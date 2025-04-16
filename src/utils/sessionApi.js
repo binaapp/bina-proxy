@@ -6,8 +6,10 @@ const getDeviceInfo = () => {
   };
 };
 
-const API_URL = "http://localhost:3001/api/session";
-debugger;
+const API_URL =
+  process.env.NODE_ENV === "production"
+    ? "http://3.72.14.168:3001/api/session"
+    : "http://localhost:3001/api/session";
 /**
  * Submits session data to the backend
  * @param {Object} params Custom parameters to override defaults
@@ -17,7 +19,6 @@ export async function submitSession(params = {}) {
   console.log("Starting session submission with params:", params);
 
   const sessionData = {
-    sessionId: params.sessionId,
     startTimestamp: params.startedAt || new Date().toISOString(),
     endTimestamp: params.endedAt || new Date().toISOString(),
     completed: params.completed || false,
@@ -26,6 +27,11 @@ export async function submitSession(params = {}) {
     deviceInfo: getDeviceInfo(),
     flowSteps: params.flowSteps || [],
   };
+
+  // Only include sessionId if it's provided and not null
+  if (params.sessionId && params.sessionId !== null) {
+    sessionData.sessionId = params.sessionId;
+  }
 
   // Always use POST
   const url = API_URL;

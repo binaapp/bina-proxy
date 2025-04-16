@@ -168,6 +168,7 @@ app.post("/api/claude", async (req, res, next) => {
 
       const data = await response.json();
       console.log("Successfully received response from Claude API");
+      //data.content = data.content?.replace(/[\x00-\x1F\x7F-\x9F]/g, '');
       res.json(data);
     } catch (fetchError) {
       console.error("Fetch error:", {
@@ -214,15 +215,36 @@ app.post("/api/session", async (req, res) => {
       flowSteps,
     } = req.body;
 
-    console.log("Received sessionId/id:", id);
-    console.log("sessionId/id type:", typeof id);
-    console.log("Full request body:", req.body);
+    console.log("Raw request body:", req.body);
+    console.log("Destructured sessionId value:", id);
+    console.log("sessionId type:", typeof id);
+
+    const MYSQL_MAX_INT = 2147483647;
+    // Check if id is invalid (null, undefined, exceeds MySQL INT limits, or is not a number)
+    const isInvalidId =
+      !id || isNaN(Number(id)) || Number(id) > MYSQL_MAX_INT || Number(id) <= 0;
 
     const connection = await pool.getConnection();
-    let resultId = id;
+    let resultId;
 
-    if (!id) {
-      console.log("Creating new session");
+    if (isInvalidId) {
+      console.log("Invalid or missing session ID. Creating new session...");
+
+      // First, get the last valid ID from the database
+      const [lastIdResult] = await connection.query(
+        "SELECT MAX(id) as maxId FROM user_sessions WHERE id <= ?",
+        [MYSQL_MAX_INT]
+      );
+      const lastValidId = lastIdResult[0].maxId || 0;
+      console.log("Last valid ID in database:", lastValidId);
+
+      // Reset the auto_increment if needed
+      if (lastValidId < MYSQL_MAX_INT) {
+        await connection.query("ALTER TABLE user_sessions AUTO_INCREMENT = ?", [
+          lastValidId + 1,
+        ]);
+      }
+
       // 🔁 Save session data to user_sessions
       const [sessionResult] = await connection.query(
         `INSERT INTO user_sessions (start_timestamp, end_timestamp, completed, referral_source, feedback, device_info)
@@ -240,6 +262,7 @@ app.post("/api/session", async (req, res) => {
       console.log("Created new session with ID:", resultId);
     } else {
       console.log("Updating existing session:", id);
+      resultId = id;
       // Update existing session
       const [updateResult] = await connection.query(
         `UPDATE user_sessions 

@@ -2,6 +2,9 @@ import { ref, onMounted } from "vue";
 
 const DAILY_LIMIT = 30;
 const STORAGE_KEY = "user_interactions";
+const isDevelopment =
+  window.location.hostname === "localhost" ||
+  window.location.hostname === "127.0.0.1";
 
 export function useInteractionLimiter() {
   const interactionsCount = ref(0);
@@ -24,7 +27,7 @@ export function useInteractionLimiter() {
         updateStorage();
       } else {
         interactionsCount.value = count;
-        isLimitReached.value = count >= DAILY_LIMIT;
+        isLimitReached.value = isDevelopment ? false : count >= DAILY_LIMIT;
       }
     } else {
       updateStorage();
@@ -39,10 +42,17 @@ export function useInteractionLimiter() {
         date: new Date().toISOString(),
       })
     );
-    isLimitReached.value = interactionsCount.value >= DAILY_LIMIT;
+    isLimitReached.value = isDevelopment
+      ? false
+      : interactionsCount.value >= DAILY_LIMIT;
   };
 
   const incrementInteraction = () => {
+    // Always allow interactions in development
+    if (isDevelopment) {
+      return true;
+    }
+
     if (isLimitReached.value) {
       return false;
     }

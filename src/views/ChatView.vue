@@ -247,7 +247,7 @@ export default {
         } else {
           // For integration-to-closing, combine reply with closing message
           const newStep = this.flowData.steps[this.currentStepIndex + 1];
-          const closingText = newStep.question
+          const closingText = newStep.reply
             .split("(https://docs.google.com")[0]
             .trim();
 
