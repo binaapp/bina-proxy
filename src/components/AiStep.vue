@@ -1,6 +1,7 @@
-/* eslint-disable */
 <script setup>
+/* eslint-disable */
 import { ref, onMounted } from "vue";
+import flowData from "@/data/flows/General.json";
 
 const props = defineProps({
   history: Array,
@@ -9,7 +10,7 @@ const props = defineProps({
   conditionDescription: String,
   nextQuestionInstruction: String,
   followupQuestionInstruction: String,
-  generalInstructions: Array,
+  //generalInstructions: Array,
   goal: String,
   nextPhase: {
     type: Object,
@@ -48,196 +49,246 @@ const props = defineProps({
 
 const emit = defineEmits(["step-result"]);
 
+// Define formatting instructions separately
+const FORMATTING_INSTRUCTIONS = `CRITICAL RESPONSE FORMAT INSTRUCTIONS:
+Formatting Instructions:
+
+1. You MUST ONLY return a valid JSON object.  
+2. DO NOT include any text before or after the JSON.  
+3. DO NOT include any explanations outside the JSON.  
+4. DO NOT engage in conversation outside the JSON.  
+5. The JSON object MUST follow this EXACT format:
+
+{
+  "status": "passed" | "retry",
+  "reply": "Your emotionally attuned response. This may include a reflection, a question, a coaching tool, or a gentle co-creation prompt—based on what best supports the user in the current phase. You may combine up to two of these if it feels natural, emotionally spacious, and aligned with the user's readiness. Do not overload the user. Always prioritize clarity, presence, and care.",
+  "reasoning": "Explain here why you decided the condition was met or not met. Be specific about what criteria were satisfied or missing, based on the phase definition."
+}`;
+
 const isLoading = ref(false);
 const error = ref(null);
 const aiResponse = ref(null);
+const systemMessage = ref("");
 
-const buildCoachingStyle = () => {
-  return `
-Coaching Style:
-- Approach: ${props.coachData.approach}
-- Tone of Voice: ${props.coachData.toneOfVoice}
-- Level of Guidance: ${props.coachData.levelOfGuidance}
-- Emotional Depth: ${props.coachData.emotionalDepth}
-- Question Style: ${props.coachData.typeOfQuestions}
-- Preferred Techniques: ${props.coachData.preferredToolsAndTechniques.join(
-    ", "
-  )}
-- Success Definition: ${props.coachData.definitionOfSessionSuccess}
-`;
+const API_URL = process.env.NODE_ENV === "production" ? "http://3.72.14.168:3001" : "http://localhost:3001";
+
+const buildPhaseDefinitions = () => {
+  // Find current phase index, skipping the start step
+  const currentPhaseIndex = flowData.steps.findIndex(
+    (step) => step.name === props.name
+  );
+
+  // Get only current and next phases
+  const relevantPhases = flowData.steps.slice(
+    currentPhaseIndex,
+    currentPhaseIndex + 2
+  );
+
+  // Map phases with conditional field inclusion
+  const phaseDefinitions = relevantPhases
+    .map((step, index) => {
+      const isCurrentPhase = index === 0;
+
+      // Build the phase definition by only including fields that exist and have values
+      const fields = [];
+
+      fields.push(
+        `${step.name.charAt(0).toUpperCase() + step.name.slice(1)} Phase:`
+      );
+
+      if (step.goal) fields.push(`Goal: ${step.goal}`);
+      if (step.condition) fields.push(`Condition: ${step.condition}`);
+      if (step.question) fields.push(`Question: ${step.question}`);
+
+      // Only include followup fields for current phase
+      if (isCurrentPhase && step.followupQuestion) {
+        fields.push(`Followup Question: ${step.followupQuestion}`);
+      }
+
+      if (step.coachTool) fields.push(`Coach Tool: ${step.coachTool}`);
+      if (step.reflection) fields.push(`Reflection: ${step.reflection}`);
+
+      if (isCurrentPhase && step.followupReflection) {
+        fields.push(`Followup Reflection: ${step.followupReflection}`);
+      }
+
+      if (step.coachPresenceNote) {
+        fields.push(`Coach Presence Note: ${step.coachPresenceNote}`);
+      }
+
+      return fields.join("\n");
+    })
+    .filter(Boolean) // Remove any undefined phases
+    .join("\n\n");
+
+  return phaseDefinitions;
 };
 
-const buildPrompt = () => {
-  const generalInstructions = Array.isArray(props.generalInstructions)
-    ? props.generalInstructions.join("\n")
-    : "Always act as a coach, not a consultant.\nHelp the user reflect and take responsibility.\nAvoid giving advice; focus on powerful questions.\nKeep the tone warm, clear, and emotionally aware.";
-
-  // Get current phase information from the current step
-  const currentPhase = {
-    name: props.name || "",
-    goal: props.goal || "",
-    condition: props.conditionDescription || "",
-    question: props.nextQuestionInstruction || "",
-    reflection:
-      props.reflection ||
-      "Help the user reflect on their emotional experience and insights gained",
-    coachPresenceNote: props.coachPresenceNote || "",
-    followupReflection: props.followupReflection || "",
-    followupQuestion: props.followupQuestionInstruction || "",
-    coachTool: props.coachTool || "",
-  };
-
-  // Get next phase information from props
-  const nextPhase = props.nextPhase || {};
-
-  console.log("Current Phase Data:", currentPhase);
-  console.log("Next Phase Data:", nextPhase);
-
-  const nextPhaseInstructions = `
-Next Phase Information:
-Name: ${nextPhase.name || ""}
-Goal: ${nextPhase.goal || ""}
-Condition: ${nextPhase.condition || ""}
-Question: ${nextPhase.question || ""}
-Reflection Focus: ${
-    nextPhase.reflection ||
-    "Help the user reflect on their emotional experience and insights gained"
-  }
-Coach Presence Note: ${nextPhase.coachPresenceNote || ""}
-Coaching tools to use at this stage: ${nextPhase.coachTool || ""}`;
-
-  const coachingStyle = buildCoachingStyle();
+const buildSystemMessage = () => {
+  const phaseDefinitions = buildPhaseDefinitions();
 
   return `
-You are a warm, emotionally attuned human coach. You are not a chatbot, consultant, or assistant. You do not evaluate or analyze. Your sole purpose is to help the user feel seen, understood, and supported through emotionally rich reflection and one powerful question at a time.
+You are a warm, emotionally attuned coach—not a chatbot, consultant, or assistant. You do not analyze, diagnose, evaluate, or advise. Your purpose is to help the user feel deeply seen, understood, and gently empowered—through one emotionally spacious reply at a time.
 
-You coach through presence—not performance.
+You coach through presence, not performance. Speak slowly and with care. Your tone is calm, grounded, and emotionally spacious. Prioritize emotional truth over technical output. Stay deeply curious about the user's emotional world and respond to what is alive now—not what was already said.
 
-Your tone is calm, grounded, and compassionate. You respond slowly and with care. You prioritize emotional truth over technical output. You are deeply curious about the user's emotional reality, and everything you say should reflect that curiosity and care.
+When helpful, you may gently use a coaching tool (such as metaphor, belief work, body-based imagery, or values reflection) to support emotional insight—as long as your tone remains warm, slow, and non-directive. Coaching tools are provided in each phase and may be woven into your reply when appropriate.
 
-You work within a structured flow, but your *relationship* with the user is always more important than moving them forward too quickly.
+Each reply must feel emotionally attuned, precise, and non-repetitive. You may include a reflection, a question, a coaching tool, or a gentle co-creation prompt. Most replies will include one or two of these—such as a reflection and a question, or a metaphor and an invitation to explore. Choose the combination that best supports the user's emotional process in the moment. Only combine elements when it feels emotionally natural and supportive. Never overload the user. Always prioritize emotional presence over progress.
 
-${coachingStyle}
+Avoid generic phrases like "That must be difficult." Use the user's actual words or implied emotional tone. Do not repeat language, imagery, or emotional phrasing from earlier turns. Only move forward once the user has felt fully seen and expressed. If unsure, ask gently: "Is there anything else you'd like to share before we move on?" If the user writes in another language, respond in their language.
 
-Style Guide:
-Tone: ${props.styleGuide.tone}
-Language: ${props.styleGuide.language}
-Avoid: ${props.styleGuide.avoid.join(", ")}
-Prioritize: ${props.styleGuide.prioritize.join(", ")}
+Co-Creation and Gentle Brainstorming:  
+When the user seems stuck, uncertain, or curious, you may gently shift into a collaborative mode. Offer emotionally grounded prompts that help them think, imagine, or play with new possibilities. This can include light brainstorming, scenario flipping, "what if" questions, symbolic invitations, or exploring multiple paths forward. Always keep your tone warm, slow, and emotionally attuned—not directive or solution-focused. You are allowed to think with the user—as long as you do so gently, curiously, and in partnership.
 
-Global Coaching Guidelines:
-${generalInstructions}
+Phase Evaluation Instructions:
 
-Current Phase Information:
-Name: ${currentPhase.name}
-Goal: ${currentPhase.goal}
-Condition: ${currentPhase.condition}
-Question: ${currentPhase.question}
-Reflection Focus: ${currentPhase.reflection}
-Coach Presence Note: ${currentPhase.coachPresenceNote}
-Followup Reflection: ${currentPhase.followupReflection}
-Followup Question: ${currentPhase.followupQuestion}
-Coaching tools to use at this stage: ${currentPhase.coachTool}
+Each user message will include "Current phase: [phase_name]".  
+Use the corresponding phase definition to evaluate the user's message and determine whether they meet the condition to advance.
 
-${nextPhaseInstructions}
+If the condition is met:
+- Set "status": "passed".
+- Transition to the next phase.
+- Craft one emotionally attuned reply that supports the user in moving gently into the next phase. Use the phase's goal, tone, and coaching tool to guide your response. You may reflect, ask a question, offer a metaphor, or invite a new perspective—and you may combine up to two of these if it feels emotionally natural and supportive. Prioritize clarity, presence, and emotional readiness over progress.
+- Do not use the followup reply from the next phase.
 
-CRITICAL RESPONSE FORMAT INSTRUCTIONS:
-1. You MUST ONLY return a valid JSON object.
-2. DO NOT include any text before or after the JSON.
-3. DO NOT include any explanations outside the JSON.
-4. DO NOT engage in conversation outside the JSON.
-5. The JSON object MUST follow this EXACT format:
-{
-  "status": "passed" or "retry",
-  "reflection": "Your deep, emotionally resonant reflection that shows true understanding of their experience",
-  "question": ["your follow-up question here"],
-  "reasoning": "Explain here why you decided the condition was met or not met. Be specific about what criteria were satisfied or missing."
-}
+If the condition is not met:
+- Set "status": "retry".
+- Remain in the current phase.
+- Craft a followup reply based on the user's most recent message, using the followup reply provided in the phase definition. You may also integrate the coaching tool from this phase—such as a metaphor, belief prompt, values exploration, or body-based imagery—if it feels emotionally supportive. You may combine up to two elements (e.g., reflection + question, or metaphor + prompt), as long as the tone remains spacious, warm, and non-directive.
 
-Evaluation Instructions:
-1. Evaluate the user's answer according to this condition:
-"${currentPhase.condition}"
+Always include a "reasoning" field explaining why the condition was or wasn't met. Reference what was present or missing based on the phase definition—such as emotional depth, clarity, insight, or closure.
 
-2. If the condition is met:
-- Set status to "passed"
-- Use the question from the Next Phase Information section
-- Explain why the condition was met
+PHASE DEFINITIONS:
 
-3. If the condition is not met:
-- Set status to "retry"
-- Use the followup question from the Current Phase Information section: "${
-    currentPhase.followupQuestion
-  }"
-- Explain what criteria were missing
+${phaseDefinitions}
 
-User's response to evaluate:
-"${props.answer}"
-`;
+${FORMATTING_INSTRUCTIONS}`;
 };
+
+onMounted(() => {
+  // Build system message once when component mounts
+  systemMessage.value = buildSystemMessage();
+  callClaude();
+});
 
 const callClaude = async () => {
   isLoading.value = true;
   error.value = null;
 
   try {
-    // Check if proxy server is healthy
-    const healthCheck = await fetch("http://127.0.0.1:3001/health");
+    // First check if the proxy server is running
+    const healthCheck = await fetch(`${API_URL}/health`);
     if (!healthCheck.ok) {
       throw new Error("Proxy server is not responding");
     }
 
-    const prompt = buildPrompt();
-    const response = await fetch("http://127.0.0.1:3001/api/claude", {
+    // Format the conversation history
+    const formattedHistory = props.history.reduce((acc, message, index) => {
+      // Skip role indicators
+      if (message === "bot" || message === "user") {
+        return acc;
+      }
+
+      // If message is already formatted, use it directly
+      if (typeof message === "object" && message.role && message.content) {
+        acc.push(message);
+        return acc;
+      }
+
+      // For plain text messages, format with role from previous item
+      const role = props.history[index - 1] === "bot" ? "assistant" : "user";
+      acc.push({
+        role: role,
+        content: message,
+      });
+      return acc;
+    }, []);
+
+    // Build current message - only include phase and current answer
+    const currentMessage = {
+      role: "user",
+      content: `Current phase: ${props.name}\n${props.answer || ""}`,
+    };
+
+    const requestBody = {
+      model: "claude-3-5-sonnet-20240620",
+      max_tokens: 1000,
+      temperature: 0.7,
+      messages: [...formattedHistory, currentMessage],
+      system: FORMATTING_INSTRUCTIONS,
+    };
+
+    // Chen Only add full system message on the very first interaction
+    // if (formattedHistory.length === 2 && props.name === "situation") {
+    //   requestBody.system = systemMessage.value;
+    // }
+    requestBody.system = systemMessage.value;
+    // Enhanced logging
+    console.log("\n=== REQUEST DETAILS ===");
+    console.log("Current Phase:", props.name);
+    console.log("Message Count:", formattedHistory.length + 1);
+    console.log("Using System Message:", Boolean(requestBody.system));
+
+    if (requestBody.system) {
+      console.log("\n=== SYSTEM MESSAGE ===");
+      console.log(
+        requestBody.system === systemMessage.value
+          ? "Full System Message"
+          : "Formatting Instructions Only"
+      );
+      console.log("Length:", requestBody.system.length);
+      console.log(requestBody.system);
+    }
+
+    console.log("\n=== CONVERSATION HISTORY ===");
+    formattedHistory.forEach((msg, idx) => {
+      console.log(
+        `[${idx + 1}] ${msg.role} (length: ${msg.content.length}):`,
+        msg.content
+      );
+    });
+
+    console.log("\n=== CURRENT MESSAGE ===");
+    console.log(`role: ${currentMessage.role}`);
+    console.log(`length: ${currentMessage.content.length}`);
+    console.log(`content: ${currentMessage.content}`);
+
+    const response = await fetch(`${API_URL}/api/claude`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        model: "claude-3-opus-20240229",
-        max_tokens: 1000,
-        temperature: 0.7,
-        messages: [
-          {
-            role: "user",
-            content: prompt,
-          },
-        ],
-      }),
+      body: JSON.stringify(requestBody),
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(
-        errorData.error?.message || "Failed to get response from Claude"
-      );
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
 
     const data = await response.json();
-    if (!data.content || !data.content[0] || !data.content[0].text) {
-      throw new Error("Invalid response format from Claude");
-    }
+    console.log("\n=== CLAUDE RESPONSE ===\n", data);
 
     try {
-      const result = JSON.parse(data.content[0].text);
-      aiResponse.value = result;
-      emit("step-result", result);
+      const parsedResponse = JSON.parse(data.content[0].text);
+      console.log("\n=== PARSED RESPONSE ===\n", parsedResponse);
+      aiResponse.value = parsedResponse;
+      emit("step-result", parsedResponse);
     } catch (parseError) {
-      console.error("Failed to parse Claude response:", data.content[0].text);
-      throw new Error("Invalid JSON response from Claude");
+      console.error("Failed to parse Claude's response:", parseError);
+      error.value = "Failed to parse Claude's response";
     }
   } catch (err) {
-    console.error("Error calling Claude:", err);
+    console.error("Error in callClaude:", err);
     error.value = err.message;
   } finally {
     isLoading.value = false;
   }
 };
-
-onMounted(callClaude);
 </script>
 
 <template>
-  <div v-if="isLoading">Processing...</div>
+  <div v-if="isLoading"></div>
 </template>
 
 <style scoped>

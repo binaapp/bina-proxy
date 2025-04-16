@@ -1,69 +1,106 @@
+<!-- A component that displays text with a typewriter effect -->
 <template>
   <div class="typing-message">
-    <p ref="messageText">&nbsp;</p>
+    <span class="typing-message__content">{{ displayedText }}</span>
+    <span v-if="isTyping" class="typing-message__cursor"></span>
   </div>
 </template>
 
-<script setup>
-import { ref, onMounted } from "vue";
+<script>
+import { ref, watch, onBeforeUnmount } from "vue";
 
-const props = defineProps({
-  text: {
-    type: String,
-    required: true,
+export default {
+  name: "TypingMessage",
+  props: {
+    text: {
+      type: String,
+      required: true,
+    },
+    typingSpeed: {
+      type: Number,
+      default: 30, // milliseconds per character
+    },
   },
-  type: {
-    type: String,
-    default: "bot",
+
+  setup(props, { emit }) {
+    const displayedText = ref("");
+    const isTyping = ref(false);
+    let currentIndex = 0;
+    let typingInterval = null;
+
+    console.log("TypingMessage component created");
+
+    const startTyping = () => {
+      console.log("Starting typing animation with text:", props.text);
+      isTyping.value = true;
+      currentIndex = 0;
+      displayedText.value = "";
+      emit("typing-start");
+
+      clearInterval(typingInterval);
+      typingInterval = setInterval(() => {
+        if (currentIndex < props.text.length) {
+          displayedText.value += props.text[currentIndex];
+          currentIndex++;
+        } else {
+          clearInterval(typingInterval);
+          isTyping.value = false;
+          console.log("Typing animation complete");
+          emit("typing-complete");
+        }
+      }, props.typingSpeed);
+    };
+
+    watch(
+      () => props.text,
+      (newText) => {
+        console.log("TypingMessage received new text:", newText);
+        if (newText) {
+          startTyping();
+        }
+      },
+      { immediate: true }
+    );
+
+    onBeforeUnmount(() => {
+      console.log("TypingMessage component being destroyed");
+      clearInterval(typingInterval);
+    });
+
+    return {
+      displayedText,
+      isTyping,
+    };
   },
-  delay: {
-    type: Number,
-    default: 0,
-  },
-});
-
-const messageText = ref(null);
-
-onMounted(() => {
-  setTimeout(() => {
-    let index = 0;
-    messageText.value.textContent = "";
-
-    const interval = setInterval(() => {
-      if (index < props.text.length) {
-        messageText.value.textContent += props.text.charAt(index);
-        index++;
-      } else {
-        clearInterval(interval);
-      }
-    }, 15);
-  }, props.delay);
-});
+};
 </script>
 
 <style scoped>
 .typing-message {
-  font-size: 1.1rem;
-  line-height: 1.6;
-  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    sans-serif;
+  font-size: 1rem;
+  line-height: 1.5;
 }
 
-.typing-message p {
-  white-space: pre-wrap;
-  margin: 0;
-  text-align: left;
-  min-height: 1.6em;
-  color: #f0f0f0;
+.typing-message__cursor {
+  display: inline-block;
+  width: 2px;
+  height: 1.2em;
+  background-color: currentColor;
+  margin-left: 2px;
+  animation: blink 1s step-end infinite;
 }
 
-/* Add spacing between paragraphs */
-.typing-message p + p {
-  margin-top: 1.25rem;
-}
-
-@media (max-width: 768px) {
-  .typing-message p + p {
-    margin-top: 1rem;
+@keyframes blink {
+  from,
+  to {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
   }
 }
 </style>
