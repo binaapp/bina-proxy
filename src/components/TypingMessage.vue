@@ -85,6 +85,10 @@ export default {
   line-height: 1.5;
 }
 
+.typing-message__content {
+  white-space: pre-wrap;
+}
+
 .typing-message__cursor {
   display: inline-block;
   width: 2px;

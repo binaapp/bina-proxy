@@ -22,15 +22,17 @@
         </div>
       </transition-group>
 
-      <!-- Add typing indicator -->
       <transition name="fade">
-        <TypingIndicator v-if="isAwaitingAi" />
+        <TypingIndicator v-if="sessionRunner?.isAwaitingAi" />
       </transition>
 
-      <!-- Separate container for the button -->
+      <!-- Feedback button container -->
       <div
         class="button-container"
-        v-if="chatMessages[chatMessages.length - 1] === ''"
+        v-if="
+          chatMessages.length > 0 &&
+          chatMessages[chatMessages.length - 1].includes('feedback')
+        "
       >
         <a
           href="https://docs.google.com/forms/d/e/1FAIpQLSfzrsEpCge_BW72pyPD7jRqS1vqEThJT73JGIPN7EERe89IwQ/viewform?usp=dialog"
@@ -40,17 +42,6 @@
           Click here to leave your feedback
         </a>
       </div>
-
-      <transition-group name="fade" tag="div">
-        <div
-          class="quote-card"
-          v-for="(quote, index) in shownQuotes"
-          :key="quote"
-        >
-          <span class="quote-number">{{ index + 1 }}.</span>
-          <em>{{ quote }}</em>
-        </div>
-      </transition-group>
     </section>
 
     <div class="chat-box">
@@ -63,33 +54,26 @@
       <button @click="sendMessage">&#8593;</button>
     </div>
 
-    <AiStep
-      v-if="isAwaitingAi"
-      :history="sessionHistory"
-      :answer="userInput"
-      :systemPrompt="coachData.communicationStyle"
-      :conditionDescription="currentStep.condition"
-      :nextQuestionInstruction="currentStep.question"
-      :followupQuestionInstruction="currentStep.followupQuestion"
-      :generalInstructions="flowData.globalInstructions"
-      :goal="currentStep.goal"
-      :nextPhase="getNextPhase"
-      :coachData="coachData"
-      :generalGuidelines="currentStep.generalGuidelines"
-      :coachTool="currentStep.coachTool"
-      :name="currentStep.name"
-      :reflection="currentStep.reflection"
-      :followupReflection="currentStep.followupReflection"
-      :coachPresenceNote="currentStep.coachPresenceNote"
-      @step-result="handleStepResult"
+    <!-- SessionRunner handles the logic -->
+    <SessionRunner
+      ref="sessionRunner"
+      :userInput="userInput"
+      @update:userInput="(value) => (userInput = value)"
+      :flow-data="flowData"
+      :coach-data="coachData"
+      @message-sent="handleMessageSent"
+      @ai-response="handleAiResponse"
+      @session-complete="handleSessionComplete"
+      @debug-message="(msg) => console.log('SessionRunner:', msg)"
     />
   </div>
 </template>
 
 <script>
-import flowData from "@/data/flows/General.json";
+import { ref } from "vue"; // Make sure this import is working
+import { flowData } from "@/composables/useFlowData";
 import coachData from "@/data/coaches/supportive-coach.json";
-import AiStep from "@/components/AiStep.vue";
+import SessionRunner from "@/components/SessionRunner.vue";
 import TypingMessage from "@/components/TypingMessage.vue";
 import TypingIndicator from "@/components/TypingIndicator.vue";
 import { useInteractionLimiter } from "../composables/useInteractionLimiter.js";
@@ -98,252 +82,95 @@ import { submitSession } from "@/utils/sessionApi";
 export default {
   name: "ChatView",
   components: {
-    AiStep,
+    SessionRunner,
     TypingMessage,
     TypingIndicator,
   },
   setup() {
     const { incrementInteraction, isLimitReached } = useInteractionLimiter();
-    return { incrementInteraction, isLimitReached };
-  },
-  data: () => ({
-    userInput: "",
-    currentStepIndex: 0,
-    introText: flowData.steps[0].introText || "",
-    nextQuestion: flowData.steps[0].nextQuestion || "",
-    currentOptions: Array.isArray(flowData.steps[0].options)
-      ? flowData.steps[0].options
-      : [],
-    shownQuotes: [],
-    isAwaitingAi: false,
-    flowData,
-    coachData,
-    chatMessages: [],
-    sessionHistory: [],
-    messageTypes: [],
-    sessionStartTime: null,
-    sessionId: null,
-    isSessionComplete: false,
-  }),
-  computed: {
-    currentStep() {
-      // For the first AI evaluation, use the situation phase data
-      if (this.currentStepIndex === 0 && this.isAwaitingAi) {
-        return this.flowData.steps[1]; // Situation phase
-      }
-      return this.flowData.steps[this.currentStepIndex] || {};
-    },
-    progressWidth() {
-      return ((this.currentStepIndex + 1) / this.flowData.steps.length) * 100;
-    },
-    getNextPhase() {
-      let nextIndex;
-      // For the first AI evaluation, use symptoms (index 2) as next phase
-      if (this.currentStepIndex === 0 && this.isAwaitingAi) {
-        nextIndex = 2; // Symptoms phase
-      } else {
-        nextIndex = this.currentStepIndex + 1;
-      }
+    const sessionRunner = ref(null);
+    const userInput = ref("");
+    const chatMessages = ref([]);
+    const messageTypes = ref([]);
 
-      // Ensure we don't exceed the steps array length
-      if (nextIndex < this.flowData.steps.length) {
-        const nextStep = this.flowData.steps[nextIndex];
-        // Only return next phase if we're actually transitioning
-        if (this.currentStepIndex !== nextIndex) {
-          return {
-            name: nextStep.name,
-            goal: nextStep.goal,
-            condition: nextStep.condition,
-            question: nextStep.question,
-            reflection: nextStep.reflection,
-            coachPresenceNote: nextStep.coachPresenceNote,
-            coachTool: nextStep.coachTool,
-          };
-        }
-      }
-      return null;
-    },
-  },
-  mounted() {
-    this.sessionStartTime = new Date().toISOString();
-
-    if (this.introText) {
-      this.chatMessages.push(
-        this.introText + "\n\n" + (this.nextQuestion || "")
-      );
-      this.messageTypes.push("bot");
-      this.sessionHistory.push({
-        role: "assistant",
-        content: this.introText + "\n\n" + (this.nextQuestion || ""),
-      });
-    }
+    return {
+      sessionRunner,
+      userInput,
+      chatMessages,
+      messageTypes,
+      flowData,
+      coachData,
+      incrementInteraction,
+      isLimitReached,
+    };
   },
   methods: {
     hideTypingIndicator() {
-      console.log("Typing started, hiding typing indicator");
-      this.isAwaitingAi = false;
+      if (this.sessionRunner) {
+        this.sessionRunner.isAwaitingAi = false;
+      }
     },
 
     sendMessage() {
       if (!this.userInput.trim()) return;
 
-      // Check interaction limit before proceeding
+      // Check interaction limit
       if (this.isLimitReached) {
-        console.warn("Daily interaction limit reached");
+        console.log("Daily interaction limit reached");
         return;
       }
 
       // Increment the interaction counter
       if (!this.incrementInteraction()) {
-        console.warn("Daily interaction limit reached");
+        console.log("Daily interaction limit reached");
         return;
       }
 
-      console.log("=== START sendMessage ===");
-      debugger; // First debug point - entering sendMessage
-
-      console.log("Sending message:", this.userInput);
-      console.log("Current step:", this.currentStep);
-      console.log("Current step index:", this.currentStepIndex);
-
-      // Only add the message if it's not already in the history
-      const lastMessage = this.sessionHistory[this.sessionHistory.length - 1];
-      if (!lastMessage || lastMessage.content !== this.userInput) {
-        this.chatMessages.push(this.userInput);
-        this.messageTypes.push("user");
-        this.sessionHistory.push({
-          role: "user",
-          content: this.userInput,
-        });
-      }
-
-      // Clear the input after sending
-      this.userInput = "";
-      console.log("Setting isAwaitingAi to true");
-      debugger; // Second debug point - before setting isAwaitingAi
-      this.isAwaitingAi = true;
-      console.log("isAwaitingAi is now:", this.isAwaitingAi);
+      // Let SessionRunner handle the message
+      this.sessionRunner?.handleUserSubmit();
     },
-    async handleStepResult(result) {
-      console.log("=== START handleStepResult ===");
-      console.log("Result structure:", {
-        reply: result.reply,
-        reasoning: result.reasoning,
-        status: result.status,
-      });
 
-      if (result.reply) {
-        if (
-          !this.flowData.steps[this.currentStepIndex] ||
-          this.flowData.steps[this.currentStepIndex].name !== "integration"
-        ) {
-          console.log("Adding AI response to chat:", result.reply);
-          this.chatMessages.push(result.reply);
-          this.messageTypes.push("bot");
-          this.sessionHistory.push({
-            role: "assistant",
-            content: result.reply,
-          });
-        } else {
-          // For integration-to-closing, combine reply with closing message
-          const newStep = this.flowData.steps[this.currentStepIndex + 1];
-          const closingText = newStep.reply
-            .split("(https://docs.google.com")[0]
-            .trim();
+    handleMessageSent({ message, type }) {
+      console.log("Message sent:", type, message);
+      this.chatMessages.push(message);
+      this.messageTypes.push(type);
+    },
 
-          const combinedMessage = [result.reply, closingText]
-            .filter(Boolean)
-            .join("\n\n");
+    handleAiResponse({ message, type }) {
+      console.log(
+        "AI response received:",
+        type,
+        message.substring(0, 30) + "..."
+      );
+      this.chatMessages.push(message);
+      this.messageTypes.push(type);
+    },
 
-          // Set session as complete when showing closing message
-          this.isSessionComplete = true;
+    handleSessionComplete(sessionData) {
+      console.log("Session completed:", sessionData);
 
-          this.chatMessages.push(combinedMessage);
-          this.messageTypes.push("bot");
-          this.sessionHistory.push({
-            role: "assistant",
-            content: combinedMessage,
-          });
-
-          // Add empty message for button after typing is complete
-          setTimeout(() => {
-            this.chatMessages.push("");
-            this.messageTypes.push("bot");
-          }, combinedMessage.length * 30 + 500);
-
-          // Disable further input
-          this.isAwaitingAi = false;
-        }
-      }
-
-      // Submit session data
-      const currentTime = new Date().toISOString();
-      const stepData = {
-        stepId: this.currentStep.name,
-        startedAt: new Date(Date.now() - 60000).toISOString(), // 1 minute ago
-        endedAt: currentTime,
-        userText:
-          this.sessionHistory[this.sessionHistory.length - 2]?.content || "",
-        systemText: JSON.stringify(result),
-      };
-
+      // Submit the completed session to the database
       try {
-        console.log(
-          "About to call submitSession with isSessionComplete:",
-          this.isSessionComplete
-        );
-        await submitSession({
-          sessionId: this.sessionId,
-          startedAt: this.sessionStartTime,
-          endedAt: currentTime,
-          flowSteps: [...(this.sessionId ? [] : [stepData])],
-          completed: this.isSessionComplete,
-          feedback: "Test from UI",
+        submitSession({
+          startedAt: new Date(Date.now() - 600000).toISOString(), // Default to 10 minutes ago
+          endedAt: new Date().toISOString(),
+          completed: true,
+          flowSteps: sessionData.history.map((msg, index) => ({
+            stepId: `step-${index}`,
+            startedAt: new Date(
+              Date.now() - (600000 - index * 30000)
+            ).toISOString(),
+            endedAt: new Date(
+              Date.now() - (600000 - (index + 1) * 30000)
+            ).toISOString(),
+            userText: msg.role === "user" ? msg.content : "",
+            systemText: msg.role === "assistant" ? msg.content : "",
+          })),
+          feedback: null, // Feedback will be submitted separately through the form
         });
       } catch (error) {
         console.error("Failed to submit session:", error);
       }
-
-      if (result.status === "passed") {
-        // Store the current step index before updating
-        const previousStepIndex = this.currentStepIndex;
-
-        // Update the step index
-        if (this.currentStepIndex === 0) {
-          this.currentStepIndex = 2; // Move directly to symptoms phase
-          console.log("Moving to symptoms step:", this.currentStep);
-        } else {
-          this.currentStepIndex++;
-        }
-
-        // Update step data
-        const newStep = this.currentStep;
-        console.log("New step data:", newStep);
-
-        // If we just passed the integration phase, we've already handled it above
-        if (previousStepIndex < this.flowData.steps.length - 2) {
-          // Not the last real step (integration)
-          this.isAwaitingAi = false;
-        }
-      } else {
-        this.isAwaitingAi = false;
-      }
-    },
-    revealQuotes() {
-      this.shownQuotes = [];
-
-      if (
-        !Array.isArray(this.currentOptions) ||
-        this.currentOptions.length === 0
-      ) {
-        return;
-      }
-
-      this.currentOptions.forEach((quote, i) => {
-        setTimeout(() => {
-          this.shownQuotes.push(quote);
-        }, i * 200);
-      });
     },
   },
 };
@@ -540,75 +367,36 @@ export default {
 .message.bot {
   color: #f0f0f0;
   line-height: 1.6;
-  padding: 0.5rem 1rem;
-  position: relative;
   display: flex;
-  justify-content: center;
-  width: 100%;
+  justify-content: flex-start;
 }
 
-.typing-message {
-  text-align: left;
-  padding: 0 1rem;
-  width: 100%;
-}
-
-.message.bot + .message.bot {
-  margin-top: 1.5rem;
-}
-
-.message.user + .message.bot {
-  margin-top: 1.75rem;
-}
-
-@media (max-width: 768px) {
-  .message {
-    margin-bottom: 1.25rem;
-  }
-
-  .message.bot + .message.bot {
-    margin-top: 1.25rem;
-  }
-
-  .message.user + .message.bot {
-    margin-top: 1.5rem;
-  }
+.bot-message-container {
+  display: flex;
+  position: relative;
+  align-items: center;
 }
 
 .button-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-  margin-top: -1rem;
+  text-align: center;
+  margin-top: 2rem;
 }
 
 .google-form-button {
   display: inline-block;
-  padding: 12px 24px;
-  background-color: white;
-  color: #12344d;
-  text-decoration: none;
+  padding: 10px 20px;
+  background-color: rgba(200, 178, 142, 0.2);
+  color: #fff;
   border-radius: 24px;
+  text-decoration: none;
+  transition: all 0.2s ease;
   font-weight: 500;
-  transition: all 0.3s;
-  text-align: center;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(200, 178, 142, 0.3);
 }
 
 .google-form-button:hover {
-  background-color: #f5f5f5;
+  background-color: rgba(200, 178, 142, 0.3);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-}
-
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.3s ease;
-}
-
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
 }
 </style>

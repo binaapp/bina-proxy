@@ -1,173 +1,233 @@
 <script setup>
-import { ref, reactive, watch, onMounted } from "vue";
+/* eslint-disable no-unused-vars */
+import { ref, reactive, computed, onMounted } from "vue";
 import AiStep from "./AiStep.vue";
-import SessionSummary from "./SessionSummary.vue";
+import { flowData } from "@/composables/useFlowData";
 
-import flowData from "@/data/flows/General.json";
-import coachData from "@/data/coaches/supportive-coach.json";
+const props = defineProps({
+  flowData: {
+    type: Object,
+    required: true,
+  },
+  coachData: {
+    type: Object,
+    required: true,
+  },
+  userInput: {
+    type: String,
+    default: "",
+  },
+});
+
+const emit = defineEmits([
+  "message-sent",
+  "ai-response",
+  "session-complete",
+  "update:userInput",
+  "debug-message",
+]);
+
+const userInput = computed({
+  get: () => props.userInput,
+  set: (value) => emit("update:userInput", value),
+});
 
 const currentStepIndex = ref(0);
 const sessionHistory = ref([]);
-const userAnswers = reactive({});
-const currentQuestion = ref(flowData.steps[0].introText || "");
-const aiResponse = ref(null);
 const isAwaitingAi = ref(false);
-const stepComplete = ref(false);
-const userInput = ref("");
-const stepSummaries = reactive(
-  JSON.parse(localStorage.getItem("stepSummaries") || "{}")
-);
 
-const nextStep = () => {
-  if (currentStepIndex.value < flowData.steps.length - 1) {
-    currentStepIndex.value++;
-    const step = flowData.steps[currentStepIndex.value];
-    currentQuestion.value = step.question || step.introText || "";
-    userInput.value = "";
-    stepComplete.value = false;
-  } else {
-    console.log("🎉 סשן הסתיים");
+// Initialize chat with first message
+onMounted(() => {
+  // Check if it's the first step and has introText
+  const firstStep = props.flowData.steps[0];
+  if (firstStep && firstStep.introText) {
+    const initialMessage = [
+      firstStep.introText.replace(/\\n/g, "\n"),
+      firstStep.question,
+      firstStep.options
+        ?.map((opt, i) => `${String.fromCharCode(97 + i)}. ${opt}`)
+        .join("\n"),
+    ]
+      .filter(Boolean)
+      .join("\n\n");
+
+    if (initialMessage.trim()) {
+      // Save to session history
+      sessionHistory.value.push({
+        role: "assistant",
+        content: initialMessage,
+      });
+
+      emit("ai-response", {
+        message: initialMessage,
+        type: "bot",
+      });
+    }
   }
-};
-
-const saveSummariesToStorage = () => {
-  localStorage.setItem("stepSummaries", JSON.stringify(stepSummaries));
-};
-
-const summarizeStep = async (stepName, messages) => {
-  try {
-    const res = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${import.meta.env.VUE_APP_OPENAI_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: "gpt-4",
-        messages: [
-          {
-            role: "system",
-            content:
-              "You are a coach assistant summarizer. Your task is to summarize the current coaching step based on the conversation below. Use 2-3 sentences. Highlight the user's main insight, emotional reflection, or learning. Do NOT include advice, next steps, or coaching language. Write the summary in a clear, simple, and emotionally aware tone. You are aware of the previous steps.",
-          },
-          ...messages,
-        ],
-        temperature: 0.7,
-      }),
-    });
-    const data = await res.json();
-    const summaryText = data.choices[0].message.content.trim();
-    stepSummaries[stepName] = summaryText;
-    saveSummariesToStorage();
-  } catch (err) {
-    console.error("Summary generation failed:", err);
-    stepSummaries[stepName] = "(Summary unavailable)";
-    saveSummariesToStorage();
-  }
-};
+});
 
 const handleStepResult = async (result) => {
-  const step = flowData.steps[currentStepIndex.value];
-  const stepName = step.name;
-  aiResponse.value = result;
+  emit("debug-message", "Received step result: " + result.status);
 
-  const fullMessages = [];
-  for (const [prevStep, summary] of Object.entries(stepSummaries)) {
-    fullMessages.push({
-      role: "system",
-      content: `Previous step (${prevStep}) summary: ${summary}`,
-    });
-  }
-
-  sessionHistory.value
-    .filter((item) => item.step === stepName)
-    .forEach((item) => {
-      fullMessages.push({ role: "assistant", content: currentQuestion.value });
-      fullMessages.push({ role: "user", content: item.userAnswer });
-    });
-
-  fullMessages.push({ role: "assistant", content: currentQuestion.value });
-  fullMessages.push({ role: "user", content: userInput.value });
-
+  // Save the result in session history
   sessionHistory.value.push({
-    step: stepName,
-    userAnswer: userInput.value,
-    aiResult: result,
+    role: "assistant",
+    content: result.reply,
   });
-  userAnswers[stepName] = userInput.value;
 
-  if (result.status === "passed") {
-    await summarizeStep(stepName, fullMessages);
-    stepComplete.value = true;
-  } else {
-    currentQuestion.value = result.question;
-    userInput.value = "";
+  // Emit AI response to ChatView
+  emit("ai-response", {
+    message: result.reply,
+    type: "bot",
+  });
+
+  // Handle status (passed, retry, continue, finish)
+  if (result.status === "passed" || result.status === "finish") {
+    // Move to next step if available
+    if (currentStepIndex.value < props.flowData.steps.length - 1) {
+      currentStepIndex.value++;
+      const nextStep = props.flowData.steps[currentStepIndex.value];
+
+      // If the next step doesn't need an API call and has content, send it
+      if (nextStep.callAPI === false) {
+        const messageText = [
+          nextStep.introText?.replace(/\\n/g, "\n"),
+          nextStep.question,
+          nextStep.options
+            ?.map((opt, i) => `${String.fromCharCode(97 + i)}. ${opt}`)
+            .join("\n"),
+        ]
+          .filter(Boolean)
+          .join("\n\n");
+
+        if (messageText.trim()) {
+          // Save to session history
+          sessionHistory.value.push({
+            role: "assistant",
+            content: messageText,
+          });
+
+          // Wait a moment before showing the next message
+          setTimeout(() => {
+            emit("ai-response", {
+              message: messageText,
+              type: "bot",
+            });
+          }, 1000);
+        }
+      }
+    } else {
+      // Session is complete
+      emit("session-complete", {
+        history: sessionHistory.value,
+      });
+    }
   }
+
+  // Reset waiting state
   isAwaitingAi.value = false;
 };
 
 const handleUserSubmit = () => {
-  isAwaitingAi.value = true;
+  if (!userInput.value.trim()) return;
+
+  emit("debug-message", "Processing user input: " + userInput.value);
+
+  // Add user message to history
+  sessionHistory.value.push({
+    role: "user",
+    content: userInput.value,
+  });
+
+  // Notify ChatView of message sent
+  emit("message-sent", {
+    message: userInput.value,
+    type: "user",
+  });
+
+  // Get current step
+  const currentStep = props.flowData.steps[currentStepIndex.value];
+
+  // Handle non-API steps directly
+  if (currentStep.callAPI === false) {
+    emit("debug-message", "Non-API step, handling directly");
+
+    // Move to next step
+    if (currentStepIndex.value < props.flowData.steps.length - 1) {
+      currentStepIndex.value++;
+      const nextStep = props.flowData.steps[currentStepIndex.value];
+
+      // If next step has content, display it
+      const responseText = [
+        nextStep.introText?.replace(/\\n/g, "\n"),
+        nextStep.question,
+        nextStep.options
+          ?.map((opt, i) => `${String.fromCharCode(97 + i)}. ${opt}`)
+          .join("\n"),
+      ]
+        .filter(Boolean)
+        .join("\n\n");
+
+      if (responseText.trim()) {
+        // Save to session history
+        sessionHistory.value.push({
+          role: "assistant",
+          content: responseText,
+        });
+
+        setTimeout(() => {
+          emit("ai-response", {
+            message: responseText,
+            type: "bot",
+          });
+        }, 800);
+      }
+
+      // If next step is an API step, set waiting state immediately
+      if (nextStep.callAPI === true) {
+        isAwaitingAi.value = true;
+      }
+    }
+  } else {
+    // Set waiting state for API steps
+    isAwaitingAi.value = true;
+  }
+
+  // Clear input
+  userInput.value = "";
 };
+
+// Expose necessary state and methods to parent
+defineExpose({
+  isAwaitingAi,
+  currentStep: computed(
+    () => props.flowData.steps[currentStepIndex.value] || {}
+  ),
+  handleUserSubmit,
+  currentStepIndex,
+});
 </script>
 
 <template>
-  <div class="session-runner">
-    <h2>{{ flowData.name }}</h2>
-    <p>
-      <strong>Coach Style:</strong> {{ coachData.toneOfVoice }} /
-      {{ coachData.approach }}
-    </p>
-
-    <div v-if="!stepComplete">
-      <p class="question">{{ currentQuestion }}</p>
-      <input
-        v-model="userInput"
-        placeholder="Type your response..."
-        @keyup.enter="handleUserSubmit"
-      />
-    </div>
-
-    <AiStep
-      v-if="isAwaitingAi"
-      :history="sessionHistory"
-      :answer="userInput"
-      :systemPrompt="coachData.communicationStyle"
-      :conditionDescription="flowData.steps[currentStepIndex].condition || ''"
-      :nextQuestionInstruction="
-        flowData.steps[currentStepIndex].nextQuestion || ''
-      "
-      :followupQuestionInstruction="
-        flowData.steps[currentStepIndex].followupQuestion || ''
-      "
-      :generalInstructions="flowData.globalInstructions"
-      @step-result="handleStepResult"
-    />
-
-    <button
-      v-if="stepComplete && currentStepIndex < flowData.steps.length - 1"
-      @click="nextStep"
-    >
-      Next
-    </button>
-
-    <SessionSummary
-      v-if="currentStepIndex === flowData.steps.length - 1 && stepComplete"
-      :sessionHistory="sessionHistory"
-      :userAnswers="userAnswers"
-      :flowData="flowData"
-      :stepSummaries="stepSummaries"
-    />
-  </div>
+  <!-- ONLY include AiStep, no visible UI elements -->
+  <AiStep
+    v-if="
+      isAwaitingAi && props.flowData.steps[currentStepIndex].callAPI !== false
+    "
+    :history="sessionHistory"
+    :answer="userInput"
+    :conditionDescription="
+      props.flowData.steps[currentStepIndex].condition || ''
+    "
+    :nextQuestionInstruction="
+      props.flowData.steps[currentStepIndex].nextQuestion || ''
+    "
+    :followupQuestionInstruction="
+      props.flowData.steps[currentStepIndex].followupQuestion || ''
+    "
+    :flow-data="props.flowData"
+    :coach-data="coachData"
+    :name="props.flowData.steps[currentStepIndex].name"
+    @step-result="handleStepResult"
+  />
 </template>
-
-<style scoped>
-.session-runner {
-  max-width: 600px;
-  margin: 0 auto;
-}
-.question {
-  font-weight: bold;
-  margin-bottom: 8px;
-}
-</style>
