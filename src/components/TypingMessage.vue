@@ -1,4 +1,4 @@
-<!-- A component that displays text with a typewriter effect -->
+<!-- Completely fixed TypingMessage.vue that never shows the link -->
 <template>
   <div class="typing-message">
     <span class="typing-message__content">{{ displayedText }}</span>
@@ -25,28 +25,82 @@ export default {
   setup(props, { emit }) {
     const displayedText = ref("");
     const isTyping = ref(false);
-    let currentIndex = 0;
+    const hasLink = ref(false);
+    const extractedLink = ref("");
     let typingInterval = null;
-
-    console.log("TypingMessage component created");
 
     const startTyping = () => {
       console.log("Starting typing animation with text:", props.text);
       isTyping.value = true;
-      currentIndex = 0;
+      hasLink.value = false;
+      extractedLink.value = "";
       displayedText.value = "";
       emit("typing-start");
 
+      // Pre-process: Extract links and create a character map
+      const charMap = [];
+      let processedText = props.text;
+      let skipRanges = [];
+
+      // Find all URLs in the text
+      const urlRegex = /\(?https?:\/\/[^\s)]+\)?/g;
+      let match;
+      while ((match = urlRegex.exec(processedText)) !== null) {
+        // Extract the URL for the button (first URL found)
+        if (!hasLink.value) {
+          const url = match[0].replace(/^\(|\)$/g, "");
+          hasLink.value = true;
+          extractedLink.value = url;
+        }
+
+        // Mark character ranges to skip during typing
+        skipRanges.push([match.index, match.index + match[0].length]);
+      }
+
+      // Create a map of characters to actually type (excluding URL ranges)
+      for (let i = 0; i < processedText.length; i++) {
+        let shouldSkip = false;
+
+        // Check if this character is within any URL range
+        for (const [start, end] of skipRanges) {
+          if (i >= start && i < end) {
+            shouldSkip = true;
+            break;
+          }
+        }
+
+        if (!shouldSkip) {
+          charMap.push({
+            char: processedText[i],
+            index: i,
+          });
+        }
+      }
+
+      // Type only the non-URL characters
+      let typingIndex = 0;
       clearInterval(typingInterval);
+
       typingInterval = setInterval(() => {
-        if (currentIndex < props.text.length) {
-          displayedText.value += props.text[currentIndex];
-          currentIndex++;
+        if (typingIndex < charMap.length) {
+          displayedText.value += charMap[typingIndex].char;
+          typingIndex++;
         } else {
           clearInterval(typingInterval);
           isTyping.value = false;
           console.log("Typing animation complete");
-          emit("typing-complete");
+
+          // When typing finishes, emit event with link info
+          if (hasLink.value) {
+            emit("typing-complete", {
+              hasLink: true,
+              link: extractedLink.value,
+            });
+          } else {
+            emit("typing-complete", {
+              hasLink: false,
+            });
+          }
         }
       }, props.typingSpeed);
     };
@@ -70,6 +124,8 @@ export default {
     return {
       displayedText,
       isTyping,
+      hasLink,
+      extractedLink,
     };
   },
 };

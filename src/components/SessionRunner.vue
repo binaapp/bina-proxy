@@ -35,6 +35,7 @@ const userInput = computed({
 const currentStepIndex = ref(0);
 const sessionHistory = ref([]);
 const isAwaitingAi = ref(false);
+const userName = ref("");
 
 // Initialize chat with first message
 onMounted(() => {
@@ -69,20 +70,55 @@ onMounted(() => {
 const handleStepResult = async (result) => {
   emit("debug-message", "Received step result: " + result.status);
 
-  // Save the result in session history
+  // Prepare to send response to ChatView
+  let responseMessage = result.reply;
+
+  // Save the AI result in session history
   sessionHistory.value.push({
     role: "assistant",
     content: result.reply,
   });
 
-  // Emit AI response to ChatView
-  emit("ai-response", {
-    message: result.reply,
-    type: "bot",
-  });
-
   // Handle status (passed, retry, continue, finish)
-  if (result.status === "passed" || result.status === "finish") {
+  if (result.status === "finish") {
+    // Check if the next step is the closing step
+    if (currentStepIndex.value < props.flowData.steps.length - 1) {
+      currentStepIndex.value++;
+      const nextStep = props.flowData.steps[currentStepIndex.value];
+
+      // Check if next step is the closing message with no API call
+      if (nextStep.name === "closing" && nextStep.callAPI === false) {
+        // Create the closing message text
+        const closingText = [
+          nextStep.introText?.replace(/\\n/g, "\n"),
+          nextStep.question,
+          nextStep.options
+            ?.map((opt, i) => `${String.fromCharCode(97 + i)}. ${opt}`)
+            .join("\n"),
+        ]
+          .filter(Boolean)
+          .join("\n\n");
+
+        if (closingText.trim()) {
+          // Save closing message to history
+          sessionHistory.value.push({
+            role: "assistant",
+            content: closingText,
+          });
+
+          // Combine both messages with a separator
+          responseMessage = responseMessage + "\n\n---\n\n" + closingText;
+
+          // Signal session complete
+          setTimeout(() => {
+            emit("session-complete", {
+              history: sessionHistory.value,
+            });
+          }, 1000);
+        }
+      }
+    }
+  } else if (result.status === "passed") {
     // Move to next step if available
     if (currentStepIndex.value < props.flowData.steps.length - 1) {
       currentStepIndex.value++;
@@ -124,6 +160,12 @@ const handleStepResult = async (result) => {
     }
   }
 
+  // Send the complete response (may include both AI reply and closing message)
+  emit("ai-response", {
+    message: responseMessage,
+    type: "bot",
+  });
+
   // Reset waiting state
   isAwaitingAi.value = false;
 };
@@ -148,6 +190,13 @@ const handleUserSubmit = () => {
   // Get current step
   const currentStep = props.flowData.steps[currentStepIndex.value];
 
+  // Check if this step collects the user's name
+  if (currentStep.collectsName) {
+    // Store the user's name
+    userName.value = userInput.value.trim();
+    emit("debug-message", "Stored user name: " + userName.value);
+  }
+
   // Handle non-API steps directly
   if (currentStep.callAPI === false) {
     emit("debug-message", "Non-API step, handling directly");
@@ -157,9 +206,15 @@ const handleUserSubmit = () => {
       currentStepIndex.value++;
       const nextStep = props.flowData.steps[currentStepIndex.value];
 
-      // If next step has content, display it
-      const responseText = [
-        nextStep.introText?.replace(/\\n/g, "\n"),
+      // Process intro text with name placeholder if we have a username
+      let introText = nextStep.introText || "";
+      if (userName.value) {
+        introText = introText.replace(/\{name\}/g, userName.value);
+      }
+
+      // Assemble the full message
+      let responseText = [
+        introText.replace(/\\n/g, "\n"),
         nextStep.question,
         nextStep.options
           ?.map((opt, i) => `${String.fromCharCode(97 + i)}. ${opt}`)

@@ -5,9 +5,7 @@
     </header>
 
     <div class="content">
-      <h1 class="main-heading">
-        You don't have to figure it<br />all out alone.
-      </h1>
+      <h1 class="main-heading">You don't have to figure it all out alone.</h1>
 
       <p class="subtitle">
         Bina is your personal AI-powered coach. Helping you lead with<br />
@@ -256,29 +254,38 @@
       <div class="faq-container">
         <div class="faq-item">
           <h3 class="faq-question">Is this like ChatGPT?</h3>
-          No. <span class="highlight">Bina</span> was built specifically to
-          coach — not just chat. It's based on proven coaching methods, not just
-          clever conversation.
+          <p class="faq-answer">
+            No. <span class="highlight">Bina</span> was built specifically to
+            coach — not just chat. It's based on proven coaching methods, not
+            just clever conversation.
+          </p>
         </div>
 
         <div class="faq-item">
           <h3 class="faq-question">Do I have to share personal info?</h3>
-          No. You control what you share and when. The space is private, safe,
-          and yours.
+          <p class="faq-answer">
+            No. You control what you share and when. The space is private, safe,
+            and yours.
+          </p>
         </div>
 
         <div class="faq-item">
           <h3 class="faq-question">What if I don't know what I want?</h3>
-          That's exactly why <span class="highlight">Bina</span> exists. You
-          don't need to have it figured out.
-          <span class="highlight">Bina</span> helps you get clarity, step by
-          step.
+          <p class="faq-answer">
+            That's exactly why <span class="highlight">Bina</span> exists. You
+            don't need to have it figured out.
+            <span class="highlight">Bina</span> helps you get clarity, step by
+            step.
+          </p>
         </div>
 
         <div class="faq-item">
           <h3 class="faq-question">How much does it cost?</h3>
-          Right now, it's free. You're experiencing an early version of
-          <span class="highlight">Bina</span> — and your feedback helps us grow.
+          <p class="faq-answer">
+            Right now, it's free. You're experiencing an early version of
+            <span class="highlight">Bina</span> — and your feedback helps us
+            grow.
+          </p>
         </div>
       </div>
     </div>
@@ -342,9 +349,15 @@
             <img src="/chen.jpg" alt="Chen Lev Ami" class="member-img" />
             <h4 class="member-name">Chen Lev Ami</h4>
             <p class="member-bio">
-              [Chen's bio goes here — include a line about her startup
-              experience, passion for building things that connect people, and
-              her belief in Bina's mission.]
+              Thirteen years ago, Chen founded Yummi—a marketplace connecting
+              home cooks with families across Israel. As a solo founder, she
+              built the company from the ground up, driven by a deep belief in
+              the power of real connection. Over the years, she discovered
+              something unexpected: the biggest factor in Yummi's success was
+              her own inner state. This insight sparked a personal journey into
+              coaching, emotional clarity, and self-leadership. Today, as the
+              founder of Bina, she's on a mission to help others find that same
+              clarity—using the most powerful tool she's encountered: AI.
             </p>
           </div>
 
@@ -402,16 +415,18 @@
 </template>
 
 <style scoped>
+/* Base Layout */
 .landing-page {
   min-height: 100vh;
-  background-color: #12344d;
+  background-color: var(--color-primary);
   display: flex;
   flex-direction: column;
-  color: #f0f0f0;
-  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-    sans-serif;
+  color: var(--color-text-light);
+  font-family: var(--font-family-primary);
   position: relative;
   overflow: hidden;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .chat-header {
@@ -437,38 +452,37 @@
 
 .content {
   flex: 1;
-  max-width: 840px;
+  max-width: var(--content-width);
   width: 100%;
   margin: 0 auto;
-  padding: 60px 20px;
+  padding: var(--spacing-xl) var(--spacing-md);
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   text-align: left;
+  box-sizing: border-box;
 }
 
-.main-heading {
-  font-family: "Times New Roman", serif;
-  font-size: 4.5rem;
-  font-weight: 900;
-  color: #e3cfa8;
-  line-height: 1.1;
-  margin-bottom: 24px;
+/* Headers and Text */
+.title {
+  font-family: var(--font-family-heading);
+  font-size: var(--font-size-xxl);
+  color: var(--color-text-light);
+  margin-bottom: var(--spacing-lg);
 }
 
 .subtitle {
-  font-size: 1.5rem;
-  font-weight: 400;
+  font-size: var(--font-size-lg);
+  color: var(--color-text-light);
+  margin-bottom: var(--spacing-xl);
   line-height: 1.5;
-  margin-bottom: 48px;
-  color: #f0f0f0;
 }
 
 .secondary-heading {
   font-size: 2rem;
   font-weight: 700;
   margin-bottom: 24px;
-  color: #e3cfa8;
+  color: #c4a27e;
 }
 
 .cta-text {
@@ -477,88 +491,67 @@
   color: #f0f0f0;
 }
 
+/* Buttons */
 .start-button-container {
   width: 100%;
   display: flex;
   justify-content: center;
-  margin-top: 48px;
+  margin-top: var(--spacing-lg);
 }
 
 .start-button {
-  background-color: #e3cfa8;
-  color: #183c56;
-  padding: 16px 48px;
-  font-size: 1.2rem;
+  background-color: var(--color-secondary);
+  color: var(--color-primary);
+  padding: var(--spacing-sm) var(--spacing-lg);
+  font-size: var(--font-size-md);
   font-weight: 700;
   border: none;
-  border-radius: 12px;
+  border-radius: var(--border-radius-md);
   cursor: pointer;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 6px var(--color-shadow);
+  transition: all var(--transition-fast);
 }
 
 .start-button:hover {
-  background-color: #d4b494;
+  background-color: #d4b494; /* Consider adding var(--color-secondary-light) */
+  transform: translateY(-2px);
 }
 
-@media (max-width: 768px) {
-  .content {
-    padding: 60px 20px 40px;
-  }
-
-  .chat-header {
-    height: 60px;
-  }
-
-  .main-heading {
-    font-size: 2.5rem;
-  }
-
-  .subtitle {
-    font-size: 1.15rem;
-  }
-
-  .secondary-heading {
-    font-size: 1rem;
-  }
-
-  .cta-text {
-    font-size: 1rem;
-  }
-}
-
+/* Sections */
 .how-it-works {
-  background-color: #f5f5f5;
-  padding: 80px 20px;
+  background-color: var(--color-background);
+  padding: var(--spacing-xl) var(--spacing-md);
   width: 100%;
 }
 
 .section-title {
-  font-family: "Times New Roman", serif;
-  font-size: 3rem;
-  color: #183c56;
+  font-family: var(--font-family-heading);
+  font-size: var(--font-size-xl);
+  color: var(--color-primary);
   text-align: center;
-  margin-bottom: 40px;
+  margin-bottom: var(--spacing-lg);
 }
 
 .section-subtitle {
-  font-size: 2rem;
-  color: #183c56;
+  font-size: var(--font-size-lg);
+  color: var(--color-primary);
   text-align: center;
-  max-width: 840px;
-  margin: 0 auto 60px;
+  max-width: var(--content-width);
+  margin: 0 auto var(--spacing-xl);
   line-height: 1.4;
 }
 
 .highlight {
-  color: #e3cfa8;
+  color: var(--color-secondary);
 }
 
+/* Steps Section */
 .steps-container {
   display: flex;
   justify-content: center;
   max-width: 1200px;
   margin: 0 auto;
-  gap: 60px;
+  gap: var(--spacing-xl);
 }
 
 .step {
@@ -572,80 +565,61 @@
 .step-number {
   width: 80px;
   height: 80px;
-  border: 7px solid #e3cfa8;
-  border-radius: 50%;
+  border: 7px solid var(--color-secondary);
+  border-radius: var(--border-radius-circular);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 2.5rem;
-  color: #183c56;
-  margin-bottom: 32px;
-  font-family: "Times New Roman", serif;
+  font-size: var(--font-size-xxl);
+  color: var(--color-primary);
+  margin-bottom: var(--spacing-md);
+  font-family: var(--font-family-heading);
 }
 
 .step-title {
-  font-size: 1.75rem;
-  color: #183c56;
-  margin-bottom: 24px;
+  font-size: var(--font-size-lg);
+  color: var(--color-primary);
+  margin-bottom: var(--spacing-md);
   font-weight: 600;
   width: 100%;
   text-align: center;
 }
 
 .step-description {
-  font-size: 1.2rem;
-  color: #183c56;
+  font-size: var(--font-size-md);
+  color: var(--color-primary);
   line-height: 1.6;
   text-align: center;
   max-width: 320px;
   margin: 0 auto;
 }
 
-@media (max-width: 768px) {
-  .steps-container {
-    flex-direction: column;
-    gap: 40px;
-  }
-
-  .section-title {
-    font-size: 2.5rem;
-  }
-
-  .section-subtitle {
-    font-size: 1.5rem;
-  }
-
-  .step {
-    align-items: center;
-    text-align: center;
-  }
-}
-
+/* Workplace Section */
 .workplace-reality {
-  background-color: #183c56;
-  padding: 100px 20px;
+  background-color: var(--color-primary);
+  padding: var(--spacing-xl) var(--spacing-md);
   width: 100%;
-  color: #ffffff;
+  color: var(--color-text-light);
 }
 
 .workplace-title {
-  font-family: "Times New Roman", serif;
-  font-size: 3.5rem;
-  color: #e3cfa8;
-  max-width: 840px;
-  margin: 0 auto 40px;
+  font-family: var(--font-family-heading);
+  font-size: var(--font-size-xxl);
+  color: var(--color-secondary);
+  max-width: var(--content-width);
+  margin: 0 auto var(--spacing-lg);
   line-height: 1.2;
   text-align: left;
 }
 
 .workplace-content {
-  max-width: 840px;
+  max-width: var(--content-width);
   margin: 0 auto;
   text-align: left;
 }
 
 .workplace-content > div {
-  margin-bottom: 40px;
+  margin-bottom: var(--spacing-lg);
 }
 
 .workplace-content > div:last-child {
@@ -653,80 +627,50 @@
 }
 
 .workplace-text {
-  font-size: 1.5rem;
+  font-size: var(--font-size-lg);
   line-height: 1.5;
-  margin-bottom: 16px;
-  color: #ffffff;
-}
-
-.workplace-text:last-child {
-  margin-bottom: 0;
+  margin-bottom: var(--spacing-sm);
+  color: var(--color-text-light);
 }
 
 .workplace-highlight {
-  font-size: 1.5rem;
+  font-size: var(--font-size-lg);
   line-height: 1.5;
-  margin-bottom: 16px;
-  color: #e3cfa8;
+  margin-bottom: var(--spacing-sm);
+  color: var(--color-secondary);
   font-weight: 400;
 }
 
-.workplace-highlight:last-child {
-  margin-bottom: 0;
-}
-
-.workplace-highlight:first-of-type {
-  margin-top: 0;
-}
-
-.workplace-highlight:last-of-type {
-  margin-bottom: 0;
-}
-
-@media (max-width: 768px) {
-  .workplace-reality {
-    padding: 60px 20px;
-  }
-
-  .workplace-title {
-    font-size: 2.5rem;
-  }
-
-  .workplace-text,
-  .workplace-highlight {
-    font-size: 1.2rem;
-  }
-}
-
+/* Why it Works Section */
 .why-it-works {
-  background-color: #f5ece3;
-  padding: 100px 20px;
+  background-color: #f5ece3; /* Consider adding var(--color-background-alt) */
+  padding: var(--spacing-xl) var(--spacing-md);
   width: 100%;
 }
 
 .why-title {
-  font-family: "Times New Roman", serif;
-  font-size: 3.5rem;
-  color: #183c56;
+  font-family: var(--font-family-heading);
+  font-size: var(--font-size-xxl);
+  color: var(--color-primary);
   text-align: center;
-  margin-bottom: 48px;
+  margin-bottom: var(--spacing-lg);
 }
 
 .why-intro {
-  max-width: 840px;
-  margin: 0 auto 64px;
+  max-width: var(--content-width);
+  margin: 0 auto var(--spacing-xl);
   text-align: center;
-  font-size: 2rem;
+  font-size: var(--font-size-lg);
   line-height: 1.4;
-  color: #183c56;
+  color: var(--color-primary);
 }
 
 .features-container {
   display: flex;
   justify-content: center;
   max-width: 1200px;
-  margin: 0 auto 64px;
-  gap: 60px;
+  margin: 0 auto var(--spacing-xl);
+  gap: var(--spacing-xl);
 }
 
 .feature {
@@ -735,81 +679,27 @@
 }
 
 .feature-icon {
-  margin-bottom: 24px;
+  margin-bottom: var(--spacing-md);
 }
 
 .feature-title {
-  font-size: 1.5rem;
-  color: #183c56;
-  margin-bottom: 16px;
+  font-size: var(--font-size-lg);
+  color: var(--color-primary);
+  margin-bottom: var(--spacing-sm);
   font-weight: 600;
 }
 
 .feature-description {
-  font-size: 1.125rem;
-  line-height: 1.6;
-  color: #183c56;
+  font-size: var(--font-size-md);
+  color: var(--color-primary);
+  line-height: 1.5;
 }
 
-.why-footer {
-  width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
-  text-align: center;
-  font-size: 2.5rem;
-  line-height: 1.3;
-  color: #183c56;
-  font-weight: 600;
-}
-
-.why-footer p {
-  margin: 0;
-  padding: 0 20px;
-  max-width: none;
-}
-
-@media (max-width: 768px) {
-  .why-it-works {
-    padding: 60px 20px;
-  }
-
-  .why-title {
-    font-size: 2.5rem;
-  }
-
-  .why-intro {
-    font-size: 1.5rem;
-    margin-bottom: 48px;
-  }
-
-  .features-container {
-    flex-direction: column;
-    align-items: center;
-    gap: 40px;
-  }
-
-  .feature {
-    text-align: center;
-  }
-
-  .why-footer {
-    font-size: 1.75rem;
-    line-height: 1.3;
-  }
-}
-
+/* Testimonials Section */
 .testimonials {
-  background-color: #183c56;
-  padding: 100px 20px;
+  background-color: var(--color-primary);
+  padding: var(--spacing-xl) var(--spacing-md);
   width: 100%;
-}
-
-.testimonials-title {
-  font-family: "Times New Roman", serif;
-  font-size: 3.5rem;
-  color: #e3cfa8;
-  text-align: center;
-  margin-bottom: 64px;
 }
 
 .testimonials-container {
@@ -817,162 +707,142 @@
   justify-content: center;
   max-width: 1200px;
   margin: 0 auto;
-  gap: 40px;
+  gap: var(--spacing-lg);
+}
+
+.testimonials-title {
+  font-family: var(--font-family-heading);
+  font-size: var(--font-size-xxl);
+  color: var(--color-secondary);
+  text-align: center;
+  margin-bottom: var(--spacing-xl);
 }
 
 .testimonial {
   flex: 1;
-  background-color: white;
-  border-radius: 16px;
-  padding: 40px;
+  background-color: var(--color-background);
+  border-radius: var(--border-radius-md);
+  padding: var(--spacing-md);
   position: relative;
   max-width: 360px;
+  box-shadow: 0 4px 8px var(--color-shadow);
 }
 
 .quote-mark {
-  font-family: "Times New Roman", serif;
-  font-size: 4rem;
-  color: #e3cfa8;
+  font-size: 3rem;
   position: absolute;
-  top: 20px;
-  left: 20px;
-  line-height: 1;
+  top: var(--spacing-sm);
+  left: var(--spacing-sm);
+  color: rgba(0, 0, 0, 0.1);
+  font-family: var(--font-family-heading);
 }
 
 .quote-text {
-  font-size: 1.25rem;
-  line-height: 1.5;
-  color: #183c56;
-  margin-bottom: 24px;
-  margin-top: 24px;
+  position: relative;
+  font-size: var(--font-size-md);
+  line-height: 1.6;
+  color: var(--color-text-dark);
+  margin: var(--spacing-md) 0;
+  padding-left: var(--spacing-md);
+  font-style: italic;
 }
 
 .profile {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-md);
 }
 
 .profile-img {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  border-radius: var(--border-radius-circular);
   object-fit: cover;
 }
 
-.profile-role {
-  font-size: 0.875rem;
-  color: #183c56;
+.profile-name {
   font-weight: 600;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-dark);
 }
 
-@media (max-width: 768px) {
-  .testimonials {
-    padding: 60px 20px;
-  }
-
-  .testimonials-title {
-    font-size: 2.5rem;
-    margin-bottom: 40px;
-  }
-
-  .testimonials-container {
-    flex-direction: column;
-    align-items: center;
-  }
-
-  .testimonial {
-    width: 100%;
-  }
+.profile-role {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-dark);
+  opacity: 0.7;
 }
 
+/* FAQ Section */
 .faq {
-  background-color: #f5f5f5;
-  padding: 100px 20px;
+  background-color: var(--color-background);
+  padding: var(--spacing-xl) var(--spacing-md);
   width: 100%;
 }
 
 .faq-title {
-  font-family: "Times New Roman", serif;
-  font-size: 3.5rem;
-  color: #183c56;
-  margin-bottom: 64px;
-  max-width: 840px;
+  font-family: var(--font-family-heading);
+  font-size: var(--font-size-xxl);
+  color: var(--color-primary);
+  margin-bottom: var(--spacing-xl);
+  max-width: var(--content-width);
   margin-left: auto;
   margin-right: auto;
   text-align: left;
 }
 
 .faq-container {
-  max-width: 840px;
+  max-width: var(--content-width);
   margin: 0 auto;
   text-align: left;
 }
 
 .faq-item {
-  margin-bottom: 48px;
-  font-size: 1.5rem;
-  line-height: 1.5;
-  color: #183c56;
-}
-
-.faq-item:last-child {
-  margin-bottom: 0;
+  margin-bottom: var(--spacing-lg);
 }
 
 .faq-question {
-  font-size: 1.75rem;
-  color: #183c56;
-  margin-bottom: 16px;
+  font-size: var(--font-size-lg);
+  margin-bottom: var(--spacing-sm);
+  color: var(--color-primary);
   font-weight: 600;
 }
 
-@media (max-width: 768px) {
-  .faq {
-    padding: 60px 20px;
-  }
-
-  .faq-title {
-    font-size: 2.5rem;
-    margin-bottom: 40px;
-  }
-
-  .faq-question {
-    font-size: 1.5rem;
-  }
+.faq-answer {
+  font-size: var(--font-size-md);
+  line-height: 1.6;
+  color: var(--color-primary);
 }
 
+/* Team Section */
 .team {
-  background-color: #183c56;
-  padding: 100px 20px;
+  background-color: var(--color-primary);
+  padding: var(--spacing-xl) var(--spacing-md);
   width: 100%;
-  color: #ffffff;
+  color: var(--color-text-light);
 }
 
 .team-title {
-  font-family: "Times New Roman", serif;
-  font-size: 3.5rem;
-  color: #e3cfa8;
+  font-family: var(--font-family-heading);
+  font-size: var(--font-size-xxl);
+  color: var(--color-secondary);
   text-align: center;
-  margin-bottom: 48px;
-}
-
-.team-intro {
-  max-width: 840px;
-  margin: 0 auto;
+  margin-bottom: var(--spacing-md);
 }
 
 .team-subtitle {
-  font-size: 2rem;
-  color: #ffffff;
-  margin-bottom: 24px;
+  font-size: var(--font-size-lg);
+  color: var(--color-text-light);
+  text-align: center;
+  margin-bottom: var(--spacing-xl);
 }
 
 .team-description {
-  font-size: 1.75rem;
-  line-height: 1.4;
-  color: #ffffff;
-  margin-bottom: 48px;
+  max-width: var(--content-width);
+  margin: 0 auto var(--spacing-xl);
+  text-align: center;
+  font-size: var(--font-size-md);
+  line-height: 1.6;
 }
 
 .team-story {
@@ -986,156 +856,196 @@
 }
 
 .team-story em {
-  color: #e3cfa8;
+  color: #c4a27e;
   font-style: normal;
 }
 
 .team-members {
   display: flex;
-  gap: 48px;
-  margin-top: 64px;
+  gap: var(--spacing-lg);
+  margin-top: var(--spacing-xl);
+  justify-content: center;
+  max-width: var(--content-width);
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .team-member {
   flex: 1;
+  text-align: center;
 }
 
 .member-img {
-  width: 160px;
-  height: 160px;
-  border-radius: 50%;
-  margin-bottom: 24px;
+  width: 180px;
+  height: 180px;
+  border-radius: var(--border-radius-circular);
   object-fit: cover;
+  margin-bottom: var(--spacing-md);
 }
 
 .member-name {
-  font-size: 1.5rem;
-  color: #e3cfa8;
-  margin-bottom: 16px;
+  font-size: var(--font-size-lg);
+  color: var(--color-secondary);
+  margin-bottom: var(--spacing-xs);
+  font-weight: 600;
 }
 
 .member-bio {
-  font-size: 1.125rem;
+  font-size: var(--font-size-sm);
   line-height: 1.6;
-  color: #ffffff;
+  max-width: 320px;
+  margin: 0 auto;
 }
 
-@media (max-width: 768px) {
-  .team {
-    padding: 60px 20px;
-  }
-
-  .team-title {
-    font-size: 2.5rem;
-    margin-bottom: 32px;
-  }
-
-  .team-subtitle {
-    font-size: 1.75rem;
-  }
-
-  .team-description {
-    font-size: 1.5rem;
-  }
-
-  .team-story {
-    font-size: 1.125rem;
-  }
-
-  .team-members {
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    gap: 48px;
-  }
-
-  .team-member {
-    max-width: 320px;
-  }
-}
-
+/* Ready Section */
 .ready-section {
-  background-color: #f5f5f5;
-  padding: 100px 20px;
+  background-color: var(--color-background);
+  padding: var(--spacing-xl) var(--spacing-md);
   width: 100%;
 }
 
 .ready-container {
-  max-width: 840px;
+  max-width: var(--content-width);
   margin: 0 auto;
   text-align: left;
 }
 
 .ready-title {
-  font-family: "Times New Roman", serif;
-  font-size: 3.5rem;
-  color: #183c56;
-  margin-bottom: 64px;
-}
-
-.ready-content {
-  text-align: left;
+  font-family: var(--font-family-heading);
+  font-size: var(--font-size-xxl);
+  color: var(--color-primary);
+  margin-bottom: var(--spacing-md);
 }
 
 .ready-heading {
-  font-size: 2.5rem;
-  color: #183c56;
-  margin-bottom: 16px;
-}
-
-.ready-subheading {
-  font-size: 2.5rem;
-  color: #183c56;
-  margin-bottom: 48px;
+  font-size: var(--font-size-xl);
+  color: var(--color-primary);
+  margin-bottom: var(--spacing-md);
+  font-weight: 600;
+  line-height: 1.3;
 }
 
 .ready-cta {
-  font-size: 2rem;
-  color: #183c56;
-  margin-bottom: 16px;
+  font-size: var(--font-size-lg);
+  line-height: 1.6;
+  color: var(--color-primary);
+  margin-bottom: var(--spacing-lg);
 }
 
 .ready-description {
-  font-size: 2rem;
-  color: #183c56;
-  margin-bottom: 48px;
+  font-size: var(--font-size-lg);
+  line-height: 1.6;
+  color: var(--color-primary);
+  margin-bottom: var(--spacing-lg);
 }
 
 .ready-section .start-button {
-  background-color: #183c56;
-  color: #e3cfa8;
-  padding: 16px 48px;
-  font-size: 1.2rem;
-  font-weight: 700;
-  border: none;
-  border-radius: 12px;
-  cursor: pointer;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  margin-top: var(--spacing-md);
 }
 
-.ready-section .start-button:hover {
-  background-color: #12344d; /* Slightly darker blue on hover */
-}
+/* Mobile Responsive Styles */
+@media (max-width: var(--breakpoint-tablet)) {
+  /* Media query using our CSS variable for tablet breakpoint */
+  .content {
+    padding: var(--spacing-lg) var(--spacing-sm);
+  }
 
-@media (max-width: 768px) {
-  .ready-section {
-    padding: 60px 20px;
+  .title {
+    font-size: var(--font-size-xl);
+  }
+
+  .subtitle {
+    font-size: var(--font-size-md);
+  }
+
+  .steps-container {
+    flex-direction: column;
+    gap: var(--spacing-lg);
+    width: 100%;
+    align-items: center;
+  }
+
+  .step {
+    width: 100%;
+    max-width: 280px;
+    margin-bottom: var(--spacing-md);
+  }
+
+  .workplace-title {
+    font-size: 2.2rem;
+    padding: 0 var(--spacing-xs);
+    margin: 0 auto var(--spacing-md);
+    width: calc(100% - var(--spacing-md));
+  }
+
+  .features-container {
+    flex-direction: column;
+    width: 90%;
+    gap: var(--spacing-lg);
+    align-items: center;
+  }
+
+  .feature {
+    width: 100%;
+    max-width: 280px;
+    margin: 0 auto var(--spacing-md);
+    text-align: center;
+  }
+
+  .testimonials-container {
+    flex-direction: column;
+    width: 90%;
+    margin: 0 auto;
+    gap: var(--spacing-md);
+    align-items: center;
+  }
+
+  .testimonial {
+    width: 100%;
+    max-width: 320px;
+    margin: 0 auto var(--spacing-md);
+  }
+
+  .team-members {
+    flex-direction: column;
+    width: 90%;
+    margin: var(--spacing-md) auto 0;
+    gap: var(--spacing-lg);
+    align-items: center;
+  }
+
+  .team-member {
+    width: 100%;
+    max-width: 280px;
+    margin: 0 auto var(--spacing-lg);
   }
 
   .ready-title {
-    font-size: 2.5rem;
-    margin-bottom: 40px;
+    font-size: var(--font-size-xl);
+    text-align: center;
   }
 
-  .ready-heading,
-  .ready-subheading {
-    font-size: 1.75rem;
+  .ready-heading {
+    text-align: center;
   }
 
-  .ready-cta,
   .ready-description {
-    font-size: 1.5rem;
+    text-align: center;
   }
+
+  .ready-section .start-button {
+    margin: var(--spacing-md) auto;
+    display: block;
+  }
+}
+
+.main-heading {
+  font-family: var(--font-family-heading);
+  font-size: var(--font-size-xxxl);
+  color: var(--color-secondary);
+  margin-bottom: var(--spacing-lg);
+  line-height: 1.2;
+  font-weight: 600;
 }
 </style>
 

@@ -4,7 +4,7 @@
       <img src="/bina-logo.png" alt="Bina Logo" />
     </header>
 
-    <section class="chat-content">
+    <section class="chat-content" ref="chatContentRef">
       <transition-group name="fade" tag="div">
         <div
           v-for="(message, index) in chatMessages"
@@ -15,6 +15,7 @@
             v-if="messageTypes[index] === 'bot'"
             :text="message"
             @typing-start="hideTypingIndicator"
+            @typing-complete="handleTypingComplete"
           />
           <div v-else class="user-message">
             {{ message }}
@@ -26,22 +27,14 @@
         <TypingIndicator v-if="sessionRunner?.isAwaitingAi" />
       </transition>
 
-      <!-- Feedback button container -->
-      <div
-        class="button-container"
-        v-if="
-          chatMessages.length > 0 &&
-          chatMessages[chatMessages.length - 1].includes('feedback')
-        "
-      >
-        <a
-          href="https://docs.google.com/forms/d/e/1FAIpQLSfzrsEpCge_BW72pyPD7jRqS1vqEThJT73JGIPN7EERe89IwQ/viewform?usp=dialog"
-          target="_blank"
-          class="google-form-button"
-        >
-          Click here to leave your feedback
-        </a>
-      </div>
+      <!-- Link button container -->
+      <transition name="fade">
+        <div class="button-container" v-if="showLinkButton && currentLink">
+          <a :href="currentLink" target="_blank" class="google-form-button">
+            Click here to leave your feedback
+          </a>
+        </div>
+      </transition>
     </section>
 
     <div class="chat-box">
@@ -70,7 +63,7 @@
 </template>
 
 <script>
-import { ref } from "vue"; // Make sure this import is working
+import { ref, nextTick } from "vue"; // Add nextTick import
 import { flowData } from "@/composables/useFlowData";
 import coachData from "@/data/coaches/supportive-coach.json";
 import SessionRunner from "@/components/SessionRunner.vue";
@@ -92,6 +85,9 @@ export default {
     const userInput = ref("");
     const chatMessages = ref([]);
     const messageTypes = ref([]);
+    const showLinkButton = ref(false);
+    const currentLink = ref("");
+    const chatContentRef = ref(null); // Reference to chat content container
 
     return {
       sessionRunner,
@@ -102,13 +98,41 @@ export default {
       coachData,
       incrementInteraction,
       isLimitReached,
+      showLinkButton,
+      currentLink,
+      chatContentRef, // Add the ref to template
     };
   },
   methods: {
+    // Scroll chat to bottom
+    scrollToBottom() {
+      nextTick(() => {
+        if (this.chatContentRef) {
+          const element = this.chatContentRef;
+          element.scrollTop = element.scrollHeight;
+        }
+      });
+    },
+
     hideTypingIndicator() {
       if (this.sessionRunner) {
         this.sessionRunner.isAwaitingAi = false;
       }
+    },
+
+    handleTypingComplete(data) {
+      // Only show the button after typing is complete and if there's a link
+      if (data && data.hasLink) {
+        this.currentLink = data.link;
+        this.showLinkButton = true;
+        console.log("Link detected, showing button:", this.currentLink);
+      } else {
+        this.showLinkButton = false;
+        this.currentLink = "";
+      }
+
+      // Scroll to bottom when typing completes
+      this.scrollToBottom();
     },
 
     sendMessage() {
@@ -117,23 +141,56 @@ export default {
       // Check interaction limit
       if (this.isLimitReached) {
         console.log("Daily interaction limit reached");
+
+        // Add a simplified message without mentioning the specific number
+        this.chatMessages.push(
+          "You've reached your daily interaction limit with Bina. " +
+            "Please come back tomorrow to continue your coaching journey. " +
+            "This limit helps us provide quality coaching to all users."
+        );
+        this.messageTypes.push("bot");
+
+        // Scroll to show the limit message
+        this.scrollToBottom();
         return;
       }
 
-      // Increment the interaction counter
+      // Attempt to increment the interaction counter
       if (!this.incrementInteraction()) {
-        console.log("Daily interaction limit reached");
+        console.log(
+          "Daily interaction limit reached while attempting to increment"
+        );
+
+        // Add a simplified message without mentioning the specific number
+        this.chatMessages.push(
+          "You've reached your daily interaction limit with Bina. " +
+            "Please come back tomorrow to continue your coaching journey. " +
+            "This limit helps us provide quality coaching to all users."
+        );
+        this.messageTypes.push("bot");
+
+        // Scroll to show the limit message
+        this.scrollToBottom();
         return;
       }
+
+      // Hide link button when user sends a message
+      this.showLinkButton = false;
 
       // Let SessionRunner handle the message
       this.sessionRunner?.handleUserSubmit();
+
+      // Scroll to bottom immediately after sending
+      this.scrollToBottom();
     },
 
     handleMessageSent({ message, type }) {
       console.log("Message sent:", type, message);
       this.chatMessages.push(message);
       this.messageTypes.push(type);
+
+      // Scroll to bottom when user message is added
+      this.scrollToBottom();
     },
 
     handleAiResponse({ message, type }) {
@@ -144,6 +201,12 @@ export default {
       );
       this.chatMessages.push(message);
       this.messageTypes.push(type);
+
+      // Reset link button status - will be updated when typing completes
+      this.showLinkButton = false;
+
+      // Scroll to bottom when AI response is added
+      this.scrollToBottom();
     },
 
     handleSessionComplete(sessionData) {
@@ -171,7 +234,18 @@ export default {
       } catch (error) {
         console.error("Failed to submit session:", error);
       }
+
+      // Scroll to bottom at session completion
+      this.scrollToBottom();
     },
+  },
+  mounted() {
+    // Initial scroll to bottom when component mounts
+    this.scrollToBottom();
+  },
+  updated() {
+    // Scroll to bottom on any update to the component
+    this.scrollToBottom();
   },
 };
 </script>

@@ -1,0 +1,64 @@
+:root {
+  /* Color Palette */
+  --color-primary: #12344d;       /* Dark navy blue */
+  --color-secondary: #c4a27e;     /* Gold/sand */
+  --color-accent: #3a8eba;        /* Bright blue */
+  --color-text-light: #f0f0f0;    /* Off-white */
+  --color-text-dark: #333333;     /* Dark gray */
+  --color-background: #ffffff;    /* White */
+  --color-border: rgba(255, 255, 255, 0.1);  /* Transparent white */
+  --color-shadow: rgba(0, 0, 0, 0.15);       /* Transparent black */
+  
+  /* Typography */
+  --font-family-primary: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-family-heading: "Playfair Display", serif;
+  
+  /* Font Sizes */
+  --font-size-xs: 0.8rem;         /* Extra small */
+  --font-size-sm: 1rem;           /* Small (base) */
+  --font-size-md: 1.2rem;         /* Medium */
+  --font-size-lg: 1.5rem;         /* Large */
+  --font-size-xl: 2rem;           /* Extra large */
+  --font-size-xxl: 2.5rem;        /* Double extra large */
+  --font-size-xxxl: 3.5rem;       /* Triple extra large for main heading */
+  
+  /* Spacing */
+  --spacing-xs: 0.5rem;           /* Extra small */
+  --spacing-sm: 1rem;             /* Small */
+  --spacing-md: 1.5rem;           /* Medium */
+  --spacing-lg: 2rem;             /* Large */
+  --spacing-xl: 3rem;             /* Extra large */
+  
+  /* Border Radius */
+  --border-radius-sm: 6px;        /* Small */
+  --border-radius-md: 12px;       /* Medium */
+  --border-radius-lg: 18px;       /* Large */
+  --border-radius-circular: 50%;  /* Circular (for round elements) */
+  
+  /* Animation */
+  --transition-fast: 0.2s ease;   /* Quick transitions */
+  --transition-normal: 0.4s ease; /* Standard transitions */
+  --transition-slow: 0.6s ease;   /* Slower, more noticeable transitions */
+  
+  /* Layout */
+  --content-width: 700px;         /* Maximum content container width */
+  --header-height: 72px;          /* Header bar height */
+  --chat-box-height: 60px;        /* Chat input box height */
+  
+  /* Z-Index Layers */
+  --z-index-header: 10;           /* Header bar layer */
+  --z-index-overlay: 20;          /* Overlay elements layer */
+  --z-index-modal: 30;            /* Modal/popup layer */
+  
+  /* Breakpoints */
+  --breakpoint-mobile: 480px;     /* Small mobile devices */
+  --breakpoint-tablet: 768px;     /* Tablets and large mobile */
+  --breakpoint-desktop: 1024px;   /* Desktop and small laptops */
+  --breakpoint-wide: 1440px;      /* Wide screens and large monitors */
+  
+  /* Add these if not already present */
+  --breakpoint-tablet: 768px;
+  --breakpoint-mobile: 480px;
+  --color-secondary-light: #d4b494; /* Lighter gold for hover states */
+  --color-background-alt: #f5ece3; /* Light beige background for some sections */
+}

@@ -1,6 +1,6 @@
 import { ref, onMounted } from "vue";
 
-const DAILY_LIMIT = 30;
+const DAILY_LIMIT = 60;
 const STORAGE_KEY = "user_interactions";
 const isDevelopment =
   window.location.hostname === "localhost" ||
