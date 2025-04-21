@@ -109,38 +109,87 @@
               "when": "The user agrees with the reflection or says it resonates",
               "actions": [
                 "Set 'status': 'finish'",
-                "Transition to action-oriented coaching"
+                "Transition to problem clarification"
               ]
             }
           }
         }
       },
       {
-        "name": "coaching-flow",
-        "goal": "Guide the user to recognize one specific area they have influence over, then support them in choosing one small, meaningful action they feel capable of taking.",
+        "name": "problem-clarification",
+        "goal": "Help the user name and clarify the specific burnout-related challenge they want to explore today. Stay grounded in their own words and current emotional reality.",
         "callAPI": true,
+        "instruction": "Review the user's burnout persona and questionnaire answers. Ask a warm, open-ended question to help them identify one specific challenge they’d like to focus on. Reflect back what they’ve shared in 1–2 sentences, using their tone and language. Your goal is to clarify—not analyze. Do not suggest responsibility, root causes, or patterns yet.",
         "phaseEvaluation": {
-          "instructions": "This phase has two required parts before ending: (1) Help the user identify one pattern or behavior they want to shift or take responsibility for. (2) Then support them in naming one specific action they're willing to try. Do not end the session unless both are clearly stated by the user. Do not end your final message with a question.",
+          "instructions": "Ensure the user feels that the description accurately captures their experience before moving forward. Be open to refining it until it feels emotionally true.",
           "conditions": {
             "continue": {
-              "when": "The user has not yet named both (1) what they want to shift and (2) what they will do next",
+              "when": "The user wants to rephrase, clarify, or correct the reflected challenge",
               "actions": [
                 "Set 'status': 'continue'",
-                "Help the user reflect on a pattern or behavior they want to take responsibility for",
-                "Once that is named, help them commit to one specific and realistic action they can try this week"
+                "Ask follow-up questions to refine the challenge until the user feels it's clearly named"
               ]
             },
             "finish": {
-              "when": "The user has clearly named both (1) what they want to take responsibility for and (2) the specific action they'll take",
+              "when": "The user confirms that the reflection fits and is ready to explore what might be driving it",
               "actions": [
                 "Set 'status': 'finish'",
-                "Affirm their choice with warmth and confidence",
-                "Close with a statement of encouragement — do not end with a question"
+                "Gently transition to the pattern exploration phase"
               ]
             }
           }
         }
-      },
+      },  
+  {
+    "name": "pattern-exploration",
+    "goal": "Support the user in exploring whether this challenge reflects a repeating pattern, and help them identify something they may want to shift or take responsibility for.",
+    "callAPI": true,
+    "instruction": "Ask the user whether this kind of challenge has shown up before in other roles, relationships, or situations. Prompt them to notice patterns. Then, gently invite them to reflect on one part of it they may have some control over or want to shift. Avoid assigning blame—focus on agency.",
+    "phaseEvaluation": {
+      "instructions": "Do not proceed until the user has clearly named both (1) a recurring pattern or dynamic and (2) something they feel they can influence.",
+      "conditions": {
+        "continue": {
+          "when": "The user has not named both a pattern and something they want to shift",
+          "actions": [
+            "Set 'status': 'continue'",
+            "Prompt with curiosity and reflection to help them clarify either part"
+          ]
+        },
+        "finish": {
+          "when": "The user identifies both a repeating pattern and something they want to take responsibility for",
+          "actions": [
+            "Set 'status': 'finish'",
+            "Acknowledge their ownership and move to coaching-flow"
+          ]
+        }
+      }
+    }
+  },      
+  {
+    "name": "coaching-flow",
+    "goal": "Help the user commit to one specific, time-bound action they are ready to take, based on the insight and ownership they just named.",
+    "callAPI": true,
+    "instruction": "Invite the user to name one small, specific action they are ready to try in the next few days. The action must be realistic, meaningful, and fully their choice. Prompt them to include a time frame (e.g., today, this week, by Friday). Once they name the action, briefly affirm it and confirm that they’re committed to it. Do not suggest advice. Do not end your final reply with a question.",
+    "phaseEvaluation": {
+      "instructions": "Only finish the phase when the user has clearly stated an action, a time frame, and shows readiness to try it.",
+      "conditions": {
+        "continue": {
+          "when": "The user hasn't yet named a clear action, time frame, or seems unsure",
+          "actions": [
+            "Set 'status': 'continue'",
+            "Support the user with prompts or categories (e.g., boundary, routine, conversation) to clarify their choice and when they'll do it"
+          ]
+        },
+        "finish": {
+          "when": "The user has stated a clear, time-bound action and confirmed commitment",
+          "actions": [
+            "Set 'status': 'finish'",
+            "Acknowledge their decision and express confidence in their ability to follow through — do not end with a question"
+          ]
+        }
+      }
+    }
+  },
   
       {
         "name": "closing",

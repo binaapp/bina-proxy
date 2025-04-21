@@ -56,9 +56,177 @@
   --breakpoint-desktop: 1024px;   /* Desktop and small laptops */
   --breakpoint-wide: 1440px;      /* Wide screens and large monitors */
   
-  /* Add these if not already present */
-  --breakpoint-tablet: 768px;
-  --breakpoint-mobile: 480px;
+  /* Mobile-specific styles */
+  --mobile-step-size: 60px;       /* Size of step circles on mobile */
+  --mobile-border-width: 5px;     /* Border width for elements on mobile */
+  --mobile-content-width: 90%;    /* Width of content containers on mobile */
+  --mobile-element-max-width: 280px; /* Maximum width for elements on mobile */
+  --mobile-element-alignment: center; /* Default alignment for mobile elements */
+  
+  /* Other styles */
   --color-secondary-light: #d4b494; /* Lighter gold for hover states */
   --color-background-alt: #f5ece3; /* Light beige background for some sections */
+  
+  /* Mobile-specific variables */
+  --mobile-container-padding: 1rem;
+  --mobile-max-width: 100%;
+  --mobile-element-spacing: 1.5rem;
+}
+
+/* Global Mobile Reset Styles */
+@media (max-width: 768px) {
+  /* Make ALL flex containers stack vertically on mobile */
+  .landing-page [class*="container"]:not(.step-number),
+  .landing-page [class*="-container"]:not(.step-number),
+  .landing-page > div > div:not(.step-number), /* Target nested divs within main sections */
+  .landing-page > div div[class]:not(.step-number), /* Target all classed divs within main sections */
+  .landing-page [class*="members"]:not(.step-number) /* Target any members container */ {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    box-sizing: border-box !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+  
+  /* Make ALL flex or grid items be full width on mobile */
+  .landing-page [class*="container"] > *,
+  .landing-page [class*="-container"] > *,
+  .landing-page > div > div > *, /* Target items within nested divs */
+  .landing-page [class*="member"] /* Target any member item */ {
+    width: 100% !important;
+    max-width: var(--mobile-element-max-width) !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    margin-bottom: var(--spacing-md) !important;
+    box-sizing: border-box !important;
+  }
+  
+  /* Center all buttons and button containers */
+  .landing-page button,
+  .landing-page [class*="button"],
+  .landing-page [class*="-button"],
+  .landing-page [class*="button-container"],
+  .landing-page [class*="-button-container"] {
+    display: block !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    text-align: center !important;
+  }
+  
+  /* Center router-link elements (which often contain buttons) */
+  .landing-page a,
+  .landing-page router-link {
+    display: block !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    text-align: center !important;
+    width: fit-content !important;
+  }
+  
+  /* Make ALL images center themselves */
+  .landing-page img {
+    display: block !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+  
+  /* Center all text in titles and headings */
+  .landing-page h1, 
+  .landing-page h2, 
+  .landing-page h3, 
+  .landing-page h4, 
+  .landing-page [class*="title"],
+  .landing-page [class*="heading"],
+  .landing-page [class*="subtitle"] {
+    text-align: center !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding-left: var(--spacing-sm) !important;
+    padding-right: var(--spacing-sm) !important;
+    box-sizing: border-box !important;
+  }
+  
+  /* Center all text content */
+  .landing-page p,
+  .landing-page [class*="description"],
+  .landing-page [class*="text"] {
+    text-align: center !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding-left: var(--spacing-sm) !important;
+    padding-right: var(--spacing-sm) !important;
+    box-sizing: border-box !important;
+  }
+  
+  /* Apply proper spacing to all sections */
+  .landing-page > div {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  
+  /* Fix for step-number circles - ensure they maintain the original flex properties */
+  .landing-page .step-number {
+    /* Critical properties from original CSS that must be preserved: */
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    
+    /* Mobile-specific dimensions */
+    width: 60px !important;
+    height: 60px !important;
+    border-width: 5px !important;
+    border-style: solid !important;
+    border-color: var(--color-secondary) !important;
+    border-radius: 50% !important;
+    
+    /* Additional properties to ensure circle shape */
+    flex: 0 0 auto !important; /* don't grow or shrink */
+    min-width: 60px !important;
+    min-height: 60px !important;
+    max-width: 60px !important;
+    max-height: 60px !important;
+    box-sizing: border-box !important;
+    padding: 0 !important;
+    margin: 0 auto var(--spacing-sm) !important;
+  }
+  
+  /* Ensure the step container doesn't interfere with step-number */
+  .landing-page .step {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center !important;
+  }
+  
+  /* Fix for steps container */
+  .landing-page .steps-container {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: var(--spacing-lg) !important;
+  }
+  
+  /* Very specific fix ONLY for the step-number on mobile */
+  .step-number {
+    width: 60px !important;
+    height: 60px !important;
+    border-radius: 50% !important;
+    aspect-ratio: 1 !important;
+    
+    /* Other styles to center content and maintain appearance */
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    
+    /* Remove any potentially distorting styles */
+    padding: 0 !important;
+    margin: 0 auto !important;
+    box-sizing: border-box !important;
+  }
 }

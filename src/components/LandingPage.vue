@@ -24,16 +24,21 @@
     </div>
 
     <div class="how-it-works">
-      <h2 class="section-title">How it works</h2>
+      <h2 class="section-title mobile-center">How it works</h2>
 
-      <h3 class="section-subtitle">
+      <h3 class="section-subtitle mobile-center mobile-container">
         <span class="highlight">Bina</span> guides you through real
         conversations that create growth.
       </h3>
 
-      <div class="steps-container">
-        <div class="step">
-          <div class="step-number">1</div>
+      <div class="steps-container mobile-stack mobile-container">
+        <div class="step mobile-center-block">
+          <div
+            class="step-number circle-fix"
+            style="aspect-ratio: 1; border-radius: 50%; overflow: hidden"
+          >
+            1
+          </div>
           <h4 class="step-title">Start with a real moment</h4>
           <p class="step-description">
             Tell <span class="highlight">Bina</span> what's on your mind. A
@@ -42,8 +47,13 @@
           </p>
         </div>
 
-        <div class="step">
-          <div class="step-number">2</div>
+        <div class="step mobile-center-block">
+          <div
+            class="step-number"
+            style="aspect-ratio: 1; border-radius: 50%; overflow: hidden"
+          >
+            2
+          </div>
           <h4 class="step-title">See things clearly</h4>
           <p class="step-description">
             <span class="highlight">Bina</span> helps you pause, reflect, and
@@ -51,8 +61,13 @@
           </p>
         </div>
 
-        <div class="step">
-          <div class="step-number">3</div>
+        <div class="step mobile-center-block">
+          <div
+            class="step-number"
+            style="aspect-ratio: 1; border-radius: 50%; overflow: hidden"
+          >
+            3
+          </div>
           <h4 class="step-title">Turn clarity into action</h4>
           <p class="step-description">
             You walk away knowing what to do next and it feels like the right
@@ -566,7 +581,7 @@
   width: 80px;
   height: 80px;
   border: 7px solid var(--color-secondary);
-  border-radius: var(--border-radius-circular);
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -574,6 +589,7 @@
   color: var(--color-primary);
   margin-bottom: var(--spacing-md);
   font-family: var(--font-family-heading);
+  box-sizing: border-box;
 }
 
 .step-title {
@@ -943,11 +959,53 @@
   margin-top: var(--spacing-md);
 }
 
-/* Mobile Responsive Styles */
+/* Modified mobile styles */
 @media (max-width: var(--breakpoint-tablet)) {
-  /* Media query using our CSS variable for tablet breakpoint */
-  .content {
-    padding: var(--spacing-lg) var(--spacing-sm);
+  /* General mobile styles */
+  .how-it-works {
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .section-subtitle {
+    font-size: var(--font-size-md);
+    margin-bottom: var(--spacing-lg);
+  }
+
+  /* Steps section */
+  .steps-container {
+    gap: var(--mobile-element-spacing);
+  }
+
+  .step {
+    margin-bottom: var(--mobile-element-spacing);
+    width: 100%;
+    padding: 0 var(--mobile-container-padding);
+  }
+
+  .step-number {
+    width: 60px;
+    height: 60px;
+    border-width: 5px;
+    font-size: var(--font-size-xl);
+    margin: 0 auto var(--spacing-sm);
+  }
+
+  .step-title {
+    font-size: var(--font-size-md);
+    margin-bottom: var(--spacing-sm);
+    width: auto;
+  }
+
+  .step-description {
+    font-size: var(--font-size-sm);
+    max-width: none;
+    width: 100%;
+  }
+
+  .main-heading {
+    font-size: var(--font-size-xl);
+    text-align: center;
   }
 
   .title {
@@ -956,45 +1014,69 @@
 
   .subtitle {
     font-size: var(--font-size-md);
+    text-align: center;
   }
 
-  .steps-container {
-    flex-direction: column;
-    gap: var(--spacing-lg);
-    width: 100%;
-    align-items: center;
+  .secondary-heading {
+    text-align: center;
   }
 
-  .step {
-    width: 100%;
-    max-width: 280px;
-    margin-bottom: var(--spacing-md);
+  .cta-text {
+    text-align: center;
   }
 
   .workplace-title {
-    font-size: 2.2rem;
+    font-size: var(--font-size-xl);
     padding: 0 var(--spacing-xs);
     margin: 0 auto var(--spacing-md);
-    width: calc(100% - var(--spacing-md));
+    width: var(--mobile-content-width);
+    text-align: center;
+  }
+
+  .workplace-content {
+    text-align: center;
+    padding: 0 var(--spacing-sm);
+  }
+
+  .workplace-text,
+  .workplace-highlight {
+    font-size: var(--font-size-md);
+    text-align: center;
+  }
+
+  .why-title {
+    font-size: var(--font-size-xl);
+    padding: 0 var(--spacing-sm);
+  }
+
+  .why-intro {
+    font-size: var(--font-size-md);
+    padding: 0 var(--spacing-sm);
   }
 
   .features-container {
     flex-direction: column;
-    width: 90%;
+    width: var(--mobile-content-width);
     gap: var(--spacing-lg);
     align-items: center;
   }
 
   .feature {
     width: 100%;
-    max-width: 280px;
+    max-width: var(--mobile-element-max-width);
     margin: 0 auto var(--spacing-md);
     text-align: center;
   }
 
+  .feature-icon {
+    text-align: center;
+    display: flex;
+    justify-content: center;
+  }
+
   .testimonials-container {
     flex-direction: column;
-    width: 90%;
+    width: var(--mobile-content-width);
     margin: 0 auto;
     gap: var(--spacing-md);
     align-items: center;
@@ -1002,13 +1084,30 @@
 
   .testimonial {
     width: 100%;
-    max-width: 320px;
+    max-width: var(--mobile-element-max-width);
     margin: 0 auto var(--spacing-md);
+  }
+
+  .faq-title {
+    font-size: var(--font-size-xl);
+    text-align: center;
+  }
+
+  .faq-container {
+    padding: 0 var(--spacing-sm);
+  }
+
+  .faq-question {
+    font-size: var(--font-size-md);
+  }
+
+  .faq-answer {
+    font-size: var(--font-size-sm);
   }
 
   .team-members {
     flex-direction: column;
-    width: 90%;
+    width: var(--mobile-content-width);
     margin: var(--spacing-md) auto 0;
     gap: var(--spacing-lg);
     align-items: center;
@@ -1016,8 +1115,19 @@
 
   .team-member {
     width: 100%;
-    max-width: 280px;
+    max-width: var(--mobile-element-max-width);
     margin: 0 auto var(--spacing-lg);
+  }
+
+  .team-title,
+  .team-subtitle {
+    font-size: var(--font-size-xl);
+  }
+
+  .team-description,
+  .team-story {
+    font-size: var(--font-size-md);
+    padding: 0 var(--spacing-sm);
   }
 
   .ready-title {
@@ -1026,7 +1136,15 @@
   }
 
   .ready-heading {
+    font-size: var(--font-size-lg);
     text-align: center;
+    padding: 0 var(--spacing-sm);
+  }
+
+  .ready-cta {
+    font-size: var(--font-size-md);
+    text-align: center;
+    padding: 0 var(--spacing-sm);
   }
 
   .ready-description {
@@ -1046,6 +1164,26 @@
   margin-bottom: var(--spacing-lg);
   line-height: 1.2;
   font-weight: 600;
+}
+
+/* Add this at the end of your styles */
+@media (max-width: 768px) {
+  .circle-fix {
+    width: 60px !important;
+    height: 60px !important;
+    min-width: 60px !important;
+    min-height: 60px !important;
+    max-width: 60px !important;
+    max-height: 60px !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-sizing: border-box !important;
+    padding: 0 !important;
+    margin: 0 auto !important;
+    overflow: hidden !important;
+  }
 }
 </style>
 

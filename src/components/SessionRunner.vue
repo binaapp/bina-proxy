@@ -3,6 +3,7 @@
 import { ref, reactive, computed, onMounted } from "vue";
 import AiStep from "./AiStep.vue";
 import { flowData } from "@/composables/useFlowData";
+import { submitSession } from "@/utils/sessionApi";
 
 const props = defineProps({
   flowData: {
@@ -36,6 +37,9 @@ const currentStepIndex = ref(0);
 const sessionHistory = ref([]);
 const isAwaitingAi = ref(false);
 const userName = ref("");
+const sessionStartTime = ref(new Date().toISOString());
+const sessionId = ref(null);
+const isSessionComplete = ref(false);
 
 // Initialize chat with first message
 onMounted(() => {
@@ -67,17 +71,50 @@ onMounted(() => {
   }
 });
 
+// Add this function to handle all database saves
+const saveStepToDatabase = async (userText, systemText) => {
+  try {
+    const params = {
+      sessionId: sessionId.value,
+      startedAt: sessionStartTime.value,
+      endedAt: new Date().toISOString(),
+      completed: isSessionComplete.value,
+      feedback: process.env.NODE_ENV === "development" ? "Test from UI" : "",
+      flowSteps: [
+        {
+          stepId: `step-${currentStepIndex.value}`,
+          startedAt: new Date(Date.now() - 30000).toISOString(),
+          endedAt: new Date().toISOString(),
+          userText: userText,
+          systemText: systemText,
+        },
+      ],
+    };
+
+    console.log("Submitting step to database:", params);
+    const response = await submitSession(params);
+    console.log("Step saved to database:", response);
+
+    // Store session ID from first response
+    if (!sessionId.value && response?.sessionId) {
+      sessionId.value = response.sessionId;
+    }
+  } catch (error) {
+    console.error("Failed to save step:", error);
+  }
+};
+
 const handleStepResult = async (result) => {
   emit("debug-message", "Received step result: " + result.status);
 
-  // Prepare to send response to ChatView
-  let responseMessage = result.reply;
-
-  // Save the AI result in session history
+  // Save the AI result in session history first
   sessionHistory.value.push({
     role: "assistant",
     content: result.reply,
   });
+
+  // Prepare to send response to ChatView
+  let responseMessage = result.reply;
 
   // Handle status (passed, retry, continue, finish)
   if (result.status === "finish") {
@@ -109,54 +146,13 @@ const handleStepResult = async (result) => {
           // Combine both messages with a separator
           responseMessage = responseMessage + "\n\n---\n\n" + closingText;
 
-          // Signal session complete
-          setTimeout(() => {
-            emit("session-complete", {
-              history: sessionHistory.value,
-            });
-          }, 1000);
+          // Mark session as complete
+          isSessionComplete.value = true;
+
+          // Save the final combined message to the database
+          await saveStepToDatabase("", responseMessage);
         }
       }
-    }
-  } else if (result.status === "passed") {
-    // Move to next step if available
-    if (currentStepIndex.value < props.flowData.steps.length - 1) {
-      currentStepIndex.value++;
-      const nextStep = props.flowData.steps[currentStepIndex.value];
-
-      // If the next step doesn't need an API call and has content, send it
-      if (nextStep.callAPI === false) {
-        const messageText = [
-          nextStep.introText?.replace(/\\n/g, "\n"),
-          nextStep.question,
-          nextStep.options
-            ?.map((opt, i) => `${String.fromCharCode(97 + i)}. ${opt}`)
-            .join("\n"),
-        ]
-          .filter(Boolean)
-          .join("\n\n");
-
-        if (messageText.trim()) {
-          // Save to session history
-          sessionHistory.value.push({
-            role: "assistant",
-            content: messageText,
-          });
-
-          // Wait a moment before showing the next message
-          setTimeout(() => {
-            emit("ai-response", {
-              message: messageText,
-              type: "bot",
-            });
-          }, 1000);
-        }
-      }
-    } else {
-      // Session is complete
-      emit("session-complete", {
-        history: sessionHistory.value,
-      });
     }
   }
 
@@ -170,41 +166,43 @@ const handleStepResult = async (result) => {
   isAwaitingAi.value = false;
 };
 
-const handleUserSubmit = () => {
+const handleUserSubmit = async () => {
   if (!userInput.value.trim()) return;
 
-  emit("debug-message", "Processing user input: " + userInput.value);
+  const currentInputText = userInput.value;
+  emit("update:userInput", "");
+  userInput.value = "";
+
+  // Get the previous system message that prompted this response
+  const previousSystemMessage =
+    sessionHistory.value.filter((msg) => msg.role === "assistant").pop()
+      ?.content || "";
 
   // Add user message to history
   sessionHistory.value.push({
     role: "user",
-    content: userInput.value,
+    content: currentInputText,
   });
 
   // Notify ChatView of message sent
   emit("message-sent", {
-    message: userInput.value,
+    message: currentInputText,
     type: "user",
   });
 
-  // Get current step
-  const currentStep = props.flowData.steps[currentStepIndex.value];
+  // Save to database - this is the ONLY place we save to the database
+  await saveStepToDatabase(currentInputText, previousSystemMessage);
 
-  // Check if this step collects the user's name
+  const currentStep = props.flowData.steps[currentStepIndex.value];
   if (currentStep.collectsName) {
-    // Store the user's name
-    userName.value = userInput.value.trim();
-    emit("debug-message", "Stored user name: " + userName.value);
+    userName.value = currentInputText.trim();
   }
 
-  // Handle non-API steps directly
+  // For non-API steps, process the next step
   if (currentStep.callAPI === false) {
-    emit("debug-message", "Non-API step, handling directly");
-
     // Move to next step
     if (currentStepIndex.value < props.flowData.steps.length - 1) {
-      currentStepIndex.value++;
-      const nextStep = props.flowData.steps[currentStepIndex.value];
+      const nextStep = props.flowData.steps[currentStepIndex.value + 1];
 
       // Process intro text with name placeholder if we have a username
       let introText = nextStep.introText || "";
@@ -212,8 +210,7 @@ const handleUserSubmit = () => {
         introText = introText.replace(/\{name\}/g, userName.value);
       }
 
-      // Assemble the full message
-      let responseText = [
+      const responseText = [
         introText.replace(/\\n/g, "\n"),
         nextStep.question,
         nextStep.options
@@ -238,18 +235,17 @@ const handleUserSubmit = () => {
         }, 800);
       }
 
-      // If next step is an API step, set waiting state immediately
+      currentStepIndex.value++; // Increment after processing
+
+      // If next step is an API step, set waiting state
       if (nextStep.callAPI === true) {
         isAwaitingAi.value = true;
       }
     }
   } else {
-    // Set waiting state for API steps
+    // For API steps, set waiting state
     isAwaitingAi.value = true;
   }
-
-  // Clear input
-  userInput.value = "";
 };
 
 // Expose necessary state and methods to parent
