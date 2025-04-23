@@ -93,7 +93,7 @@
       {
         "name": "reflection",
         "callAPI": true,
-        "instruction": "Based on the user's 3 answers, offer a short, emotionally grounded reflection. Do not use labels or personas. Just describe what might be happening in a way that helps the user feel understood. Be specific, not general. Keep it to 2–3 sentences.",
+        "instruction": "Based on the user's 3 answers, offer a short, emotionally grounded reflection. Do not use labels or personas. Just describe what might be happening in a way that helps the user feel understood. Be specific, not general. Keep it to 2–3 sentences.\n\nThen, optionally add one or two of the following:\n- A relatable quote from another anonymized user who expressed a similar experience\n- A data point (e.g., '42% of managers in this situation report the same thing')\n- A note on how others in this state have felt or responded (without giving advice)",
         "phaseEvaluation": {
           "instructions": "Check if the user resonates with the reflection. If not, adjust. If yes, move to next phase.",
           "conditions": {
@@ -164,9 +164,34 @@
         }
       }
     }
-  },      
+  },   
   {
-    "name": "coaching-flow",
+    "name": "shared-perspective",
+    "callAPI": true,
+    "goal": "Help the user feel less alone in their experience by sharing a peer reflection or data point, then invite them to reflect on what this brings up before moving to action.",
+    "instruction": "Start by offering a brief, emotionally grounded normalization of the user's experience. This could include: (1) a quote from another anonymized user, (2) a relevant statistic (e.g., '60% of managers here say the same'), or (3) an observation about how common this experience is. Then, ask the user: 'What comes up for you as you hear this?' or a similar open question. Do not analyze or interpret their response. Simply acknowledge what they share and prepare to move to the next step.",
+    "phaseEvaluation": {
+      "instructions": "Do not continue until the user has responded meaningfully to the question. Acknowledge their reply and gently transition to action planning.",
+      "conditions": {
+        "continue": {
+          "when": "The user hasn't responded or gives only a neutral acknowledgment (e.g., 'ok')",
+          "actions": [
+            "Set 'status': 'continue'",
+            "Gently invite them again to share what this brings up, or reflect on what stood out"
+          ]
+        },
+        "finish": {
+          "when": "The user shares even a brief reflection or emotional response",
+          "actions": [
+            "Set 'status': 'finish'",
+            "Acknowledge their reflection and transition to the action planning phase"
+          ]
+        }
+      }
+    }
+  },     
+  {
+    "name": "action",
     "goal": "Help the user commit to one specific, time-bound action they are ready to take, based on the insight and ownership they just named.",
     "callAPI": true,
     "instruction": "Invite the user to name one small, specific action they are ready to try in the next few days. The action must be realistic, meaningful, and fully their choice. Prompt them to include a time frame (e.g., today, this week, by Friday). Once they name the action, briefly affirm it and confirm that they’re committed to it. Do not suggest advice. Do not end your final reply with a question.",
@@ -184,13 +209,38 @@
           "when": "The user has stated a clear, time-bound action and confirmed commitment",
           "actions": [
             "Set 'status': 'finish'",
-            "Acknowledge their decision and express confidence in their ability to follow through — do not end with a question"
+            "Acknowledge their decision and express confidence in their ability to follow through and continue to session reflection"
           ]
         }
       }
     }
   },
-  
+  {
+    "name": "session-reflection",
+    "callAPI": true,
+    "goal": "Help the user pause and reflect on what they’re taking away from the session, so the insight becomes more tangible and meaningful before closing.",
+    "instruction": "Ask the user: 'As we wrap up our session, what's the most valuable insight you're taking away from our conversation today?' You may rephrase it gently in the user’s tone or language. Keep the tone warm, grounded, and open. After the user responds, affirm what they shared without summarizing or analyzing. This is not a coaching step — it’s an integration moment.",
+    "phaseEvaluation": {
+      "instructions": "Wait for the user to respond meaningfully. A short sentence is enough. Then acknowledge and move to closing.",
+      "conditions": {
+        "continue": {
+          "when": "The user hasn’t responded meaningfully yet",
+          "actions": [
+            "Set 'status': 'continue'",
+            "Repeat the question or gently invite them to reflect again"
+          ]
+        },
+        "finish": {
+          "when": "The user shares a reflection on what they’re taking away",
+          "actions": [
+            "Set 'status': 'finish'",
+            "Acknowledge their insight with warmth and transition to session closing"
+          ]
+        }
+      }
+    }
+  },  
+
       {
         "name": "closing",
         "callAPI": false,
