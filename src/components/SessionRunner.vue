@@ -40,6 +40,7 @@ const userName = ref("");
 const sessionStartTime = ref(new Date().toISOString());
 const sessionId = ref(null);
 const isSessionComplete = ref(false);
+const currentStepDbId = ref(null);
 
 // Initialize chat with first message
 onMounted(() => {
@@ -72,7 +73,12 @@ onMounted(() => {
 });
 
 // Add this function to handle all database saves
-const saveStepToDatabase = async (userText, systemText) => {
+const saveStepToDatabase = async (
+  userText,
+  systemText,
+  isUpdate = false,
+  overrideStepName = null
+) => {
   try {
     const params = {
       sessionId: sessionId.value,
@@ -82,11 +88,15 @@ const saveStepToDatabase = async (userText, systemText) => {
       feedback: process.env.NODE_ENV === "development" ? "Test from UI" : "",
       flowSteps: [
         {
-          stepId: `step-${currentStepIndex.value}`,
+          stepId:
+            overrideStepName ||
+            props.flowData.steps[currentStepIndex.value]?.name ||
+            "unknown",
           startedAt: new Date(Date.now() - 30000).toISOString(),
           endedAt: new Date().toISOString(),
           userText: userText,
           systemText: systemText,
+          stepDbId: isUpdate ? currentStepDbId.value : undefined,
         },
       ],
     };
@@ -98,6 +108,11 @@ const saveStepToDatabase = async (userText, systemText) => {
     // Store session ID from first response
     if (!sessionId.value && response?.sessionId) {
       sessionId.value = response.sessionId;
+    }
+
+    // Store step DB ID if this is a new step
+    if (!isUpdate && response?.stepId) {
+      currentStepDbId.value = response.stepId;
     }
   } catch (error) {
     console.error("Failed to save step:", error);
@@ -113,6 +128,21 @@ const handleStepResult = async (result) => {
     content: result.reply,
   });
 
+  // For "finish" status, we'll use the next step's name
+  let stepNameToUse = props.flowData.steps[currentStepIndex.value]?.name;
+  if (
+    result.status === "finish" &&
+    currentStepIndex.value < props.flowData.steps.length - 1
+  ) {
+    // Use the next step's name instead
+    stepNameToUse = props.flowData.steps[currentStepIndex.value + 1]?.name;
+  }
+
+  // Save system message to database immediately (except for the very first system message)
+  if (sessionId.value) {
+    await saveStepToDatabase("", result.reply, false, stepNameToUse);
+  }
+
   // Prepare to send response to ChatView
   let responseMessage = result.reply;
 
@@ -120,7 +150,7 @@ const handleStepResult = async (result) => {
   if (result.status === "finish") {
     // Check if the next step is the closing step
     if (currentStepIndex.value < props.flowData.steps.length - 1) {
-      currentStepIndex.value++;
+      currentStepIndex.value++; // Move this AFTER saving to DB
       const nextStep = props.flowData.steps[currentStepIndex.value];
 
       // Check if next step is the closing message with no API call
@@ -173,7 +203,7 @@ const handleUserSubmit = async () => {
   emit("update:userInput", "");
   userInput.value = "";
 
-  // Get the previous system message that prompted this response
+  // Get the previous system message
   const previousSystemMessage =
     sessionHistory.value.filter((msg) => msg.role === "assistant").pop()
       ?.content || "";
@@ -190,8 +220,13 @@ const handleUserSubmit = async () => {
     type: "user",
   });
 
-  // Save to database - this is the ONLY place we save to the database
-  await saveStepToDatabase(currentInputText, previousSystemMessage);
+  // For the first step, save both system and user message
+  if (currentStepIndex.value === 0) {
+    await saveStepToDatabase(currentInputText, previousSystemMessage);
+  } else {
+    // For later steps, update the existing step with user's response
+    await saveStepToDatabase(currentInputText, previousSystemMessage, true);
+  }
 
   const currentStep = props.flowData.steps[currentStepIndex.value];
   if (currentStep.collectsName) {
