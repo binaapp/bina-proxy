@@ -317,8 +317,12 @@ const callClaude = async () => {
       // Log the raw response to help identify issues
       console.log("\n=== RAW RESPONSE TEXT ===\n", data.content[0].text);
       
-      // Simple fix: Remove all control characters (0-31 and 127-159)
-      const cleanedText = data.content[0].text.replace(/[\u0000-\u001F\u007F-\u009F]/g, '');
+      // Before JSON.parse, clean the response:
+      const cleanedText = data.content[0].text
+        .replace(/[\x00-\x1F\x7F-\x9F]/g, '') // Remove control chars
+        .replace(/\n\s*\n\s*\n/g, '\n\n')  // Normalize multiple line breaks
+        .replace(/([.?!:])\s*(\d+\.|\*)/g, '$1\n\n$2'); // Add breaks before numbered lists
+
       const parsedResponse = JSON.parse(cleanedText);
       console.log("\n=== PARSED RESPONSE ===\n", parsedResponse);
       
