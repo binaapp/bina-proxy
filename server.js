@@ -226,6 +226,7 @@ app.post("/api/session", async (req, res) => {
 
     const connection = await pool.getConnection();
     let resultId;
+    let stepIdToReturn = undefined;
 
     if (isInvalidId) {
       console.log("Invalid or missing session ID. Creating new session...");
@@ -275,24 +276,37 @@ app.post("/api/session", async (req, res) => {
 
     // 💾 Save each step to session_steps
     if (Array.isArray(flowSteps) && flowSteps.length > 0) {
-      const stepValues = flowSteps.map((step) => [
-        resultId,
-        step.stepId,
-        step.startedAt,
-        step.endedAt,
-        step.userText,
-        step.systemText,
-      ]);
+      const step = flowSteps[0]; // Only handle one step at a time
 
-      await connection.query(
-        `INSERT INTO session_steps (session_id, step_id, started_at, ended_at, user_text, system_text)
-         VALUES ?`,
-        [stepValues]
-      );
+      if (step.stepDbId) {
+        // UPDATE existing step
+        await connection.query(
+          `UPDATE session_steps
+           SET user_text = ?, ended_at = ?
+           WHERE id = ?`,
+          [step.userText, step.endedAt, step.stepDbId]
+        );
+        stepIdToReturn = step.stepDbId;
+      } else {
+        // INSERT new step
+        const [stepResult] = await connection.query(
+          `INSERT INTO session_steps (session_id, step_id, started_at, ended_at, user_text, system_text)
+           VALUES (?, ?, ?, ?, ?, ?)`,
+          [
+            resultId,
+            step.stepId,
+            step.startedAt,
+            step.endedAt,
+            step.userText,
+            step.systemText,
+          ]
+        );
+        stepIdToReturn = stepResult.insertId;
+      }
     }
 
     connection.release();
-    res.json({ success: true, sessionId: resultId });
+    res.json({ success: true, sessionId: resultId, stepId: stepIdToReturn });
   } catch (err) {
     console.error("Error saving session:", err);
     console.error("Error details:", err.message);
