@@ -215,6 +215,87 @@ app.post("/api/session", async (req, res) => {
       flowSteps,
     } = req.body;
 
+    app.get("/api/session/:id", async (req, res) => {
+      try {
+        const sessionId = req.params.id;
+        console.log("[GET /api/session/:id] Requested sessionId:", sessionId);
+
+        const connection = await pool.getConnection();
+
+        // Get session info
+        const [sessionRows] = await connection.query(
+          "SELECT * FROM user_sessions WHERE id = ?",
+          [sessionId]
+        );
+        console.log(
+          "[GET /api/session/:id] user_sessions result:",
+          sessionRows
+        );
+
+        if (sessionRows.length === 0) {
+          console.log(
+            "[GET /api/session/:id] No session found in user_sessions for id:",
+            sessionId
+          );
+          connection.release();
+          return res.status(404).json({ error: "Session not found" });
+        }
+        const session = sessionRows[0];
+
+        // Get all steps for this session, ordered by started_at
+        const [steps] = await connection.query(
+          "SELECT * FROM session_steps WHERE session_id = ? ORDER BY started_at ASC",
+          [sessionId]
+        );
+        console.log("[GET /api/session/:id] session_steps result:", steps);
+
+        connection.release();
+
+        // Build a history array for the frontend
+        const history = steps
+          .map((step) => [
+            step.system_text && {
+              role: "assistant",
+              content: step.system_text,
+            },
+            step.user_text && { role: "user", content: step.user_text },
+          ])
+          .flat()
+          .filter(Boolean);
+
+        // Try to extract userName from device_info if present and parseable
+        let userName = "";
+        try {
+          if (session.device_info) {
+            const deviceInfo = JSON.parse(session.device_info);
+            if (deviceInfo && deviceInfo.name) {
+              userName = deviceInfo.name;
+            }
+          }
+        } catch (e) {
+          console.log("[GET /api/session/:id] Error parsing device_info:", e);
+        }
+
+        console.log("[GET /api/session/:id] Returning session:", {
+          sessionId: session.id,
+          userName,
+          historyLength: history.length,
+          stepsLength: steps.length,
+        });
+
+        res.json({
+          sessionId: session.id,
+          userName,
+          history,
+          session, // full session info if you want it
+          steps, // full steps if you want them
+        });
+      } catch (err) {
+        console.error("[GET /api/session/:id] Error fetching session:", err);
+        res.status(500).json({ error: "Failed to fetch session" });
+      }
+    });
+
     console.log("Raw request body:", req.body);
     console.log("Destructured sessionId value:", id);
     console.log("sessionId type:", typeof id);

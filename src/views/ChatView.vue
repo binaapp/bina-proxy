@@ -11,15 +11,21 @@
           :key="index"
           :class="['message', messageTypes[index]]"
         >
+          <!-- User messages: always use the same markup -->
+          <div v-if="messageTypes[index] === 'user'" class="user-message">
+            {{ message }}
+          </div>
+          <!-- Restored bot messages: plain text, no typing -->
+          <span v-else-if="restoredIndexes && restoredIndexes.has(index)">
+            {{ message }}
+          </span>
+          <!-- New bot messages: use TypingMessage -->
           <TypingMessage
-            v-if="messageTypes[index] === 'bot'"
+            v-else
             :text="message"
             @typing-start="hideTypingIndicator"
             @typing-complete="handleTypingComplete"
           />
-          <div v-else class="user-message">
-            {{ message }}
-          </div>
         </div>
       </transition-group>
 
@@ -58,6 +64,7 @@
       @ai-response="handleAiResponse"
       @session-complete="handleSessionComplete"
       @debug-message="(msg) => console.log('SessionRunner:', msg)"
+      @session-restored="handleSessionRestored"
     />
   </div>
 </template>
@@ -88,6 +95,22 @@ export default {
     const showLinkButton = ref(false);
     const currentLink = ref("");
     const chatContentRef = ref(null); // Reference to chat content container
+    const restoredIndexes = ref(new Set());
+
+    // Handle restored session
+    function handleSessionRestored({ history }) {
+      chatMessages.value = history.map((msg) => msg.content);
+      messageTypes.value = history.map((msg) =>
+        msg.role === "assistant" ? "bot" : "user"
+      );
+      // Mark all current messages as restored
+      restoredIndexes.value = new Set(chatMessages.value.map((_, idx) => idx));
+      nextTick(() => {
+        if (chatContentRef.value) {
+          chatContentRef.value.scrollTop = chatContentRef.value.scrollHeight;
+        }
+      });
+    }
 
     return {
       sessionRunner,
@@ -101,6 +124,8 @@ export default {
       showLinkButton,
       currentLink,
       chatContentRef, // Add the ref to template
+      restoredIndexes,
+      handleSessionRestored,
     };
   },
   methods: {
@@ -188,6 +213,7 @@ export default {
       console.log("Message sent:", type, message);
       this.chatMessages.push(message);
       this.messageTypes.push(type);
+      this.restoredIndexes.value = new Set(); // Clear restored indexes for new messages
 
       // Scroll to bottom when user message is added
       this.scrollToBottom();
@@ -201,6 +227,7 @@ export default {
       );
       this.chatMessages.push(message);
       this.messageTypes.push(type);
+      this.restoredIndexes.value = new Set(); // Clear restored indexes for new messages
 
       // Reset link button status - will be updated when typing completes
       this.showLinkButton = false;

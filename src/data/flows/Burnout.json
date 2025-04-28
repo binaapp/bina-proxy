@@ -25,7 +25,7 @@
       }
     },
     "styleGuide": {
-      "tone": "The tone should default to warm and grounded, but may shift based on the user's selected preference (e.g., 'direct' vs 'supportive').",
+      "tone": "The tone should default to warm and grounded",
       "language": "concise, encouraging, grounded",
       "avoid": ["overexplaining", "emotional overload", "vague labels", "long reflective monologues", "avoid using the user's name too much, only when neccesary"],
       "prioritize": ["clarity", "momentum", "the user's own words", "agency over advice"]
@@ -47,26 +47,13 @@
         "name": "start",
         "callAPI": false,
         "collectsName": true,
-        "introText": "Hey, I'm Bina — your burnout coach. This will be quick and focused. I'll ask you just four questions to understand where you're at. Then, I'll reflect what I see and we'll find one small step you can take that actually helps.",
+        "introText": "Hey, I'm Bina — your burnout coach. This will be quick and focused. I'll ask you just three questions to understand where you're at. Then, I'll reflect what I see and we'll find one small step you can take that actually helps.",
         "question": "Let's start — what's your first name or how would you like me to call you?"
     },
       {
-        "name": "communication-style",
-        "callAPI": false,
-        "introText": "Nice to meet you, {name}!\n\nNow I will ask 4 questions and will address the answers afterwards.\n\nTo make this work best for you, I want to get a feel for how to talk to you in a way that really fits. There’s no right or wrong — just what feels more like you.",
-        "question": "When it comes to tone and style, I usually prefer:",
-        "options": [
-          "A direct, focused tone — clear and straight to the point.",
-          "A supportive, spacious tone — warm and gently reflective"
-        ],
-        "tonePreferenceMapping": {
-          "I appreciate it straight and clear, even if it’s a bit blunt.": "direct",
-          "I prefer it thoughtful and gentle.": "supportive"
-        }
-      },
-      {
         "name": "burnout-q1",
         "callAPI": false,
+        "introText": "Nice to meet you, {name}!\n\nNow I will ask 3 questions and will address the answers afterwards.",
         "question": "There are many sources of burnout. Which of these feels most true for you right now? (You can choose more than one)",
         "options": [
           "I'm carrying too much emotional weight from helping or supporting others",
@@ -256,7 +243,7 @@
   {
     "name": "email-capture",
     "callAPI": true,
-    "instruction": "Generate a short, emotionally attuned message that invites the user to receive a personal summary of this session by email. The tone should be warm, grounded, and not salesy. \n\nThe message should:\n- Reflect the importance of the reflection the user just did\n- Suggest that receiving a summary could help them carry it forward into their day-to-day\n- Mention briefly that the summary will include their key insight and next step (no details, just mention)\n- End with a clear, gentle invitation to leave their email to receive it\n- Reassure the user that no spam or promotions will be sent\n\nKeep the message to 4–6 sentences. Do not summarize the session or repeat insights already stated — this message is only an invitation to receive the full summary by email.",
+    "instruction": "Generate a short, emotionally attuned message that invites the user to receive a personal summary of this session by email. The tone should be warm, grounded, and not salesy. \n\nThe message should:\n- Reflect the importance of the reflection the user just did\n- Suggest that receiving a summary could help them carry it forward into their day-to-day\n- Mention briefly that the summary will include their key insight and next step (no details, just mention)\n- End with a clear, gentle invitation to leave their email to receive it\n- Reassure the user that no spam will be sent (but don't promise that we won't send anything)\n\nKeep the message to 4–6 sentences. Do not summarize the session or repeat insights already stated — this message is only an invitation to receive the full summary by email.",
     "phaseEvaluation": {
       "instructions": "Continue prompting until a valid email address is received.",
       "conditions": {

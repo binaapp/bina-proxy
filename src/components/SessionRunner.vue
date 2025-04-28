@@ -26,6 +26,7 @@ const emit = defineEmits([
   "session-complete",
   "update:userInput",
   "debug-message",
+  "session-restored",
 ]);
 
 const userInput = computed({
@@ -41,6 +42,52 @@ const sessionStartTime = ref(new Date().toISOString());
 const sessionId = ref(null);
 const isSessionComplete = ref(false);
 const currentStepDbId = ref(null);
+
+// === SESSION RESTORE LOGIC WITH LOGS ===
+onMounted(async () => {
+  const savedSessionId = localStorage.getItem("binaSessionId");
+  console.log("[SessionRunner] onMounted: savedSessionId =", savedSessionId);
+  if (savedSessionId) {
+    try {
+      const res = await fetch(`/api/session/${savedSessionId}`);
+      console.log(
+        "[SessionRunner] Fetched /api/session/:id, status:",
+        res.status
+      );
+      if (res.ok) {
+        const data = await res.json();
+        console.log("[SessionRunner] Session data from backend:", data);
+        sessionId.value = data.sessionId;
+        userName.value = data.userName;
+        sessionHistory.value = data.history;
+        // Set currentStepIndex based on the last step in the DB
+        if (data.steps && data.steps.length > 0) {
+          const lastStep = data.steps[data.steps.length - 1];
+          console.log("[SessionRunner] Last step from DB:", lastStep);
+          const idx = props.flowData.steps.findIndex(
+            (step) => step.name === lastStep.step_id // or lastStep.stepId, depending on your schema
+          );
+          console.log("[SessionRunner] Calculated currentStepIndex:", idx);
+          if (idx !== -1) {
+            currentStepIndex.value = idx;
+          }
+        }
+        // Emit restored session history to parent (ChatView)
+        emit("session-restored", { history: data.history });
+      } else {
+        // Session not found, clear localStorage and start new session
+        console.log(
+          "[SessionRunner] Session not found in backend, clearing localStorage."
+        );
+        localStorage.removeItem("binaSessionId");
+      }
+    } catch (e) {
+      console.error("[SessionRunner] Failed to restore session:", e);
+    }
+  } else {
+    console.log("[SessionRunner] No saved sessionId in localStorage.");
+  }
+});
 
 // Initialize chat with first message
 onMounted(() => {
@@ -105,13 +152,23 @@ const saveStepToDatabase = async (
     const response = await submitSession(params);
     console.log("Step saved to database:", response);
 
-    // Store session ID from first response
-    if (!sessionId.value && response?.sessionId) {
+    // Store session ID from first response and save to localStorage
+    if (response?.sessionId) {
       sessionId.value = response.sessionId;
+      localStorage.setItem("binaSessionId", response.sessionId);
+      console.log(
+        "[SessionRunner] Saved sessionId to localStorage:",
+        response.sessionId
+      );
     }
 
     // Store step DB ID if this is a new step
     if (!isUpdate && response?.stepId) {
+      currentStepDbId.value = response.stepId;
+    }
+
+    // Save the new system message to the DB with empty userText
+    if (response?.stepId) {
       currentStepDbId.value = response.stepId;
     }
   } catch (error) {
@@ -203,7 +260,7 @@ const handleUserSubmit = async () => {
   emit("update:userInput", "");
   userInput.value = "";
 
-  // Get the previous system message
+  // Get the previous system message (the one just shown to the user)
   const previousSystemMessage =
     sessionHistory.value.filter((msg) => msg.role === "assistant").pop()
       ?.content || "";
@@ -220,26 +277,21 @@ const handleUserSubmit = async () => {
     type: "user",
   });
 
-  // For the first step, save both system and user message
-  if (currentStepIndex.value === 0) {
-    await saveStepToDatabase(currentInputText, previousSystemMessage);
-  } else {
-    // For later steps, update the existing step with user's response
-    await saveStepToDatabase(currentInputText, previousSystemMessage, true);
-  }
+  // Always save both system and user message together for this step
+  await saveStepToDatabase(currentInputText, previousSystemMessage, true);
 
   const currentStep = props.flowData.steps[currentStepIndex.value];
   if (currentStep.collectsName) {
     userName.value = currentInputText.trim();
   }
 
-  // For non-API steps, process the next step
+  // Only advance for non-AI steps
   if (currentStep.callAPI === false) {
-    // Move to next step
     if (currentStepIndex.value < props.flowData.steps.length - 1) {
-      const nextStep = props.flowData.steps[currentStepIndex.value + 1];
+      currentStepIndex.value++;
+      const nextStep = props.flowData.steps[currentStepIndex.value];
 
-      // Process intro text with name placeholder if we have a username
+      // Prepare the next system message
       let introText = nextStep.introText || "";
       if (userName.value) {
         introText = introText.replace(/\{name\}/g, userName.value);
@@ -268,17 +320,24 @@ const handleUserSubmit = async () => {
             type: "bot",
           });
         }, 800);
-      }
 
-      currentStepIndex.value++; // Increment after processing
+        // Save the new system message to the DB with empty userText
+        const response = await saveStepToDatabase("", responseText);
+        if (response?.stepId) {
+          currentStepDbId.value = response.stepId;
+        }
+      }
 
       // If next step is an API step, set waiting state
       if (nextStep.callAPI === true) {
         isAwaitingAi.value = true;
       }
+    } else {
+      // If this was the last step, you may want to mark session as complete here
+      isSessionComplete.value = true;
     }
   } else {
-    // For API steps, set waiting state
+    // For AI steps, just set waiting state and let handleStepResult decide advancement
     isAwaitingAi.value = true;
   }
 };
@@ -295,7 +354,6 @@ defineExpose({
 </script>
 
 <template>
-  <!-- ONLY include AiStep, no visible UI elements -->
   <AiStep
     v-if="
       isAwaitingAi && props.flowData.steps[currentStepIndex].callAPI !== false
