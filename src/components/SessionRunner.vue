@@ -3,7 +3,7 @@
 import { ref, reactive, computed, onMounted } from "vue";
 import AiStep from "./AiStep.vue";
 import { flowData } from "@/composables/useFlowData";
-import { submitSession } from "@/utils/sessionApi";
+import { submitSession, API_URL } from "@/utils/sessionApi";
 
 const props = defineProps({
   flowData: {
@@ -49,7 +49,7 @@ onMounted(async () => {
   console.log("[SessionRunner] onMounted: savedSessionId =", savedSessionId);
   if (savedSessionId) {
     try {
-      const res = await fetch(`/api/session/${savedSessionId}`);
+      const res = await fetch(`${API_URL}/${savedSessionId}`);
       console.log(
         "[SessionRunner] Fetched /api/session/:id, status:",
         res.status

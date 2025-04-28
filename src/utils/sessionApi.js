@@ -6,7 +6,7 @@ const getDeviceInfo = () => {
   };
 };
 
-const API_URL =
+export const API_URL =
   process.env.NODE_ENV === "production"
     ? "http://3.72.14.168:3000/api/session"
     : "http://localhost:3001/api/session";
