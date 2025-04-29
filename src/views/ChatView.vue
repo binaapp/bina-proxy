@@ -278,6 +278,11 @@ export default {
 </script>
 
 <style scoped>
+.user-message,
+.message {
+  white-space: pre-line;
+}
+
 .chat-wrapper {
   display: flex;
   flex-direction: column;

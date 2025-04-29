@@ -59,7 +59,7 @@ const error = ref(null);
 const aiResponse = ref(null);
 const systemMessage = ref("");
 
-const API_URL = process.env.NODE_ENV === "production" ? "http://3.72.14.168:3001" : "http://localhost:3001";
+const API_URL = process.env.NODE_ENV === "production" ? "https://api.binaapp.com" : "http://localhost:3001";
 
 const buildPhaseDefinitions = () => {
   // Find current phase index
@@ -228,10 +228,10 @@ const callClaude = async () => {
 
   try {
     // First check if the proxy server is running
-    const healthCheck = await fetch(`${API_URL}/health`);
-    if (!healthCheck.ok) {
-      throw new Error("Proxy server is not responding");
-    }
+    //const healthCheck = await fetch(`${API_URL}/health`);
+    //if (!healthCheck.ok) {
+    //  throw new Error("Proxy server is not responding");
+    //}
 
     // Format the conversation history
     const formattedHistory = props.history.reduce((acc, message, index) => {

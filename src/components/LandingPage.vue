@@ -5,16 +5,25 @@
     </header>
 
     <div class="content">
-      <h1 class="main-heading">You don't have to figure it all out alone.</h1>
+      <h1 class="main-heading">
+        Hi, I'm Bina.<br />
+        Your AI-powered coach.
+      </h1>
 
       <p class="subtitle">
-        Bina is your personal AI-powered coach. Helping you lead with<br />
-        confidence, clarity, and emotional strength.
+        I'm here to help you navigate your professional challenges.
       </p>
 
-      <h2 class="secondary-heading">Private. Empowering. Always available.</h2>
+      <h2 class="secondary-heading">
+        In our private conversations, you'll gain clarity, reconnect with your
+        confidence, and map out simple steps you can trust that move you toward
+        what matters most.
+      </h2>
 
-      <p class="cta-text">Try your first coaching session. It's free.</p>
+      <p class="cta-text">
+        Ready to take the first step?<br />
+        Start your free session.
+      </p>
 
       <div class="start-button-container">
         <router-link to="/chat">
@@ -108,6 +117,11 @@
           </p>
         </div>
       </div>
+      <div class="start-button-container">
+        <router-link to="/chat">
+          <button class="start-button">START NOW</button>
+        </router-link>
+      </div>
     </div>
 
     <div class="why-it-works">
@@ -115,9 +129,8 @@
 
       <div class="why-intro">
         <p>
-          Most tools tell you what to do.
-          <span class="highlight">Bina</span> helps you understand yourself, so
-          you can lead in a way that actually fits you.
+          Most tools offer answers.
+          <span class="highlight">Bina</span> helps you find your own.
         </p>
       </div>
 
@@ -194,17 +207,21 @@
           </p>
         </div>
       </div>
-
       <div class="why-footer">
         <p>
           And the more you use it, the better it understands what drives you,
           challenges you, and helps you thrive.
         </p>
       </div>
+      <div class="start-button-container">
+        <router-link to="/chat">
+          <button class="start-button">START NOW</button>
+        </router-link>
+      </div>
     </div>
 
     <div class="testimonials">
-      <h2 class="testimonials-title">What manager are saying</h2>
+      <h2 class="testimonials-title">What people are saying</h2>
 
       <div class="testimonials-container">
         <div class="testimonial">
@@ -261,6 +278,11 @@
           </div>
         </div>
       </div>
+      <div class="start-button-container">
+        <router-link to="/chat">
+          <button class="start-button">START NOW</button>
+        </router-link>
+      </div>
     </div>
 
     <div class="faq">
@@ -302,6 +324,11 @@
             grow.
           </p>
         </div>
+      </div>
+      <div class="start-button-container">
+        <router-link to="/chat">
+          <button class="start-button">START NOW</button>
+        </router-link>
       </div>
     </div>
 
@@ -403,6 +430,34 @@
       </div>
     </div>
 
+    <div class="vision">
+      <h2 class="vision-title">Our Vision</h2>
+
+      <div class="vision-content">
+        <div class="section-1">
+          <p class="vision-text">
+            We believe in a world where professionals go to work feeling
+            confident, clear, and connected — to themselves, to their purpose,
+            and to their power.<br />
+            Ensuring a workplace where people grow, contribute meaningfully, and
+            feel seen for who they are.
+          </p>
+        </div>
+        <h2 class="mission-title">Our Mission</h2>
+        <div class="mission-content">
+          <p class="mission-highlight">
+            Through AI-powered conversations grounded in real coaching methods,
+            we help you reconnect with yourself, build emotional strength, and
+            lead your professional journey with clarity and courage.
+          </p>
+          <div class="start-button-container">
+            <router-link to="/chat">
+              <button class="start-button">START NOW</button>
+            </router-link>
+          </div>
+        </div>
+      </div>
+    </div>
     <div class="ready-section">
       <div class="ready-container">
         <h2 class="ready-title">READY TO TRY IT?</h2>
@@ -415,7 +470,8 @@
 
           <h4 class="ready-cta">
             Start your first session now.<br />
-            It's free, it's private, and it just might change the way you lead.
+            It's free, it's private, and it just might change the way you show
+            up at work, with more clarity, confidence, and purpose.
           </h4>
 
           <div class="start-button-container">
@@ -1184,6 +1240,41 @@
     margin: 0 auto !important;
     overflow: hidden !important;
   }
+}
+
+.vision,
+.mission-content {
+  max-width: 900px;
+  margin: 0 auto 48px auto;
+  padding: 32px 16px;
+  text-align: left;
+}
+
+.vision-title,
+.mission-title {
+  font-size: 3rem;
+  font-weight: 700;
+  margin-bottom: 32px;
+  color: #c4a27e;
+  text-align: left;
+}
+
+.vision-text,
+.mission-highlight {
+  font-size: 2rem;
+  line-height: 1.4;
+  margin-bottom: 32px;
+  color: #fff;
+  text-align: left;
+  max-width: 900px;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.start-button-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 32px;
 }
 </style>
 
