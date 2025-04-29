@@ -18,6 +18,10 @@ const props = defineProps({
     type: String,
     default: "",
   },
+  referralSource: {
+    type: String,
+    default: "direct",
+  },
 });
 
 const emit = defineEmits([
@@ -132,6 +136,7 @@ const saveStepToDatabase = async (
       startedAt: sessionStartTime.value,
       endedAt: new Date().toISOString(),
       completed: isSessionComplete.value,
+      referralSource: props.referralSource,
       feedback: process.env.NODE_ENV === "development" ? "Test from UI" : "",
       flowSteps: [
         {

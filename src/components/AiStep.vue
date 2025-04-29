@@ -49,6 +49,10 @@ const props = defineProps({
   flowData: {
     type: Object,
     required: true
+  },
+  sessionRunner: {
+    type: Object,
+    default: null
   }
 });
 
@@ -224,6 +228,9 @@ onMounted(() => {
 
 const callClaude = async () => {
   isLoading.value = true;
+  if (props.sessionRunner) {
+    props.sessionRunner.isAwaitingAi = true;  // Set when API call starts
+  }
   error.value = null;
 
   try {
@@ -361,6 +368,9 @@ const callClaude = async () => {
     error.value = err.message;
   } finally {
     isLoading.value = false;
+    if (props.sessionRunner) {
+      props.sessionRunner.isAwaitingAi = false;  // Clear when API call ends
+    }
   }
 };
 </script>

@@ -23,7 +23,6 @@
           <TypingMessage
             v-else
             :text="message"
-            @typing-start="hideTypingIndicator"
             @typing-complete="handleTypingComplete"
           />
         </div>
@@ -60,6 +59,7 @@
       @update:userInput="(value) => (userInput = value)"
       :flow-data="flowData"
       :coach-data="coachData"
+      :referral-source="source"
       @message-sent="handleMessageSent"
       @ai-response="handleAiResponse"
       @session-complete="handleSessionComplete"
@@ -97,6 +97,10 @@ export default {
     const chatContentRef = ref(null); // Reference to chat content container
     const restoredIndexes = ref(new Set());
 
+    // Get source from URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const source = urlParams.get("source") || "direct";
+
     // Handle restored session
     function handleSessionRestored({ history }) {
       chatMessages.value = history.map((msg) => msg.content);
@@ -126,6 +130,7 @@ export default {
       chatContentRef, // Add the ref to template
       restoredIndexes,
       handleSessionRestored,
+      source, // Add this
     };
   },
   methods: {
