@@ -326,49 +326,49 @@ const callClaude = async () => {
     const data = await response.json();
     console.log("\n=== CLAUDE RESPONSE ===\n", data);
 
+    // Log the raw response to help identify issues
+    console.log("\n=== RAW RESPONSE TEXT ===\n", data.content[0].text);
+
+    let parsedResponse;
     try {
-      // Log the raw response to help identify issues
-      console.log("\n=== RAW RESPONSE TEXT ===\n", data.content[0].text);
-      
-      // Before JSON.parse, clean the response:
-      const cleanedText = data.content[0].text
-        .replace(/[\x00-\x1F\x7F-\x9F]/g, '') // Remove control chars
-        .replace(/\n\s*\n\s*\n/g, '\n\n')  // Normalize multiple line breaks
-        .replace(/([.?!:])\s*(\d+\.|\*)/g, '$1\n\n$2'); // Add breaks before numbered lists
-
-      const parsedResponse = JSON.parse(cleanedText);
-      console.log("\n=== PARSED RESPONSE ===\n", parsedResponse);
-      
-      // Validate response format based on flow's responseFormat
-      const expectedFormat = props.flowData.responseFormat?.format || {};
-      const validationErrors = [];
-      
-      // Check each required field exists
-      Object.keys(expectedFormat).forEach(field => {
-        if (!parsedResponse.hasOwnProperty(field)) {
-          validationErrors.push(`Missing required field: ${field}`);
-        }
-      });
-
-      // Check status values are valid
-      if (expectedFormat.status) {
-        const allowedStatuses = expectedFormat.status.split('|').map(s => s.trim());
-        if (!allowedStatuses.includes(parsedResponse.status)) {
-          validationErrors.push(`Invalid status value. Expected one of: ${allowedStatuses.join(', ')}`);
-        }
-      }
-
-      if (validationErrors.length > 0) {
-        throw new Error(`Invalid response format: ${validationErrors.join('; ')}`);
-      }
-
-      aiResponse.value = parsedResponse;
-      emit("step-result", parsedResponse);
+      // Try parsing the raw response first
+      parsedResponse = JSON.parse(data.content[0].text);
     } catch (parseError) {
-      console.error("Failed to parse or validate Claude's response:", parseError);
-      console.error("Check the logged RAW RESPONSE TEXT for problematic characters");
-      error.value = parseError.message;
+      // If parsing fails, try to fix the JSON structure while preserving newlines
+      const fixedJson = data.content[0].text.replace(/("reply": ")([^"]*)(")/g, (match, p1, p2, p3) => {
+        // Only escape newlines within the reply string
+        return p1 + p2.replace(/\n/g, '\\n') + p3;
+      });
+      parsedResponse = JSON.parse(fixedJson);
     }
+
+    console.log("\n=== PARSED RESPONSE ===\n", parsedResponse);
+    
+    // Validate response format based on flow's responseFormat
+    const expectedFormat = props.flowData.responseFormat?.format || {};
+    const validationErrors = [];
+    
+    // Check each required field exists
+    Object.keys(expectedFormat).forEach(field => {
+      if (!parsedResponse.hasOwnProperty(field)) {
+        validationErrors.push(`Missing required field: ${field}`);
+      }
+    });
+
+    // Check status values are valid
+    if (expectedFormat.status) {
+      const allowedStatuses = expectedFormat.status.split('|').map(s => s.trim());
+      if (!allowedStatuses.includes(parsedResponse.status)) {
+        validationErrors.push(`Invalid status value. Expected one of: ${allowedStatuses.join(', ')}`);
+      }
+    }
+
+    if (validationErrors.length > 0) {
+      throw new Error(`Invalid response format: ${validationErrors.join('; ')}`);
+    }
+
+    aiResponse.value = parsedResponse;
+    emit("step-result", parsedResponse);
   } catch (err) {
     console.error("Error in callClaude:", err);
     error.value = err.message;

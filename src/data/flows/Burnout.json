@@ -234,7 +234,7 @@
           "when": "The user shares a reflection on what they’re taking away",
           "actions": [
             "Set 'status': 'finish'",
-            "Acknowledge their insight with warmth and transition immediately to email capture"
+            "Acknowledge their insight with warmth and transition immediately (in the same answer) to email capture"
           ]
         }
       }

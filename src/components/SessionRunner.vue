@@ -131,13 +131,19 @@ const saveStepToDatabase = async (
   overrideStepName = null
 ) => {
   try {
+    const hostname = window.location.hostname;
     const params = {
       sessionId: sessionId.value,
       startedAt: sessionStartTime.value,
       endedAt: new Date().toISOString(),
       completed: isSessionComplete.value,
       referralSource: props.referralSource,
-      feedback: process.env.NODE_ENV === "development" ? "Test from UI" : "",
+      feedback:
+        process.env.NODE_ENV === "development"
+          ? "Test from UI"
+          : hostname.includes("staging.binaapp.com")
+          ? "staging"
+          : "",
       flowSteps: [
         {
           stepId:
@@ -156,6 +162,15 @@ const saveStepToDatabase = async (
     console.log("Submitting step to database:", params);
     const response = await submitSession(params);
     console.log("Step saved to database:", response);
+
+    // If this save was for a completed session, fire the pixel event
+    if (params.completed && window.fbq) {
+      console.log("[FB Pixel] Firing CompleteRegistration event");
+      fbq("track", "CompleteRegistration", {
+        content_name: "Session Completed",
+        status: "success",
+      });
+    }
 
     // Store session ID from first response and save to localStorage
     if (response?.sessionId) {
