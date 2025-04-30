@@ -6,10 +6,15 @@ const getDeviceInfo = () => {
   };
 };
 
-export const API_URL =
-  process.env.NODE_ENV === "production"
-    ? "https://api.binaapp.com/api/session"
-    : "http://localhost:3001/api/session";
+console.log("👀 Hostname at runtime:", window.location.hostname);
+
+const hostname = window.location.hostname;
+
+export const API_URL = hostname.includes("staging.binaapp.com")
+  ? "https://api-staging.binaapp.com/api/session"
+  : hostname.includes("binaapp.com")
+  ? "https://api.binaapp.com/api/session"
+  : "http://localhost:3001/api/session";
 
 /**
  * Submits session data to the backend

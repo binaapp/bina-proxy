@@ -63,7 +63,13 @@ const error = ref(null);
 const aiResponse = ref(null);
 const systemMessage = ref("");
 
-const API_URL = process.env.NODE_ENV === "production" ? "https://api.binaapp.com" : "http://localhost:3001";
+const hostname = window.location.hostname;
+
+const API_URL = hostname.includes("staging.binaapp.com")
+  ? "https://api-staging.binaapp.com"
+  : hostname.includes("binaapp.com")
+  ? "https://api.binaapp.com"
+  : "http://localhost:3001";
 
 const buildPhaseDefinitions = () => {
   // Find current phase index
