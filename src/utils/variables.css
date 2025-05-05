@@ -14,13 +14,13 @@
   --font-family-heading: "Playfair Display", serif;
   
   /* Font Sizes */
-  --font-size-xs: 0.8rem;         /* Extra small */
-  --font-size-sm: 1rem;           /* Small (base) */
-  --font-size-md: 1.2rem;         /* Medium */
-  --font-size-lg: 1.5rem;         /* Large */
-  --font-size-xl: 2rem;           /* Extra large */
-  --font-size-xxl: 2.5rem;        /* Double extra large */
-  --font-size-xxxl: 3.5rem;       /* Triple extra large for main heading */
+  --font-size-xs: 0.5rem;         /* Extra small */
+  --font-size-sm: 0.8rem;           /* Small (base) */
+  --font-size-md: 1.0rem;         /* Medium */
+  --font-size-lg: 1.2rem;         /* Large */
+  --font-size-xl: 1.5rem;           /* Extra large */
+  --font-size-xxl: 2rem;        /* Double extra large */
+  --font-size-xxxl: 3rem;       /* Triple extra large for main heading */
   
   /* Spacing */
   --spacing-xs: 0.5rem;           /* Extra small */
@@ -84,13 +84,14 @@
     display: flex !important;
     flex-direction: column !important;
     align-items: center !important;
-    width: 100% !important;
-    max-width: 100% !important;
+    /*width: 100% !important;
+    max-width: 100% !important;*/
     padding-left: 0 !important;
     padding-right: 0 !important;
     box-sizing: border-box !important;
     margin-left: auto !important;
     margin-right: auto !important;
+ 
   }
   
   /* Make ALL flex or grid items be full width on mobile */
@@ -99,10 +100,9 @@
   .landing-page > div > div > *, /* Target items within nested divs */
   .landing-page [class*="member"] /* Target any member item */ {
     width: 100% !important;
-    max-width: var(--mobile-element-max-width) !important;
+    /*max-width: var(--mobile-element-max-width) !important;*/
     margin-left: auto !important;
     margin-right: auto !important;
-    margin-bottom: var(--spacing-md) !important;
     box-sizing: border-box !important;
   }
   
@@ -143,7 +143,6 @@
   .landing-page [class*="title"],
   .landing-page [class*="heading"],
   .landing-page [class*="subtitle"] {
-    text-align: center !important;
     width: 100% !important;
     max-width: 100% !important;
     padding-left: var(--spacing-sm) !important;
@@ -155,7 +154,7 @@
   .landing-page p,
   .landing-page [class*="description"],
   .landing-page [class*="text"] {
-    text-align: center !important;
+    /*font-size: var(--font-size-xl) !important;*/
     width: 100% !important;
     max-width: 100% !important;
     padding-left: var(--spacing-sm) !important;
@@ -206,10 +205,11 @@
   }
   
   /* Fix for steps container */
+
   .landing-page .steps-container {
     display: flex !important;
     flex-direction: column !important;
-    gap: var(--spacing-lg) !important;
+    /*gap: var(--spacing-lg) !important;*/
   }
   
   /* Very specific fix ONLY for the step-number on mobile */

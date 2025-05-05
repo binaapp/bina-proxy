@@ -132,6 +132,9 @@ const saveStepToDatabase = async (
 ) => {
   try {
     const hostname = window.location.hostname;
+    const isProduction =
+      hostname === "binaapp.com" || hostname === "www.binaapp.com";
+
     const params = {
       sessionId: sessionId.value,
       startedAt: sessionStartTime.value,
@@ -163,13 +166,17 @@ const saveStepToDatabase = async (
     const response = await submitSession(params);
     console.log("Step saved to database:", response);
 
-    // If this save was for a completed session, fire the pixel event
-    if (params.completed && window.fbq) {
-      console.log("[FB Pixel] Firing CompleteRegistration event");
+    // Only fire CompleteRegistration event in production
+    if (params.completed && window.fbq && isProduction) {
+      console.log("[FB Pixel] Firing CompleteRegistration event in production");
       fbq("track", "CompleteRegistration", {
         content_name: "Session Completed",
         status: "success",
       });
+    } else if (params.completed) {
+      console.log(
+        "[FB Pixel] Skipping CompleteRegistration event - not in production environment"
+      );
     }
 
     // Store session ID from first response and save to localStorage

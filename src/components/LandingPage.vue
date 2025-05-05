@@ -6,8 +6,7 @@
 
     <div class="content">
       <h1 class="main-heading">
-        Hi, I'm Bina.<br />
-        Your AI-powered coach.
+        <span v-html="displayedText"></span>
       </h1>
 
       <p class="subtitle">
@@ -25,7 +24,7 @@
         Start your free session.
       </p>
 
-      <div class="start-button-container">
+      <div class="start-button-container-left">
         <router-link to="/chat">
           <button class="start-button">START NOW</button>
         </router-link>
@@ -35,9 +34,10 @@
     <div class="how-it-works">
       <h2 class="section-title mobile-center">How it works</h2>
 
-      <h3 class="section-subtitle mobile-center mobile-container">
-        <span class="highlight">Bina</span> guides you through real
-        conversations that create growth.
+      <h3 class="section-subtitle mobile-container">
+        <span class="highlight"
+          >Bina guides you through real conversations that create growth.</span
+        >
       </h3>
 
       <div class="steps-container mobile-stack mobile-container">
@@ -84,8 +84,14 @@
           </p>
         </div>
       </div>
+      <div class="start-button-container">
+        <router-link to="/chat">
+          <button class="start-button">START NOW</button>
+        </router-link>
+      </div>
     </div>
 
+    <!--
     <div class="workplace-reality">
       <h2 class="workplace-title">The New Workplace Reality</h2>
 
@@ -123,103 +129,7 @@
         </router-link>
       </div>
     </div>
-
-    <div class="why-it-works">
-      <h2 class="why-title">Why it works</h2>
-
-      <div class="why-intro">
-        <p>
-          Most tools offer answers.
-          <span class="highlight">Bina</span> helps you find your own.
-        </p>
-      </div>
-
-      <div class="features-container">
-        <div class="feature">
-          <div class="feature-icon">
-            <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-              <path
-                d="M24 4C14.4 4 6.4 11.2 4.8 20.4C4 24.4 4.4 28.4 6 32C7.6 35.6 10 38.8 13.2 40.8C16.4 42.8 20 44 24 44C28 44 31.6 42.8 34.8 40.8C38 38.8 40.4 35.6 42 32C43.6 28.4 44 24.4 43.2 20.4C41.6 11.2 33.6 4 24 4ZM24 40C17.2 40 11.2 35.6 9.2 29.2C8.4 26.4 8.8 23.2 10 20.4C11.2 17.6 13.2 15.2 15.6 13.6C18 12 20.8 11.2 24 11.2C27.2 11.2 30 12 32.4 13.6C34.8 15.2 36.8 17.6 38 20.4C39.2 23.2 39.6 26.4 38.8 29.2C36.8 35.6 30.8 40 24 40Z"
-                fill="#183C56"
-              />
-              <path
-                d="M24 16C20 16 16.8 19.2 16.8 23.2C16.8 27.2 20 30.4 24 30.4C28 30.4 31.2 27.2 31.2 23.2C31.2 19.2 28 16 24 16Z"
-                fill="#183C56"
-              />
-            </svg>
-          </div>
-          <h3 class="feature-title">It clears the mental clutter</h3>
-          <p class="feature-description">
-            <span class="highlight">Bina</span> helps you cut through the noise,
-            understand what's really happening, and focus on what you want to do
-            next.
-          </p>
-        </div>
-
-        <div class="feature">
-          <div class="feature-icon">
-            <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-              <circle
-                cx="24"
-                cy="24"
-                r="20"
-                stroke="#183C56"
-                stroke-width="3"
-                fill="none"
-              />
-              <path
-                d="M24 12V24L32 28"
-                stroke="#183C56"
-                stroke-width="3"
-                stroke-linecap="round"
-              />
-            </svg>
-          </div>
-          <h3 class="feature-title">It meets you in real time</h3>
-          <p class="feature-description">
-            No scheduling. No waiting. <span class="highlight">Bina</span> is
-            there when you need to reset your thinking or steady your emotions.
-          </p>
-        </div>
-
-        <div class="feature">
-          <div class="feature-icon">
-            <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-              <path
-                d="M40 16H8C6.9 16 6 16.9 6 18V38C6 39.1 6.9 40 8 40H40C41.1 40 42 39.1 42 38V18C42 16.9 41.1 16 40 16ZM40 38H8V18H40V38Z"
-                fill="#183C56"
-              />
-              <path
-                d="M24 8C20.7 8 18 10.7 18 14H22C22 12.9 22.9 12 24 12C25.1 12 26 12.9 26 14H30C30 10.7 27.3 8 24 8Z"
-                fill="#183C56"
-              />
-              <path
-                d="M24 22C20.7 22 18 24.7 18 28C18 31.3 20.7 34 24 34C27.3 34 30 31.3 30 28C30 24.7 27.3 22 24 22Z"
-                fill="#183C56"
-              />
-            </svg>
-          </div>
-          <h3 class="feature-title">It's safe to be honest</h3>
-          <p class="feature-description">
-            You don't have to impress or explain yourself.
-            <span class="highlight">Bina</span> gives you a private space to
-            reflect, feel, and figure things out, your way.
-          </p>
-        </div>
-      </div>
-      <div class="why-footer">
-        <p>
-          And the more you use it, the better it understands what drives you,
-          challenges you, and helps you thrive.
-        </p>
-      </div>
-      <div class="start-button-container">
-        <router-link to="/chat">
-          <button class="start-button">START NOW</button>
-        </router-link>
-      </div>
-    </div>
-
+    -->
     <div class="testimonials">
       <h2 class="testimonials-title">What people are saying</h2>
 
@@ -285,10 +195,90 @@
       </div>
     </div>
 
-    <div class="faq">
-      <h2 class="faq-title">FAQ</h2>
+    <div class="why-it-works">
+      <h2 class="why-title">Why it works</h2>
 
+      <div class="why-intro">
+        <p>
+          Most tools offer answers.
+          <span class="highlight">Bina</span> helps you find your own.
+        </p>
+      </div>
+
+      <div class="features-container">
+        <div class="feature">
+          <div class="feature-icon">
+            <img
+              src="/whyitworks1.jpg"
+              width="48"
+              height="48"
+              alt="Why it works icon"
+              style="display: block"
+            />
+          </div>
+          <h3 class="feature-title">It clears the mental clutter</h3>
+          <p class="feature-description">
+            <span class="highlight">Bina</span> helps you cut through the noise,
+            understand what's really happening, and focus on what you want to do
+            next.
+          </p>
+        </div>
+
+        <div class="feature">
+          <div class="feature-icon">
+            <video
+              src="/Clock.mp4"
+              width="48"
+              height="48"
+              autoplay
+              loop
+              muted
+              playsinline
+              style="display: block"
+            ></video>
+          </div>
+          <h3 class="feature-title">It meets you in real time</h3>
+          <p class="feature-description">
+            No scheduling. No waiting. <span class="highlight">Bina</span> is
+            there when you need to reset your thinking or steady your emotions.
+          </p>
+        </div>
+
+        <div class="feature">
+          <div class="feature-icon">
+            <img
+              src="/whyitworks3.jpg"
+              width="48"
+              height="48"
+              alt="Safe to be honest icon"
+              style="display: block"
+            />
+          </div>
+          <h3 class="feature-title">It's safe to be honest</h3>
+          <p class="feature-description">
+            You don't have to impress or explain yourself.
+            <span class="highlight">Bina</span> gives you a private space to
+            reflect, feel, and figure things out, your way.
+          </p>
+        </div>
+      </div>
+      <!-- <div class="why-footer">
+        <p>
+          And the more you use it, the better it understands what drives you,
+          challenges you, and helps you thrive.
+        </p>
+      </div>
+      -->
+      <div class="start-button-container">
+        <router-link to="/chat">
+          <button class="start-button">START NOW</button>
+        </router-link>
+      </div>
+    </div>
+
+    <div class="faq">
       <div class="faq-container">
+        <h2 class="faq-title">FAQ</h2>
         <div class="faq-item">
           <h3 class="faq-question">Is this like ChatGPT?</h3>
           <p class="faq-answer">
@@ -324,15 +314,16 @@
             grow.
           </p>
         </div>
-      </div>
-      <div class="start-button-container">
-        <router-link to="/chat">
-          <button class="start-button">START NOW</button>
-        </router-link>
+
+        <div class="start-button-container-left">
+          <router-link to="/chat">
+            <button class="start-button">START NOW</button>
+          </router-link>
+        </div>
       </div>
     </div>
 
-    <div class="team">
+    <!--   <div class="team">
       <h2 class="team-title">Meet the team</h2>
 
       <div class="team-intro">
@@ -421,39 +412,49 @@
             <img src="/neta.jpg" alt="Neta Geva" class="member-img" />
             <h4 class="member-name">Neta Geva</h4>
             <p class="member-bio">
-              [Neta's bio goes here — include a line about her HR background,
-              her years at Lightricks, and how she brings the human side of
-              organizations into the heart of Bina.]
+              Neta Geva combines analytical thinking with deep human insight.
+              With a background in philosophy and physics, and over 8 years in
+              human resources, she offers a unique perspective on leadership and
+              organizational growth. As an HR executive at Lightricks, she
+              scaled the company from 70 to 600 employees, led a 30-person
+              department, and was part of the executive leadership team.
+              Currently, she consults for early-stage startups, helping build
+              scalable, people-centered foundations. As a co-founder, she's
+              passionate about leveraging AI to deepen self-awareness and human
+              connection.
             </p>
           </div>
         </div>
       </div>
     </div>
+    -->
 
-    <div class="vision">
-      <h2 class="vision-title">Our Vision</h2>
-
-      <div class="vision-content">
-        <div class="section-1">
-          <p class="vision-text">
-            We believe in a world where professionals go to work feeling
-            confident, clear, and connected — to themselves, to their purpose,
-            and to their power.<br />
-            Ensuring a workplace where people grow, contribute meaningfully, and
-            feel seen for who they are.
-          </p>
-        </div>
-        <h2 class="mission-title">Our Mission</h2>
-        <div class="mission-content">
-          <p class="mission-highlight">
-            Through AI-powered conversations grounded in real coaching methods,
-            we help you reconnect with yourself, build emotional strength, and
-            lead your professional journey with clarity and courage.
-          </p>
-          <div class="start-button-container">
-            <router-link to="/chat">
-              <button class="start-button">START NOW</button>
-            </router-link>
+    <div class="vision-section">
+      <div class="vision-container">
+        <h2 class="vision-title">Our Vision</h2>
+        <div class="vision-content">
+          <div class="section-1">
+            <p class="vision-text">
+              We believe in a world where professionals go to work feeling
+              confident, clear, and connected — to themselves, to their purpose,
+              and to their power.<br />
+              Ensuring a workplace where people grow, contribute meaningfully,
+              and feel seen for who they are.
+            </p>
+          </div>
+          <h2 class="mission-title">Our Mission</h2>
+          <div class="mission-content">
+            <p class="mission-highlight">
+              Through AI-powered conversations grounded in real coaching
+              methods, we help you reconnect with yourself, build emotional
+              strength, and lead your professional journey with clarity and
+              courage.
+            </p>
+            <div class="start-button-container-left">
+              <router-link to="/chat">
+                <button class="start-button">START NOW</button>
+              </router-link>
+            </div>
           </div>
         </div>
       </div>
@@ -474,7 +475,7 @@
             up at work, with more clarity, confidence, and purpose.
           </h4>
 
-          <div class="start-button-container">
+          <div class="start-button-container-left">
             <router-link to="/chat">
               <button class="start-button">START NOW</button>
             </router-link>
@@ -487,6 +488,10 @@
 
 <style scoped>
 /* Base Layout */
+
+h1 {
+  margin-block-end: 0;
+}
 .landing-page {
   min-height: 100vh;
   background-color: var(--color-primary);
@@ -523,10 +528,12 @@
 
 .content {
   flex: 1;
-  max-width: var(--content-width);
-  width: 100%;
+  max-width: var(--max-content-width);
+  width: 80%;
   margin: 0 auto;
-  padding: var(--spacing-xl) var(--spacing-md);
+  padding-left: var(--spacing-md);
+  padding-right: var(--spacing-md);
+  padding-bottom: var(--spacing-xl);
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -545,20 +552,19 @@
 .subtitle {
   font-size: var(--font-size-lg);
   color: var(--color-text-light);
-  margin-bottom: var(--spacing-xl);
+  /*margin-bottom: var(--spacing-xl);*/
   line-height: 1.5;
 }
 
 .secondary-heading {
-  font-size: 2rem;
-  font-weight: 700;
-  margin-bottom: 24px;
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  /*margin-bottom: 24px;*/
   color: #c4a27e;
 }
 
 .cta-text {
-  font-size: 1.5rem;
-  margin-bottom: 32px;
+  font-size: var(--font-size-lg);
   color: #f0f0f0;
 }
 
@@ -567,37 +573,55 @@
   width: 100%;
   display: flex;
   justify-content: center;
-  margin-top: var(--spacing-lg);
+}
+
+.start-button-container-left {
+  width: 100%;
+  display: flex;
+  justify-content: left;
 }
 
 .start-button {
   background-color: var(--color-secondary);
   color: var(--color-primary);
-  padding: var(--spacing-sm) var(--spacing-lg);
+  /* padding: var(--spacing-sm) var(--spacing-lg);*/
+  padding-bottom: var(--spacing-sm);
+  padding-top: var(--spacing-sm);
+  padding-left: var(--spacing-lg);
+  padding-right: var(--spacing-lg);
   font-size: var(--font-size-md);
   font-weight: 700;
   border: none;
   border-radius: var(--border-radius-md);
   cursor: pointer;
-  box-shadow: 0 4px 6px var(--color-shadow);
+  box-shadow: 0 6px 12px var(--color-shadow);
   transition: all var(--transition-fast);
+  margin-top: var(--spacing-md);
 }
 
 .start-button:hover {
   background-color: #d4b494; /* Consider adding var(--color-secondary-light) */
   transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.25); /* lifted & deeper */
+}
+
+.start-button:active {
+  transform: translateY(0);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2); /* pressed down */
 }
 
 /* Sections */
 .how-it-works {
   background-color: var(--color-background);
-  padding: var(--spacing-xl) var(--spacing-md);
+  /*padding: var(--spacing-xl) var(--spacing-md);*/
+  padding-bottom: var(--spacing-md);
   width: 100%;
 }
 
 .section-title {
   font-family: var(--font-family-heading);
-  font-size: var(--font-size-xl);
+  font-size: var(--font-size-xxl);
+
   color: var(--color-primary);
   text-align: center;
   margin-bottom: var(--spacing-lg);
@@ -613,7 +637,7 @@
 }
 
 .highlight {
-  color: var(--color-secondary);
+  color: var(--color-primary);
 }
 
 /* Steps Section */
@@ -622,7 +646,7 @@
   justify-content: center;
   max-width: 1200px;
   margin: 0 auto;
-  gap: var(--spacing-xl);
+  /*gap: var(--spacing-xl);*/
 }
 
 .step {
@@ -643,7 +667,6 @@
   justify-content: center;
   font-size: var(--font-size-xxl);
   color: var(--color-primary);
-  margin-bottom: var(--spacing-md);
   font-family: var(--font-family-heading);
   box-sizing: border-box;
 }
@@ -664,6 +687,7 @@
   text-align: center;
   max-width: 320px;
   margin: 0 auto;
+  margin-bottom: var(--spacing-md);
 }
 
 /* Workplace Section */
@@ -716,7 +740,7 @@
 /* Why it Works Section */
 .why-it-works {
   background-color: #f5ece3; /* Consider adding var(--color-background-alt) */
-  padding: var(--spacing-xl) var(--spacing-md);
+  padding: var(--spacing-md) var(--spacing-md);
   width: 100%;
 }
 
@@ -730,7 +754,7 @@
 
 .why-intro {
   max-width: var(--content-width);
-  margin: 0 auto var(--spacing-xl);
+  margin: 0 auto var(--spacing-md);
   text-align: center;
   font-size: var(--font-size-lg);
   line-height: 1.4;
@@ -741,8 +765,8 @@
   display: flex;
   justify-content: center;
   max-width: 1200px;
-  margin: 0 auto var(--spacing-xl);
-  gap: var(--spacing-xl);
+  /*margin: 0 auto var(--spacing-xl);*/
+  /*gap: var(--spacing-xl);*/
 }
 
 .feature {
@@ -751,7 +775,10 @@
 }
 
 .feature-icon {
-  margin-bottom: var(--spacing-md);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
 }
 
 .feature-title {
@@ -770,7 +797,8 @@
 /* Testimonials Section */
 .testimonials {
   background-color: var(--color-primary);
-  padding: var(--spacing-xl) var(--spacing-md);
+  /*padding: var(--spacing-md) var(--spacing-md);*/
+  padding-bottom: var(--spacing-md);
   width: 100%;
 }
 
@@ -780,6 +808,7 @@
   max-width: 1200px;
   margin: 0 auto;
   gap: var(--spacing-lg);
+  padding-bottom: var(--spacing-md);
 }
 
 .testimonials-title {
@@ -798,6 +827,9 @@
   position: relative;
   max-width: 360px;
   box-shadow: 0 4px 8px var(--color-shadow);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
 }
 
 .quote-mark {
@@ -805,7 +837,7 @@
   position: absolute;
   top: var(--spacing-sm);
   left: var(--spacing-sm);
-  color: rgba(0, 0, 0, 0.1);
+  color: var(--color-secondary);
   font-family: var(--font-family-heading);
 }
 
@@ -817,13 +849,16 @@
   margin: var(--spacing-md) 0;
   padding-left: var(--spacing-md);
   font-style: italic;
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
 }
 
 .profile {
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
-  margin-top: var(--spacing-md);
+  margin-top: 0;
 }
 
 .profile-img {
@@ -848,34 +883,25 @@
 /* FAQ Section */
 .faq {
   background-color: var(--color-background);
-  padding: var(--spacing-xl) var(--spacing-md);
+  padding: var(--spacing-md) var(--spacing-md);
   width: 100%;
 }
 
-.faq-title {
-  font-family: var(--font-family-heading);
-  font-size: var(--font-size-xxl);
-  color: var(--color-primary);
-  margin-bottom: var(--spacing-xl);
-  max-width: var(--content-width);
-  margin-left: auto;
-  margin-right: auto;
-  text-align: left;
-}
-
 .faq-container {
-  max-width: var(--content-width);
+  max-width: var(--maxcontent-width);
+  width: 80%;
+  align-items: flex-start;
   margin: 0 auto;
   text-align: left;
 }
 
-.faq-item {
-  margin-bottom: var(--spacing-lg);
+.faq-title {
+  /* margin-bottom: var(--spacing-md);*/
+  color: var(--color-primary);
 }
 
 .faq-question {
   font-size: var(--font-size-lg);
-  margin-bottom: var(--spacing-sm);
   color: var(--color-primary);
   font-weight: 600;
 }
@@ -968,7 +994,55 @@
   max-width: 320px;
   margin: 0 auto;
 }
+/* Vision Section */
+.vision-section {
+  background-color: var(--color-primary);
+  padding: var(--spacing-md) var(--spacing-md);
+  width: 100%;
+}
 
+.vision-container {
+  max-width: var(--maxcontent-width);
+  width: 80%;
+  margin: 0 auto;
+  padding: 0 var(--spacing-md);
+}
+.vision,
+.mission-content {
+  max-width: 100%;
+  /*margin: 0 auto 48px auto;*/
+  /*padding: 32px 16px;*/
+  text-align: left;
+  font-size: var(--font-size-md);
+}
+
+.vision-title,
+.mission-title {
+  font-family: var(--font-family-heading);
+  font-size: var(--font-size-xxl);
+  font-weight: 700;
+  margin-bottom: 32px;
+  color: var(--color-secondary);
+  text-align: left;
+}
+
+.vision-text,
+.mission-highlight {
+  font-size: var(--font-size-lg);
+  line-height: 1.4;
+  margin-bottom: var(--spacing-lg);
+  color: var(--color-text-light);
+  text-align: left;
+  max-width: 100%;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.start-button-container {
+  display: flex;
+  justify-content: center;
+  /*margin-top: 32px;*/
+}
 /* Ready Section */
 .ready-section {
   background-color: var(--color-background);
@@ -977,7 +1051,8 @@
 }
 
 .ready-container {
-  max-width: var(--content-width);
+  max-width: var(--maxcontent-width);
+  width: 80%;
   margin: 0 auto;
   text-align: left;
 }
@@ -985,12 +1060,12 @@
 .ready-title {
   font-family: var(--font-family-heading);
   font-size: var(--font-size-xxl);
-  color: var(--color-primary);
+  color: var(--color-secondary);
   margin-bottom: var(--spacing-md);
 }
 
 .ready-heading {
-  font-size: var(--font-size-xl);
+  font-size: var(--font-size-lg);
   color: var(--color-primary);
   margin-bottom: var(--spacing-md);
   font-weight: 600;
@@ -1005,18 +1080,18 @@
 }
 
 .ready-description {
-  font-size: var(--font-size-lg);
+  font-size: var(--font-size-md);
   line-height: 1.6;
   color: var(--color-primary);
   margin-bottom: var(--spacing-lg);
 }
 
-.ready-section .start-button {
-  margin-top: var(--spacing-md);
-}
-
 /* Modified mobile styles */
 @media (max-width: var(--breakpoint-tablet)) {
+  body,
+  .landing-page {
+    font-size: var(--font-size-sm);
+  }
   /* General mobile styles */
   .how-it-works {
     padding-left: 0;
@@ -1025,7 +1100,7 @@
 
   .section-subtitle {
     font-size: var(--font-size-md);
-    margin-bottom: var(--spacing-lg);
+    text-align: left;
   }
 
   /* Steps section */
@@ -1061,25 +1136,26 @@
 
   .main-heading {
     font-size: var(--font-size-xl);
-    text-align: center;
+    margin-block-end: 0;
   }
 
   .title {
     font-size: var(--font-size-xl);
+    /*text-align: center;*/
   }
 
   .subtitle {
     font-size: var(--font-size-md);
-    text-align: center;
+    /*text-align: center;*/
   }
 
-  .secondary-heading {
+  /* .secondary-heading {
     text-align: center;
   }
 
   .cta-text {
     text-align: center;
-  }
+  } */
 
   .workplace-title {
     font-size: var(--font-size-xl);
@@ -1090,14 +1166,14 @@
   }
 
   .workplace-content {
-    text-align: center;
+    /*text-align: center;*/
     padding: 0 var(--spacing-sm);
   }
 
   .workplace-text,
   .workplace-highlight {
     font-size: var(--font-size-md);
-    text-align: center;
+    /*text-align: center;*/
   }
 
   .why-title {
@@ -1114,20 +1190,22 @@
     flex-direction: column;
     width: var(--mobile-content-width);
     gap: var(--spacing-lg);
-    align-items: center;
+    /*align-items: center;*/
   }
 
   .feature {
     width: 100%;
     max-width: var(--mobile-element-max-width);
     margin: 0 auto var(--spacing-md);
-    text-align: center;
+    /*text-align: center;*/
   }
 
   .feature-icon {
-    text-align: center;
+    /*text-align: center;*/
     display: flex;
     justify-content: center;
+    padding-bottom: var(--spacing-md);
+    padding-top: var(--spacing-md);
   }
 
   .testimonials-container {
@@ -1135,7 +1213,8 @@
     width: var(--mobile-content-width);
     margin: 0 auto;
     gap: var(--spacing-md);
-    align-items: center;
+
+    /*align-items: center;*/
   }
 
   .testimonial {
@@ -1143,10 +1222,9 @@
     max-width: var(--mobile-element-max-width);
     margin: 0 auto var(--spacing-md);
   }
-
   .faq-title {
     font-size: var(--font-size-xl);
-    text-align: center;
+    color: var(--color-primary) !important;
   }
 
   .faq-container {
@@ -1166,7 +1244,7 @@
     width: var(--mobile-content-width);
     margin: var(--spacing-md) auto 0;
     gap: var(--spacing-lg);
-    align-items: center;
+    /*align-items: center;*/
   }
 
   .team-member {
@@ -1188,24 +1266,24 @@
 
   .ready-title {
     font-size: var(--font-size-xl);
-    text-align: center;
+    /*text-align: center;*/
   }
 
   .ready-heading {
     font-size: var(--font-size-lg);
-    text-align: center;
+    /*text-align: center;*/
     padding: 0 var(--spacing-sm);
   }
 
   .ready-cta {
     font-size: var(--font-size-md);
-    text-align: center;
+    /*text-align: center;*/
     padding: 0 var(--spacing-sm);
   }
 
-  .ready-description {
+  /*  .ready-description {
     text-align: center;
-  }
+  }*/
 
   .ready-section .start-button {
     margin: var(--spacing-md) auto;
@@ -1215,9 +1293,10 @@
 
 .main-heading {
   font-family: var(--font-family-heading);
+  margin-block-end: 0;
   font-size: var(--font-size-xxxl);
   color: var(--color-secondary);
-  margin-bottom: var(--spacing-lg);
+  /*margin-bottom: var(--spacing-lg);*/
   line-height: 1.2;
   font-weight: 600;
 }
@@ -1242,44 +1321,29 @@
   }
 }
 
-.vision,
-.mission-content {
-  max-width: 900px;
-  margin: 0 auto 48px auto;
-  padding: 32px 16px;
-  text-align: left;
-}
-
-.vision-title,
-.mission-title {
-  font-size: 3rem;
-  font-weight: 700;
-  margin-bottom: 32px;
-  color: #c4a27e;
-  text-align: left;
-}
-
-.vision-text,
-.mission-highlight {
-  font-size: 2rem;
-  line-height: 1.4;
-  margin-bottom: 32px;
-  color: #fff;
-  text-align: left;
-  max-width: 900px;
-  margin-left: 0;
-  margin-right: 0;
-}
-
-.start-button-container {
-  display: flex;
-  justify-content: center;
-  margin-top: 32px;
+a,
+a:visited,
+a:active {
+  text-decoration: none !important;
 }
 </style>
 
-<script>
-export default {
-  name: "LandingPage",
-};
+<script setup>
+import { ref, onMounted } from "vue";
+
+const fullText = "Hi, I'm Bina.\nYour AI-powered coach.";
+const displayedText = ref("");
+const typingSpeed = 40; // ms per character
+
+onMounted(() => {
+  let i = 0;
+  function type() {
+    if (i < fullText.length) {
+      displayedText.value += fullText[i] === "\n" ? "<br />" : fullText[i];
+      i++;
+      setTimeout(type, typingSpeed);
+    }
+  }
+  type();
+});
 </script>
