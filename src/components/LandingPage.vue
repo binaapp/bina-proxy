@@ -226,8 +226,8 @@
 
         <div class="feature">
           <div class="feature-icon">
-            <video
-              src="/Clock.mp4"
+            <img
+              src="/Clock.gif"
               width="48"
               height="48"
               autoplay
@@ -235,7 +235,7 @@
               muted
               playsinline
               style="display: block"
-            ></video>
+            />
           </div>
           <h3 class="feature-title">It meets you in real time</h3>
           <p class="feature-description">
@@ -1068,7 +1068,7 @@ h1 {
   font-size: var(--font-size-lg);
   color: var(--color-primary);
   margin-bottom: var(--spacing-md);
-  font-weight: 600;
+  font-weight: 450;
   line-height: 1.3;
 }
 
@@ -1077,6 +1077,8 @@ h1 {
   line-height: 1.6;
   color: var(--color-primary);
   margin-bottom: var(--spacing-lg);
+  font-weight: 450;
+  line-height: 1.3;
 }
 
 .ready-description {
@@ -1208,20 +1210,6 @@ h1 {
     padding-top: var(--spacing-md);
   }
 
-  .testimonials-container {
-    flex-direction: column;
-    width: var(--mobile-content-width);
-    margin: 0 auto;
-    gap: var(--spacing-md);
-
-    /*align-items: center;*/
-  }
-
-  .testimonial {
-    width: 100%;
-    max-width: var(--mobile-element-max-width);
-    margin: 0 auto var(--spacing-md);
-  }
   .faq-title {
     font-size: var(--font-size-xl);
     color: var(--color-primary) !important;
@@ -1319,6 +1307,22 @@ h1 {
     margin: 0 auto !important;
     overflow: hidden !important;
   }
+  .testimonials-container {
+    max-width: 100%;
+    width: 100%;
+    padding-left: var(--spacing-lg);
+    padding-right: var(--spacing-lg);
+    margin: 0;
+    box-sizing: border-box;
+  }
+  .testimonial {
+    max-width: 100%;
+    width: 100%;
+    margin: 0 0 var(--spacing-md) 0;
+    box-sizing: border-box;
+    padding-left: var(--spacing-lg);
+    padding-right: var(--spacing-lg);
+  }
 }
 
 a,
@@ -1333,7 +1337,7 @@ import { ref, onMounted } from "vue";
 
 const fullText = "Hi, I'm Bina.\nYour AI-powered coach.";
 const displayedText = ref("");
-const typingSpeed = 40; // ms per character
+const typingSpeed = 60; // ms per character
 
 onMounted(() => {
   let i = 0;
