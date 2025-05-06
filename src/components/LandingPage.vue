@@ -557,7 +557,7 @@ h1 {
 
 .secondary-heading {
   font-size: var(--font-size-lg);
-  font-weight: 600;
+  font-weight: 450;
   /*margin-bottom: 24px;*/
   color: #c4a27e;
 }
@@ -750,7 +750,8 @@ h1 {
 /* Why it Works Section */
 .why-it-works {
   background-color: #f5ece3; /* Consider adding var(--color-background-alt) */
-  padding: var(--spacing-md) var(--spacing-md);
+  /*padding: var(--spacing-md) var(--spacing-md);*/
+  padding-bottom: var(--spacing-md);
   width: 100%;
   align-items: center;
 }
@@ -775,8 +776,9 @@ h1 {
 .features-container {
   display: flex;
   justify-content: center;
+  align-items: center;
   max-width: 1200px;
-  /*margin: 0 auto var(--spacing-xl);*/
+  margin: 0 auto var(--spacing-md);
   /*gap: var(--spacing-xl);*/
 }
 
