@@ -159,6 +159,7 @@
     max-width: 100% !important;
     padding-left: var(--spacing-sm) !important;
     padding-right: var(--spacing-sm) !important;
+    padding-bottom: var(--spacing-lg) !important;
     box-sizing: border-box !important;
   }
   

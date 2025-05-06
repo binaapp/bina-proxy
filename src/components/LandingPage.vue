@@ -35,9 +35,8 @@
       <h2 class="section-title mobile-center">How it works</h2>
 
       <h3 class="section-subtitle mobile-container">
-        <span class="highlight"
-          >Bina guides you through real conversations that create growth.</span
-        >
+        <span class="highlight">Bina</span> guides you through real
+        conversations that create growth.
       </h3>
 
       <div class="steps-container mobile-stack mobile-container">
@@ -465,7 +464,7 @@
 
         <div class="ready-content">
           <h3 class="ready-heading">
-            Bina is here when you're ready.<br />
+            <span class="highlight">Bina</span> is here when you're ready.<br />
             No scheduling, no judgment, no pressure.
           </h3>
 
@@ -585,10 +584,10 @@ h1 {
   background-color: var(--color-secondary);
   color: var(--color-primary);
   /* padding: var(--spacing-sm) var(--spacing-lg);*/
-  padding-bottom: var(--spacing-sm);
-  padding-top: var(--spacing-sm);
-  padding-left: var(--spacing-lg);
-  padding-right: var(--spacing-lg);
+  padding-bottom: var(--spacing-xs);
+  padding-top: var(--spacing-xs);
+  padding-left: var(--spacing-xl);
+  padding-right: var(--spacing-xl);
   font-size: var(--font-size-md);
   font-weight: 700;
   border: none;
@@ -611,6 +610,17 @@ h1 {
 }
 
 /* Sections */
+
+.main-heading {
+  font-size: var(--font-size-xxxl);
+  font-family: var(--font-family-heading);
+  margin-block-end: 0;
+  /*font-size: var(--font-size-xxxl);*/
+  color: var(--color-secondary);
+  /*margin-bottom: var(--spacing-lg);*/
+  line-height: 1.2;
+  font-weight: 600;
+}
 .how-it-works {
   background-color: var(--color-background);
   /*padding: var(--spacing-xl) var(--spacing-md);*/
@@ -637,7 +647,7 @@ h1 {
 }
 
 .highlight {
-  color: var(--color-primary);
+  color: var(--color-secondary);
 }
 
 /* Steps Section */
@@ -742,6 +752,7 @@ h1 {
   background-color: #f5ece3; /* Consider adding var(--color-background-alt) */
   padding: var(--spacing-md) var(--spacing-md);
   width: 100%;
+  align-items: center;
 }
 
 .why-title {
@@ -1136,11 +1147,6 @@ h1 {
     width: 100%;
   }
 
-  .main-heading {
-    font-size: var(--font-size-xl);
-    margin-block-end: 0;
-  }
-
   .title {
     font-size: var(--font-size-xl);
     /*text-align: center;*/
@@ -1207,7 +1213,7 @@ h1 {
     display: flex;
     justify-content: center;
     padding-bottom: var(--spacing-md);
-    padding-top: var(--spacing-md);
+    padding-top: var(--spacing-xl);
   }
 
   .faq-title {
@@ -1279,16 +1285,6 @@ h1 {
   }
 }
 
-.main-heading {
-  font-family: var(--font-family-heading);
-  margin-block-end: 0;
-  font-size: var(--font-size-xxxl);
-  color: var(--color-secondary);
-  /*margin-bottom: var(--spacing-lg);*/
-  line-height: 1.2;
-  font-weight: 600;
-}
-
 /* Add this at the end of your styles */
 @media (max-width: 768px) {
   .circle-fix {
@@ -1322,6 +1318,21 @@ h1 {
     box-sizing: border-box;
     padding-left: var(--spacing-lg);
     padding-right: var(--spacing-lg);
+  }
+
+  .vision-container {
+    width: 100% !important;
+  }
+
+  .main-heading {
+    font-family: var(--font-family-heading);
+    margin-block-end: 0;
+    /*font-size: var(--font-size-xxxl);*/
+    font-size: 10vw;
+    color: var(--color-secondary);
+    /*margin-bottom: var(--spacing-lg);*/
+    line-height: 1.2;
+    font-weight: 600;
   }
 }
 
