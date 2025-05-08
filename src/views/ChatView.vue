@@ -214,6 +214,14 @@ export default {
       // Let SessionRunner handle the message
       this.sessionRunner?.handleUserSubmit();
 
+      // Reset textarea height after sending
+      this.$nextTick(() => {
+        const textarea = this.$refs.chatInput;
+        if (textarea) {
+          textarea.style.height = "auto";
+        }
+      });
+
       // Scroll to bottom immediately after sending
       this.scrollToBottom();
     },
