@@ -43,12 +43,15 @@
     </section>
 
     <div class="chat-box">
-      <input
-        type="text"
+      <textarea
         v-model="userInput"
         placeholder="Message Bina"
         @keyup.enter="sendMessage"
-      />
+        @input="autoResize"
+        ref="chatInput"
+        rows="1"
+        style="overflow: hidden; resize: none"
+      ></textarea>
       <button @click="sendMessage">&#8593;</button>
     </div>
 
@@ -99,7 +102,8 @@ export default {
 
     // Get source from URL parameters
     const urlParams = new URLSearchParams(window.location.search);
-    const source = urlParams.get("source") || "direct";
+    const source =
+      urlParams.get("source") || urlParams.get("utm_source") || "direct";
 
     // Handle restored session
     function handleSessionRestored({ history }) {
@@ -270,6 +274,16 @@ export default {
       // Scroll to bottom at session completion
       this.scrollToBottom();
     },
+
+    autoResize() {
+      this.$nextTick(() => {
+        const textarea = this.$refs.chatInput;
+        if (textarea) {
+          textarea.style.height = "auto";
+          textarea.style.height = textarea.scrollHeight + "px";
+        }
+      });
+    },
   },
   mounted() {
     // Initial scroll to bottom when component mounts
@@ -375,10 +389,9 @@ export default {
   outline: 1px solid rgba(255, 255, 255, 0.2); /* Subtle white debug */
 }
 
-.chat-box input {
+.chat-box textarea {
   flex: 1;
-  height: 40px;
-  padding: 0 1rem;
+  padding: 0.5rem 1rem;
   border: none;
   border-radius: 24px;
   background: rgba(255, 255, 255, 0.1);
@@ -386,6 +399,10 @@ export default {
   font-size: 1rem;
   font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
     sans-serif;
+  min-height: 32px;
+  max-height: 200px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .chat-box button {
