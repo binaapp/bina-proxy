@@ -1,7 +1,33 @@
 <template>
   <div class="landing-page">
     <header class="chat-header">
+      <button
+        class="hamburger"
+        @click="menuOpen = !menuOpen"
+        aria-label="Open menu"
+      >
+        <span class="bar"></span>
+        <span class="bar"></span>
+        <span class="bar"></span>
+      </button>
       <img src="/bina-logo.png" alt="Bina Logo" />
+      <nav v-if="menuOpen" class="hamburger-menu">
+        <button
+          class="close-menu"
+          @click="menuOpen = false"
+          aria-label="Close menu"
+        >
+          &times;
+        </button>
+        <a href="#how-it-works" @click="menuOpen = false">How Bina works</a>
+        <a href="#testimonials" @click="menuOpen = false">Testimonials</a>
+        <a href="#why" @click="menuOpen = false">Why It Works</a>
+        <a href="#faq" @click="menuOpen = false">FAQ's</a>
+        <a href="#vision" @click="menuOpen = false">Our Vision</a>
+        <router-link to="/chat" class="menu-action" @click="menuOpen = false">
+          <button class="menu-action-btn">Try it Free</button>
+        </router-link>
+      </nav>
     </header>
 
     <div class="content">
@@ -31,7 +57,7 @@
       </div>
     </div>
 
-    <div class="how-it-works">
+    <div id="how-it-works" class="how-it-works">
       <h2 class="section-title mobile-center">How it works</h2>
 
       <h3 class="section-subtitle mobile-container">
@@ -129,7 +155,7 @@
       </div>
     </div>
     -->
-    <div class="testimonials">
+    <div id="testimonials" class="testimonials">
       <h2 class="testimonials-title">What people are saying</h2>
 
       <div class="testimonials-container">
@@ -194,7 +220,7 @@
       </div>
     </div>
 
-    <div class="why-it-works">
+    <div id="why" class="why-it-works">
       <h2 class="why-title">Why it works</h2>
 
       <div class="why-intro">
@@ -275,7 +301,7 @@
       </div>
     </div>
 
-    <div class="faq">
+    <div id="faq" class="faq">
       <div class="faq-container">
         <h2 class="faq-title">FAQ</h2>
         <div class="faq-item">
@@ -428,7 +454,7 @@
     </div>
     -->
 
-    <div class="vision-section">
+    <div id="vision" class="vision-section">
       <div class="vision-container">
         <h2 class="vision-title">Our Vision</h2>
         <div class="vision-content">
@@ -499,14 +525,14 @@ h1 {
   color: var(--color-text-light);
   font-family: var(--font-family-primary);
   position: relative;
-  overflow: hidden;
+  /*overflow: hidden;*/
   width: 100%;
   box-sizing: border-box;
 }
 
 .chat-header {
   padding: 1rem;
-  background: transparent;
+  background: var(--color-primary);
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   position: sticky;
   top: 0;
@@ -516,6 +542,7 @@ h1 {
   align-items: center;
   height: 72px;
   outline: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
 .chat-header img {
@@ -523,6 +550,9 @@ h1 {
   width: auto;
   max-width: 250px;
   object-fit: contain;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
 .content {
@@ -1336,12 +1366,107 @@ h1 {
     line-height: 1.2;
     font-weight: 600;
   }
+
+  .content {
+    width: 100%;
+    padding-left: var(--spacing-sm);
+    padding-right: var(--spacing-sm);
+    box-sizing: border-box;
+  }
 }
 
 a,
 a:visited,
 a:active {
   text-decoration: none !important;
+}
+
+.hamburger {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  width: 32px;
+  height: 32px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  z-index: 20;
+  margin-left: 0;
+  position: absolute;
+  left: 1rem;
+}
+.hamburger .bar {
+  display: block;
+  height: 4px;
+  width: 100%;
+  background: #fff !important;
+  margin: 4px 0;
+  border-radius: 2px;
+  transition: 0.3s;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+}
+.hamburger-menu {
+  position: absolute;
+  top: 72px; /* match header height */
+  left: 1rem;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  min-width: 150px;
+  z-index: 15;
+  max-width: calc(100vw - 2rem);
+  box-sizing: border-box;
+  overflow-x: auto;
+}
+.hamburger-menu a {
+  padding: 1rem;
+  color: var(--color-primary);
+  text-decoration: none;
+  border-bottom: 1px solid #eee;
+  font-weight: 400;
+  font-family: inherit;
+  letter-spacing: 0.01em;
+}
+.hamburger-menu a:last-child {
+  border-bottom: none;
+}
+
+.close-menu {
+  background: none;
+  border: none;
+  color: #333;
+  font-size: 2rem;
+  position: absolute;
+  top: 0.5rem;
+  right: 0.75rem;
+  cursor: pointer;
+  z-index: 100;
+}
+
+.menu-action {
+  display: flex;
+  justify-content: center;
+  margin-top: 1.5rem;
+  text-decoration: none;
+}
+
+.menu-action-btn {
+  font-weight: 700;
+  font-size: 1.2rem;
+  color: var(--color-primary, #18364a);
+  background: #fff;
+  border: 2px solid var(--color-primary, #18364a);
+  border-radius: 8px;
+  padding: 0.75rem 2rem;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.menu-action-btn:hover {
+  background: var(--color-primary, #18364a);
+  color: #fff;
 }
 </style>
 
@@ -1351,6 +1476,7 @@ import { ref, onMounted } from "vue";
 const fullText = "Hi, I'm Bina.\nYour AI-powered coach.";
 const displayedText = ref("");
 const typingSpeed = 60; // ms per character
+const menuOpen = ref(false);
 
 onMounted(() => {
   let i = 0;
