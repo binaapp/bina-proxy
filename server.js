@@ -2,6 +2,7 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const fetch = require("node-fetch");
+const { sendEmail } = require('./sesEmailService');
 
 const mysql = require("mysql2/promise");
 
@@ -32,6 +33,8 @@ const corsOptions = {
     "http://binaapp.s3-website.eu-north-1.amazonaws.com",
     "http://3.72.14.168:3001",
     "http://binaapp.s3-website.eu-north-1.amazonaws.com/",
+    "https://staging.binaapp.com",
+    "https://binaapp.com",
   ],
   credentials: true,
   methods: ["GET", "POST", "OPTIONS"],
@@ -342,6 +345,25 @@ app.post("/api/session", async (req, res) => {
       );
       resultId = sessionResult.insertId;
       console.log("Created new session with ID:", resultId);
+
+      // Send email ONLY when a new session is created
+      const userName = deviceInfo && deviceInfo.name ? deviceInfo.name : "Unknown";
+      try {
+        await sendEmail(
+          'bina@binaapp.com',
+          'A user started a session',
+          `A new session was started by ${userName}.
+Referral source: ${referralSource || "Unknown"}
+Session ID: ${resultId}`,
+          `<p>
+            A new session was started by <b>${userName}</b>.<br>
+            Referral source: <b>${referralSource || "Unknown"}</b><br>
+            Session ID: <b>${resultId}</b>
+          </p>`
+        );
+      } catch (emailErr) {
+        console.error("Error sending session start email:", emailErr);
+      }
     } else {
       console.log("Updating existing session:", id);
       resultId = id;
@@ -353,6 +375,27 @@ app.post("/api/session", async (req, res) => {
         [endTimestamp, completed, id]
       );
       console.log("Update result:", updateResult);
+
+      // Send email ONLY when session is ended/completed
+      if (completed) {
+        const userName = deviceInfo && deviceInfo.name ? deviceInfo.name : "Unknown";
+        try {
+          await sendEmail(
+            'bina@binaapp.com',
+            'A user ended a session',
+            `Session ended by ${userName}.
+Referral source: ${referralSource || "Unknown"}
+Session ID: ${resultId}`,
+            `<p>
+              Session ended by <b>${userName}</b>.<br>
+              Referral source: <b>${referralSource || "Unknown"}</b><br>
+              Session ID: <b>${resultId}</b>
+            </p>`
+          );
+        } catch (emailErr) {
+          console.error("Error sending session end email:", emailErr);
+        }
+      }
     }
 
     // 💾 Save each step to session_steps
@@ -387,6 +430,7 @@ app.post("/api/session", async (req, res) => {
     }
 
     connection.release();
+
     res.json({ success: true, sessionId: resultId, stepId: stepIdToReturn });
   } catch (err) {
     console.error("Error saving session:", err);
