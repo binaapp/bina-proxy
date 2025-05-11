@@ -10,7 +10,14 @@
         <span class="bar"></span>
         <span class="bar"></span>
       </button>
-      <img src="/bina-logo.png" alt="Bina Logo" />
+      <router-link
+        to="/"
+        class="logo-link"
+        aria-label="Go to home"
+        @click.prevent="handleLogoClick"
+      >
+        <img src="/bina-logo.png" alt="Bina Logo" />
+      </router-link>
       <nav v-if="menuOpen" class="hamburger-menu">
         <button
           class="close-menu"
@@ -557,7 +564,7 @@ h1 {
 
 .content {
   flex: 1;
-  max-width: var(--max-content-width);
+  max-width: var(--max-content-width, 1200px);
   width: 80%;
   margin: 0 auto;
   padding-left: var(--spacing-md);
@@ -931,7 +938,7 @@ h1 {
 }
 
 .faq-container {
-  max-width: var(--maxcontent-width);
+  max-width: var(--max-content-width, 1200px);
   width: 80%;
   align-items: flex-start;
   margin: 0 auto;
@@ -1045,7 +1052,7 @@ h1 {
 }
 
 .vision-container {
-  max-width: var(--maxcontent-width);
+  max-width: var(--max-content-width, 1200px);
   width: 80%;
   margin: 0 auto;
   padding: 0 var(--spacing-md);
@@ -1094,7 +1101,7 @@ h1 {
 }
 
 .ready-container {
-  max-width: var(--maxcontent-width);
+  max-width: var(--max-content-width, 1200px);
   width: 80%;
   margin: 0 auto;
   text-align: left;
@@ -1373,6 +1380,38 @@ h1 {
     padding-right: var(--spacing-sm);
     box-sizing: border-box;
   }
+
+  .hamburger {
+    left: 1rem !important;
+  }
+
+  .content,
+  .vision-container,
+  .ready-container,
+  .faq-container {
+    width: 100% !important;
+    max-width: 600px; /* adjust as needed for your design */
+    margin: 0 auto;
+    padding-left: var(--spacing-sm);
+    padding-right: var(--spacing-sm);
+    box-sizing: border-box;
+  }
+
+  .logo-link {
+    left: 50% !important;
+    top: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    z-index: 5;
+    display: contents !important;
+  }
+
+  .chat-header {
+    padding-left: var(--spacing-sm);
+    padding-right: var(--spacing-sm);
+  }
 }
 
 a,
@@ -1394,7 +1433,9 @@ a:active {
   z-index: 20;
   margin-left: 0;
   position: absolute;
-  left: 1rem;
+  left: calc((100vw - 80vw) / 2 + var(--spacing-md));
+
+  /*left: 1rem;*/
 }
 .hamburger .bar {
   display: block;
@@ -1468,15 +1509,37 @@ a:active {
   background: var(--color-primary, #18364a);
   color: #fff;
 }
+
+.logo-link {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  height: 100%;
+  display: flex;
+  align-items: center;
+  z-index: 5;
+}
+.logo-link img {
+  height: 50px;
+  width: auto;
+  max-width: 250px;
+  object-fit: contain;
+  display: block;
+}
 </style>
 
 <script setup>
 import { ref, onMounted } from "vue";
+import { useRoute, useRouter } from "vue-router";
 
 const fullText = "Hi, I'm Bina.\nYour AI-powered coach.";
 const displayedText = ref("");
 const typingSpeed = 60; // ms per character
 const menuOpen = ref(false);
+
+const route = useRoute();
+const router = useRouter();
 
 onMounted(() => {
   let i = 0;
@@ -1489,4 +1552,12 @@ onMounted(() => {
   }
   type();
 });
+
+function handleLogoClick() {
+  if (route.path === "/") {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  } else {
+    router.push("/");
+  }
+}
 </script>
