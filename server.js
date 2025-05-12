@@ -25,23 +25,35 @@ console.log("🌍 Connected to DB:", process.env.DB_HOST, process.env.DB_NAME);
 const app = express();
 
 // CORS configuration
+const allowedOrigins = [
+  "http://localhost:8080",
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
+  "http://binaapp.s3-website.eu-north-1.amazonaws.com",
+  "http://3.72.14.168:3001",
+  "http://binaapp.s3-website.eu-north-1.amazonaws.com/",
+  "https://staging.binaapp.com",
+  "https://binaapp.com",
+  "https://www.binaapp.com",
+];
+
 const corsOptions = {
-  origin: [
-    "http://localhost:8080",
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-    "http://binaapp.s3-website.eu-north-1.amazonaws.com",
-    "http://3.72.14.168:3001",
-    "http://binaapp.s3-website.eu-north-1.amazonaws.com/",
-    "https://staging.binaapp.com",
-    "https://binaapp.com",
-  ],
-  credentials: true,
-  methods: ["GET", "POST", "OPTIONS"],
+  origin: function (origin, callback) {
+    console.log("CORS request from origin:", origin);
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.warn("Blocked by CORS:", origin);
+      callback(null, false);
+    }
+  },
+  methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
   allowedHeaders: ["Content-Type", "Accept", "Authorization"],
   exposedHeaders: ["Content-Length", "Content-Type"],
-  maxAge: 600, // Cache preflight requests for 10 minutes
+  credentials: true,
+  maxAge: 600,
 };
+
 
 app.use(cors(corsOptions));
 app.options("*", cors(corsOptions));

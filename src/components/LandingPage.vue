@@ -6,9 +6,17 @@
         @click="menuOpen = !menuOpen"
         aria-label="Open menu"
       >
-        <span class="bar"></span>
-        <span class="bar"></span>
-        <span class="bar"></span>
+        <svg
+          width="48"
+          height="48"
+          viewBox="0 0 48 48"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <rect x="10" y="12" width="28" height="4" rx="2" fill="white" />
+          <rect x="10" y="22" width="28" height="4" rx="2" fill="white" />
+          <rect x="10" y="32" width="28" height="4" rx="2" fill="white" />
+        </svg>
       </button>
       <router-link
         to="/"
@@ -1382,7 +1390,11 @@ h1 {
   }
 
   .hamburger {
-    left: 1rem !important;
+    left: 0.4rem !important;
+  }
+
+  .hamburger-menu {
+    left: 1.4rem !important;
   }
 
   .content,
@@ -1426,14 +1438,14 @@ a:active {
   justify-content: center;
   align-items: flex-start;
   width: 32px;
-  height: 32px;
+  height: 43px;
   background: none;
   border: none;
   cursor: pointer;
   z-index: 20;
   margin-left: 0;
   position: absolute;
-  left: calc((100vw - 80vw) / 2 + var(--spacing-md));
+  left: calc((100vw - 83vw) / 2 + var(--spacing-md));
 
   /*left: 1rem;*/
 }
@@ -1442,6 +1454,8 @@ a:active {
   height: 4px;
   width: 100%;
   background: #fff !important;
+  opacity: 1 !important;
+  transform: none !important;
   margin: 4px 0;
   border-radius: 2px;
   transition: 0.3s;
@@ -1450,7 +1464,7 @@ a:active {
 .hamburger-menu {
   position: absolute;
   top: 72px; /* match header height */
-  left: 1rem;
+  left: calc((100vw - 80vw) / 2 + var(--spacing-md));
   background: #fff;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   display: flex;
