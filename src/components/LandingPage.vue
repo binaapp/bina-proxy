@@ -1438,7 +1438,7 @@ a:active {
   justify-content: center;
   align-items: flex-start;
   width: 32px;
-  height: 43px;
+  height: 41px;
   background: none;
   border: none;
   cursor: pointer;
