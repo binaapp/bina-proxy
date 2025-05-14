@@ -254,7 +254,7 @@ async function handleSubmit() {
 
 .thanks-title {
   font-family: var(--font-family-heading);
-  font-size: 3rem;
+  font-size: var(--font-size-xxl);
   color: var(--color-secondary);
   margin-bottom: 2rem;
   font-weight: 700;
@@ -263,7 +263,7 @@ async function handleSubmit() {
 
 .thanks-text {
   color: var(--color-text-light);
-  font-size: 2rem;
+  font-size: var(--font-size-lg);
   margin-bottom: 2.5rem;
   line-height: 1.3;
 }
@@ -272,7 +272,7 @@ async function handleSubmit() {
   background-color: var(--color-secondary);
   color: var(--color-primary);
   padding: 1rem 3rem;
-  font-size: 2rem;
+  font-size: var(--font-size-md);
   font-weight: 700;
   border: none;
   border-radius: var(--border-radius-md);
@@ -280,6 +280,10 @@ async function handleSubmit() {
   box-shadow: 0 6px 12px var(--color-shadow);
   transition: all var(--transition-fast);
   margin-top: 2rem;
+  padding-bottom: var(--spacing-xs);
+  padding-top: var(--spacing-xs);
+  padding-left: var(--spacing-xl);
+  padding-right: var(--spacing-xl);
 }
 
 .start-button:hover {
