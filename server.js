@@ -217,6 +217,12 @@ app.post("/api/claude", async (req, res, next) => {
     });
   }
 });
+
+function shouldSendEmails() {
+  // Only send emails if in production
+  return process.env.NODE_ENV === 'production';
+}
+
 app.post("/api/session", async (req, res) => {
   try {
     const {
@@ -360,21 +366,23 @@ app.post("/api/session", async (req, res) => {
 
       // Send email ONLY when a new session is created
       const userName = deviceInfo && deviceInfo.name ? deviceInfo.name : "Unknown";
-      try {
-        await sendEmail(
-          'bina@binaapp.com',
-          'A user started a session',
-          `A new session was started by ${userName}.
+      if (shouldSendEmails()) {
+        try {
+          await sendEmail(
+            'bina@binaapp.com',
+            'A user started a session',
+            `A new session was started by ${userName}.
 Referral source: ${referralSource || "Unknown"}
 Session ID: ${resultId}`,
-          `<p>
-            A new session was started by <b>${userName}</b>.<br>
-            Referral source: <b>${referralSource || "Unknown"}</b><br>
-            Session ID: <b>${resultId}</b>
-          </p>`
-        );
-      } catch (emailErr) {
-        console.error("Error sending session start email:", emailErr);
+            `<p>
+              A new session was started by <b>${userName}</b>.<br>
+              Referral source: <b>${referralSource || "Unknown"}</b><br>
+              Session ID: <b>${resultId}</b>
+            </p>`
+          );
+        } catch (emailErr) {
+          console.error("Error sending session start email:", emailErr);
+        }
       }
     } else {
       console.log("Updating existing session:", id);
@@ -389,7 +397,7 @@ Session ID: ${resultId}`,
       console.log("Update result:", updateResult);
 
       // Send email ONLY when session is ended/completed
-      if (completed) {
+      if (completed && shouldSendEmails()) {
         const userName = deviceInfo && deviceInfo.name ? deviceInfo.name : "Unknown";
         try {
           await sendEmail(
@@ -452,6 +460,7 @@ Session ID: ${resultId}`,
 });
 
 app.post("/api/contact", async (req, res) => {
+  console.log("Received body:", req.body);
   const { name, email, reason, message } = req.body;
   try {
     await sendEmail(

@@ -2,12 +2,28 @@
   <AppHeader />
   <div class="contact-page">
     <div class="contact-info">
-      <h1 class="contact-title">Contact Us</h1>
-      <h2 class="contact-subtitle">We'd love to hear from you</h2>
-      <p class="contact-description">
-        Whether you have a question, feedback, or an idea to explore — we'd love
-        to hear from you. Fill out the form and we'll get back to you soon.
-      </p>
+      <template v-if="!sent">
+        <h1 class="contact-title">Contact Us</h1>
+        <h2 class="contact-subtitle">We'd love to hear from you</h2>
+        <p class="contact-description">
+          Whether you have a question, feedback, or an idea to explore — we'd
+          love to hear from you. Fill out the form and we'll get back to you
+          soon.
+        </p>
+      </template>
+      <template v-else>
+        <div class="thank-you-message">
+          <h1 class="thanks-title">Thanks for reaching out.</h1>
+          <p class="thanks-text">
+            We've received your message and will get back to you soon.<br />
+            In the meantime, feel free to start a session or explore more about
+            Bina.
+          </p>
+          <button class="start-button" @click="$router.push('/chat')">
+            START NOW
+          </button>
+        </div>
+      </template>
     </div>
     <div class="contact-right">
       <form v-if="!sent" class="contact-form" @submit.prevent="handleSubmit">
@@ -40,17 +56,6 @@
         ></textarea>
         <button type="submit" class="send-button">Send Message</button>
       </form>
-      <div v-else class="thank-you-message">
-        <h1 class="thanks-title">Thanks for reaching out.</h1>
-        <p class="thanks-text">
-          We've received your message and will get back to you soon.<br />
-          In the meantime, feel free to start a session or explore more about
-          Bina.
-        </p>
-        <button class="start-button" @click="$router.push('/chat')">
-          START NOW
-        </button>
-      </div>
     </div>
   </div>
 </template>
@@ -58,16 +63,21 @@
 <script setup>
 import { ref } from "vue";
 import AppHeader from "./AppHeader.vue";
+import { getApiBase } from "@/utils/sessionApi";
 
 const name = ref("");
 const email = ref("");
 const reason = ref("");
 const message = ref("");
 const sent = ref(false);
+const sending = ref(false);
+const debugMsg = ref("");
 
 async function handleSubmit() {
+  sending.value = true;
+  debugMsg.value = "handleSubmit called!";
   try {
-    await fetch("http://localhost:3001/api/contact", {
+    const response = await fetch(`${getApiBase()}/api/contact`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -77,9 +87,14 @@ async function handleSubmit() {
         message: message.value,
       }),
     });
+    if (!response.ok) throw new Error("Failed to send message");
     sent.value = true;
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    debugMsg.value = "Message sent!";
   } catch (err) {
-    // Show error message
+    debugMsg.value = "Error: " + err.message;
+  } finally {
+    sending.value = false;
   }
 }
 </script>

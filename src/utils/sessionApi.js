@@ -76,6 +76,13 @@ export async function submitSession(params = {}) {
   }
 }
 
+export function getApiBase() {
+  if (hostname.includes("staging.binaapp.com"))
+    return "https://api-staging.binaapp.com";
+  if (hostname.includes("binaapp.com")) return "https://api.binaapp.com";
+  return "http://localhost:3001";
+}
+
 // Usage example in a Vue component:
 /*
 import { submitSession } from '@/utils/sessionApi';
