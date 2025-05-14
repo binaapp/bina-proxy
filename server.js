@@ -451,6 +451,22 @@ Session ID: ${resultId}`,
   }
 });
 
+app.post("/api/contact", async (req, res) => {
+  const { name, email, reason, message } = req.body;
+  try {
+    await sendEmail(
+      'bina@binaapp.com', // or your desired recipient
+      `Contact Form Submission: ${reason}`,
+      `From: ${name} <${email}>\nReason: ${reason}\n\n${message}`,
+      `<p><b>From:</b> ${name} (${email})<br><b>Reason:</b> ${reason}</p><p>${message}</p>`
+    );
+    res.json({ success: true });
+  } catch (err) {
+    console.error("Error sending contact form email:", err);
+    res.status(500).json({ error: "Failed to send email" });
+  }
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error("Global error handler:", err);

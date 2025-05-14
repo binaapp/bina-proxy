@@ -1,50 +1,6 @@
 <template>
   <div class="landing-page">
-    <header class="chat-header">
-      <button
-        class="hamburger"
-        @click="menuOpen = !menuOpen"
-        aria-label="Open menu"
-      >
-        <svg
-          width="48"
-          height="48"
-          viewBox="0 0 48 48"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <rect x="10" y="12" width="28" height="4" rx="2" fill="white" />
-          <rect x="10" y="22" width="28" height="4" rx="2" fill="white" />
-          <rect x="10" y="32" width="28" height="4" rx="2" fill="white" />
-        </svg>
-      </button>
-      <router-link
-        to="/"
-        class="logo-link"
-        aria-label="Go to home"
-        @click.prevent="handleLogoClick"
-      >
-        <img src="/bina-logo.png" alt="Bina Logo" />
-      </router-link>
-      <nav v-if="menuOpen" class="hamburger-menu">
-        <button
-          class="close-menu"
-          @click="menuOpen = false"
-          aria-label="Close menu"
-        >
-          &times;
-        </button>
-        <a href="#how-it-works" @click="menuOpen = false">How Bina works</a>
-        <a href="#testimonials" @click="menuOpen = false">Testimonials</a>
-        <a href="#why" @click="menuOpen = false">Why It Works</a>
-        <a href="#faq" @click="menuOpen = false">FAQ's</a>
-        <a href="#vision" @click="menuOpen = false">Our Vision</a>
-        <router-link to="/chat" class="menu-action" @click="menuOpen = false">
-          <button class="menu-action-btn">Try it Free</button>
-        </router-link>
-      </nav>
-    </header>
-
+    <Header />
     <div class="content">
       <h1 class="main-heading">
         <span v-html="displayedText"></span>
@@ -543,31 +499,6 @@ h1 {
   /*overflow: hidden;*/
   width: 100%;
   box-sizing: border-box;
-}
-
-.chat-header {
-  padding: 1rem;
-  background: var(--color-primary);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 72px;
-  outline: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-}
-
-.chat-header img {
-  height: 50px;
-  width: auto;
-  max-width: 250px;
-  object-fit: contain;
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
 }
 
 .content {
@@ -1389,14 +1320,6 @@ h1 {
     box-sizing: border-box;
   }
 
-  .hamburger {
-    left: 0.4rem !important;
-  }
-
-  .hamburger-menu {
-    left: 1.4rem !important;
-  }
-
   .content,
   .vision-container,
   .ready-container,
@@ -1408,22 +1331,6 @@ h1 {
     padding-right: var(--spacing-sm);
     box-sizing: border-box;
   }
-
-  .logo-link {
-    left: 50% !important;
-    top: 50% !important;
-    transform: translate(-50%, -50%) !important;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    z-index: 5;
-    display: contents !important;
-  }
-
-  .chat-header {
-    padding-left: var(--spacing-sm);
-    padding-right: var(--spacing-sm);
-  }
 }
 
 a,
@@ -1431,129 +1338,15 @@ a:visited,
 a:active {
   text-decoration: none !important;
 }
-
-.hamburger {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: flex-start;
-  width: 32px;
-  height: 41px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  z-index: 20;
-  margin-left: 0;
-  position: absolute;
-  left: calc((100vw - 83vw) / 2 + var(--spacing-md));
-
-  /*left: 1rem;*/
-}
-.hamburger .bar {
-  display: block;
-  height: 4px;
-  width: 100%;
-  background: #fff !important;
-  opacity: 1 !important;
-  transform: none !important;
-  margin: 4px 0;
-  border-radius: 2px;
-  transition: 0.3s;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
-}
-.hamburger-menu {
-  position: absolute;
-  top: 72px; /* match header height */
-  left: calc((100vw - 80vw) / 2 + var(--spacing-md));
-  background: #fff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  display: flex;
-  flex-direction: column;
-  min-width: 150px;
-  z-index: 15;
-  max-width: calc(100vw - 2rem);
-  box-sizing: border-box;
-  overflow-x: auto;
-}
-.hamburger-menu a {
-  padding: 1rem;
-  color: var(--color-primary);
-  text-decoration: none;
-  border-bottom: 1px solid #eee;
-  font-weight: 400;
-  font-family: inherit;
-  letter-spacing: 0.01em;
-}
-.hamburger-menu a:last-child {
-  border-bottom: none;
-}
-
-.close-menu {
-  background: none;
-  border: none;
-  color: #333;
-  font-size: 2rem;
-  position: absolute;
-  top: 0.5rem;
-  right: 0.75rem;
-  cursor: pointer;
-  z-index: 100;
-}
-
-.menu-action {
-  display: flex;
-  justify-content: center;
-  margin-top: 1.5rem;
-  text-decoration: none;
-}
-
-.menu-action-btn {
-  font-weight: 700;
-  font-size: 1.2rem;
-  color: var(--color-primary, #18364a);
-  background: #fff;
-  border: 2px solid var(--color-primary, #18364a);
-  border-radius: 8px;
-  padding: 0.75rem 2rem;
-  cursor: pointer;
-  transition: background 0.2s, color 0.2s;
-}
-
-.menu-action-btn:hover {
-  background: var(--color-primary, #18364a);
-  color: #fff;
-}
-
-.logo-link {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  height: 100%;
-  display: flex;
-  align-items: center;
-  z-index: 5;
-}
-.logo-link img {
-  height: 50px;
-  width: auto;
-  max-width: 250px;
-  object-fit: contain;
-  display: block;
-}
 </style>
 
 <script setup>
 import { ref, onMounted } from "vue";
-import { useRoute, useRouter } from "vue-router";
+import Header from "./AppHeader.vue";
 
 const fullText = "Hi, I'm Bina.\nYour AI-powered coach.";
 const displayedText = ref("");
 const typingSpeed = 60; // ms per character
-const menuOpen = ref(false);
-
-const route = useRoute();
-const router = useRouter();
 
 onMounted(() => {
   let i = 0;
@@ -1566,12 +1359,4 @@ onMounted(() => {
   }
   type();
 });
-
-function handleLogoClick() {
-  if (route.path === "/") {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  } else {
-    router.push("/");
-  }
-}
 </script>
