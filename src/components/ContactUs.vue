@@ -27,10 +27,10 @@
         />
         <select v-model="reason" required>
           <option disabled value="">Reason for contact</option>
-          <option>General Inquiry</option>
-          <option>Feedback</option>
-          <option>Support</option>
-          <option>Other</option>
+          <option>I have a question</option>
+          <option>I want to partner</option>
+          <option>Feedback on product</option>
+          <option>Something else</option>
         </select>
         <textarea
           v-model="message"
@@ -236,6 +236,9 @@ async function handleSubmit() {
     gap: 1rem;
     width: 100%;
     box-sizing: border-box;
+  }
+  .contact-form input {
+    font-size: var(--font-size-md);
   }
   .send-button {
     font-size: var(--font-size-xl);
