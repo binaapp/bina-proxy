@@ -200,6 +200,8 @@ const saveStepToDatabase = async (
     }
   } catch (error) {
     console.error("Failed to save step:", error);
+    // Show error to user (replace with your UI logic)
+    alert("The server is not responding. Please try again.");
   }
 };
 

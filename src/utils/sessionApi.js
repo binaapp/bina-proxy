@@ -17,11 +17,17 @@ export const API_URL = hostname.includes("staging.binaapp.com")
   : "http://localhost:3001/api/session";
 
 /**
- * Submits session data to the backend
+ * Submits session data to the backend, with retry logic on network/server errors
  * @param {Object} params Custom parameters to override defaults
+ * @param {number} maxRetries Number of times to retry on failure
+ * @param {number} retryDelay Delay between retries (ms)
  * @returns {Promise} Response from the server
  */
-export async function submitSession(params = {}) {
+export async function submitSession(
+  params = {},
+  maxRetries = 3,
+  retryDelay = 2000
+) {
   console.log("Starting session submission with params:", params);
 
   const sessionData = {
@@ -46,33 +52,45 @@ export async function submitSession(params = {}) {
   console.log(`Sending ${method} request to:`, url);
   console.log("Session data being sent:", sessionData);
 
-  try {
-    const response = await fetch(url, {
-      method,
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(sessionData),
-    });
+  let attempt = 0;
+  while (attempt < maxRetries) {
+    try {
+      const response = await fetch(url, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(sessionData),
+      });
 
-    console.log("Response status:", response.status);
-    console.log(
-      "Response headers:",
-      Object.fromEntries(response.headers.entries())
-    );
+      console.log("Response status:", response.status);
+      console.log(
+        "Response headers:",
+        Object.fromEntries(response.headers.entries())
+      );
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("Server error response:", errorText);
-      throw new Error(`HTTP error! status: ${response.status}`);
+      if (!response.ok) {
+        // Only retry on server errors or timeout (504)
+        if (response.status === 504 || response.status >= 500) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        // For other errors, don't retry
+        const errorText = await response.text();
+        throw new Error(errorText);
+      }
+
+      const data = await response.json();
+      console.log("Session submission successful:", data);
+      return data;
+    } catch (error) {
+      attempt++;
+      if (attempt >= maxRetries) {
+        // After max retries, rethrow error so UI can show message
+        throw error;
+      }
+      // Wait before retrying
+      await new Promise((res) => setTimeout(res, retryDelay));
     }
-
-    const data = await response.json();
-    console.log("Session submission successful:", data);
-    return data;
-  } catch (error) {
-    console.error("Error submitting session:", error);
-    throw error;
   }
 }
 

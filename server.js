@@ -145,7 +145,15 @@ app.post("/api/claude", async (req, res, next) => {
     }
 
     let response;
+    const controller = new AbortController();
+    const timeoutMs = 15000; // 15 seconds
+    const timeout = setTimeout(() => {
+      console.error("Claude API request timed out after", timeoutMs, "ms");
+      controller.abort();
+    }, timeoutMs);
+
     try {
+      console.log("Sending request to Claude API...");
       response = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST",
         headers: {
@@ -154,7 +162,10 @@ app.post("/api/claude", async (req, res, next) => {
           "anthropic-version": "2023-06-01",
         },
         body: JSON.stringify(claudeRequest),
+        signal: controller.signal,
       });
+      clearTimeout(timeout);
+      console.log("Received response from Claude API");
 
       console.log("Claude API response headers:", {
         status: response.status,
@@ -187,6 +198,14 @@ app.post("/api/claude", async (req, res, next) => {
       //data.content = data.content?.replace(/[\x00-\x1F\x7F-\x9F]/g, '');
       res.json(data);
     } catch (fetchError) {
+      clearTimeout(timeout);
+      if (fetchError.name === 'AbortError') {
+        console.error("Claude API request aborted due to timeout");
+        return res.status(504).json({
+          error: "Timeout",
+          message: "Claude API did not respond in time",
+        });
+      }
       console.error("Fetch error:", {
         message: fetchError.message,
         name: fetchError.name,
