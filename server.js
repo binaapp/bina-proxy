@@ -3,6 +3,7 @@ const express = require("express");
 const cors = require("cors");
 const fetch = require("node-fetch");
 const { sendEmail } = require('./sesEmailService');
+const rateLimit = require('express-rate-limit');
 
 const mysql = require("mysql2/promise");
 
@@ -220,6 +221,7 @@ app.post("/api/claude", async (req, res, next) => {
 
 function shouldSendEmails() {
   // Only send emails if in production
+  console.log("NODE_ENV is:", process.env.NODE_ENV);
   return process.env.NODE_ENV === 'production';
 }
 
@@ -459,15 +461,35 @@ Session ID: ${resultId}`,
   }
 });
 
-app.post("/api/contact", async (req, res) => {
+const contactLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // limit each IP to 5 requests per windowMs
+  message: { error: "Too many contact form submissions from this IP, please try again later." }
+});
+
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+app.post("/api/contact", contactLimiter, async (req, res) => {
   console.log("Received body:", req.body);
   const { name, email, reason, message } = req.body;
+
+  // Check message length
+  if (!message || message.length > 2000) {
+    return res.status(400).json({ error: "Message is required and must be less than 2000 characters." });
+  }
+
   try {
     await sendEmail(
-      'bina@binaapp.com', // or your desired recipient
-      `Contact Form Submission: ${reason}`,
-      `From: ${name} <${email}>\nReason: ${reason}\n\n${message}`,
-      `<p><b>From:</b> ${name} (${email})<br><b>Reason:</b> ${reason}</p><p>${message}</p>`
+      'bina@binaapp.com',
+      `Contact Form Submission: ${escapeHtml(reason)}`,
+      `From: ${escapeHtml(name)} <${escapeHtml(email)}>\nReason: ${escapeHtml(reason)}\n\n${escapeHtml(message)}`,
+      `<p><b>From:</b> ${escapeHtml(name)} (${escapeHtml(email)})<br><b>Reason:</b> ${escapeHtml(reason)}</p><p>${escapeHtml(message)}</p>`
     );
     res.json({ success: true });
   } catch (err) {
@@ -503,3 +525,4 @@ API endpoint:
 Press Ctrl+C to stop the server
 `);
 });
+
