@@ -48,7 +48,7 @@
             v-if="sessionButtonType === 'registration'"
             @click="goToRegistration"
           >
-            Register Now
+            Sign Up Here
           </PrimaryButton>
         </div>
       </transition>
@@ -385,9 +385,8 @@ export default {
 
       // Update button state if provided
       if (showButton) {
-        console.log("[ChatView] Setting button state:", showButton);
-        this.showSessionButton = true;
-        this.sessionButtonType = showButton;
+        console.log("[ChatView] Pending button state:", showButton);
+        this.pendingSessionButtonType = showButton;
       }
 
       this.scrollToBottom();

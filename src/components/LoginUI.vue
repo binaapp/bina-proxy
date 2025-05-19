@@ -148,7 +148,12 @@ async function onGoogleSignIn() {
       }),
     });
 
-    alert(`Signed in as ${user.email}`);
+    if (window.opener) {
+      window.opener.location.href = "/chat?justRegistered=1";
+      window.close();
+    } else {
+      router.push({ path: "/chat", query: { justRegistered: "1" } });
+    }
   } catch (error) {
     console.error("Google sign-in error:", error);
     alert("Google sign-in failed");
