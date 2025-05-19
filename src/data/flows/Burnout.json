@@ -130,7 +130,7 @@
       "name": "problem-clarification",
       "goal": "Help the user name and clarify the specific burnout-related challenge they want to explore today. Stay grounded in their own words and current emotional reality.",
       "callAPI": true,
-      "instruction": "Review the user's burnout persona and questionnaire answers. Ask a warm, open-ended question to help them identify one specific challenge they’d like to focus on. Reflect back what they’ve shared in 1–2 sentences, using their tone and language. Your goal is to clarify—not analyze. Do not suggest responsibility, root causes, or patterns yet.",
+      "instruction": "Review the user's burnout persona and questionnaire answers. Ask a warm, open-ended question to help them identify one specific challenge they'd like to focus on. Reflect back what they've shared in 1–2 sentences, using their tone and language. Your goal is to clarify—not analyze. Do not suggest responsibility, root causes, or patterns yet.",
       "phaseEvaluation": {
         "instructions": "Ensure the user feels that the description accurately captures their experience before moving forward. Be open to refining it until it feels emotionally true.",
         "conditions": {
@@ -153,7 +153,7 @@
     },
     {
       "name": "pattern-exploration",
-      "goal": "Ask the user whether this kind of challenge has shown up before in other roles, relationships, or situations. Prompt them to notice patterns. Then, gently invite them to reflect on one part of it they may have some control over or want to shift. Avoid assigning blame—focus on agency. If the user shares something personal or takes ownership, acknowledge it warmly. You might say something like: 'It takes clarity to notice a pattern like that,' or 'That’s a powerful insight to name.' Keep any encouragement emotionally grounded and specific to what they shared.",
+      "goal": "Ask the user whether this kind of challenge has shown up before in other roles, relationships, or situations. Prompt them to notice patterns. Then, gently invite them to reflect on one part of it they may have some control over or want to shift. Avoid assigning blame—focus on agency. If the user shares something personal or takes ownership, acknowledge it warmly. You might say something like: 'It takes clarity to notice a pattern like that,' or 'That's a powerful insight to name.' Keep any encouragement emotionally grounded and specific to what they shared.",
       "callAPI": true,
       "instruction": "Ask the user whether this kind of challenge has shown up before in other roles, relationships, or situations. Prompt them to notice patterns. Then, gently invite them to reflect on one part of it they may have some control over or want to shift. Avoid assigning blame—focus on agency.",
       "phaseEvaluation": {
@@ -205,7 +205,7 @@
       "name": "action",
       "goal": "Help the user commit to one specific action they are ready to take, based on the insight and ownership they just named.",
       "callAPI": true,
-      "instruction": "Invite the user to name one small, specific action they are ready to try soon. The action must be realistic, meaningful, and fully their choice. Once they name the action, briefly affirm it and reflect the emotional significance of naming it — for example: 'That’s a meaningful commitment to make,' or 'The fact that you named it clearly shows real care for yourself.' Keep any encouragement simple, sincere, and connected to what they said. Do not suggest advice.",
+      "instruction": "Invite the user to name one small, specific action they are ready to try soon. The action must be realistic, meaningful, and fully their choice. Once they name the action, briefly affirm it and reflect the emotional significance of naming it — for example: 'That's a meaningful commitment to make,' or 'The fact that you named it clearly shows real care for yourself.' Keep any encouragement simple, sincere, and connected to what they said. Do not suggest advice.",
       "phaseEvaluation": {
         "instructions": "Only finish the phase when the user has clearly stated an action, a general time frame (e.g. 'this week'), and shows readiness to try it.",
         "conditions": {
@@ -229,20 +229,20 @@
     {
       "name": "session-reflection",
       "callAPI": true,
-      "goal": "Help the user pause and reflect on what they’re taking away from the session, so the insight becomes more tangible and meaningful before closing.",
-      "instruction": "Ask the user: 'As we wrap up our session, what's the most valuable insight you're taking away from our conversation today?' You may rephrase it gently in the user’s tone or language but make sure they understand this is the last step. After they respond, affirm what they shared, and reflect back their courage, clarity, or presence — in a grounded, emotionally attuned way. Avoid exaggerated praise or vague affirmations. This is not a coaching step — it’s an integration moment and a chance to acknowledge their process.",
+      "goal": "Help the user pause and reflect on what they're taking away from the session, so the insight becomes more tangible and meaningful before closing.",
+      "instruction": "Ask the user: 'As we wrap up our session, what's the most valuable insight you're taking away from our conversation today?' You may rephrase it gently in the user's tone or language but make sure they understand this is the last step. After they respond, affirm what they shared, and reflect back their courage, clarity, or presence — in a grounded, emotionally attuned way. Avoid exaggerated praise or vague affirmations. This is not a coaching step — it's an integration moment and a chance to acknowledge their process.",
       "phaseEvaluation": {
         "instructions": "Wait for the user to respond meaningfully. A short sentence is enough. Then acknowledge and move to closing.",
         "conditions": {
           "continue": {
-            "when": "The user hasn’t responded meaningfully yet",
+            "when": "The user hasn't responded meaningfully yet",
             "actions": [
               "Set 'status': 'continue'",
               "Repeat the question or gently invite them to reflect again"
             ]
           },
           "finish": {
-            "when": "The user shares a reflection on what they’re taking away",
+            "when": "The user shares a reflection on what they're taking away",
             "actions": [
               "Set 'status': 'finish'",
               "Acknowledge their insight with warmth and transition immediately (in the same answer) to email capture"
@@ -255,7 +255,7 @@
       "name": "registration",
       "callAPI": true,
       "showButton": "registration",
-"instruction": "Generate a short, emotionally attuned message that invites the user to register by clicking the button below. Registration will allow them to receive a personal summary of this session by email, and continue from where they left off in their next free session. The tone should be warm, grounded, and not salesy.\n\nThe message should:\n- Reflect the importance of the reflection the user just did\n- Suggest that registering will help them carry it forward into their day-to-day and make it easier to continue next time\n- Mention briefly that the summary will include their key insight and next step (no details, just mention)\n- End with a clear, gentle invitation to click the registration button\n- Reassure the user that no spam will be sent (but don't promise that we won't send anything)\n\nKeep the message to 4–6 sentences. Do not summarize the session or repeat insights already stated — this message is only an invitation to register and receive the full summary. Please use the original user's name in the message (not from the email).",
+      "instruction": "Generate a short, emotionally attuned message that invites the user to register by clicking the button below. Registration will allow them to receive a personal summary of this session by email, and continue from where they left off in their next free session. The tone should be warm, grounded, and not salesy.\n\nThe message should:\n- Reflect the importance of the reflection the user just did\n- Suggest that registering will help them carry it forward into their day-to-day and make it easier to continue next time\n- Mention briefly that the summary will include their key insight and next step (no details, just mention)\n- End with a clear, gentle invitation to click the registration button\n- Reassure the user that no spam will be sent (but don't promise that we won't send anything)\n\nKeep the message to 4–6 sentences. Do not summarize the session or repeat insights already stated — this message is only an invitation to register and receive the full summary. Please use the original user's name in the message (not from the email).",
       "phaseEvaluation": {
         "instructions": "Continue prompting until the user registers",
         "conditions": {
@@ -272,7 +272,19 @@
     {
       "name": "closing",
       "callAPI": true,
-      "instruction": "First, thank the user warmly for registering.\n\nThen, based on the attached summary, generate one strong, personalized sentence that reflects a meaningful step or realization from the session. This sentence should:\n- Mirror back a clear strength or inner quality the user demonstrated (e.g., courage, clarity, honesty, self-awareness, calm, leadership, compassion, etc.)\n- Show how they applied that strength to take a step, make a realization, or shift perspective\n- Be specific and grounded — avoid vague praise or generic coaching talk\n- Use a warm, empowering, human tone\n\nAfter the sentence, let the user know their email is on the way."
+      "instruction": "First, thank the user warmly for signing up.\n\nThen, based on the attached summary, generate one strong, personalized sentence that reflects a meaningful step or realization from the session. This sentence should:\n- Mirror back a clear strength or inner quality the user demonstrated (e.g., courage, clarity, honesty, self-awareness, calm, leadership, compassion, etc.)\n- Show how they applied that strength to take a step, make a realization, or shift perspective\n- Be specific and grounded — avoid vague praise or generic coaching talk\n- Use a warm, empowering, human tone\n\nAfter the sentence, let the user know their email is on the way.",
+      "introText": "Done! You're all set.\n\nYour personal session summary is on its way to your inbox.",
+      "question": "Let me share a final reflection with you.",
+      "showButton": null,
+      "conditions": {
+        "continue": {
+          "when": "The user has signed up",
+          "actions": [
+            "Set 'status': 'complete'",
+            "Generate a personalized closing message"
+          ]
+        }
+      }
     }
   ]
 }

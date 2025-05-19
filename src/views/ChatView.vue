@@ -13,16 +13,16 @@
         >
           <!-- User messages: always use the same markup -->
           <div v-if="messageTypes[index] === 'user'" class="user-message">
-            {{ message }}
+            {{ typeof message === "object" ? message.content : message }}
           </div>
           <!-- Restored bot messages: plain text, no typing -->
           <span v-else-if="restoredIndexes && restoredIndexes.has(index)">
-            {{ message }}
+            {{ typeof message === "object" ? message.content : message }}
           </span>
           <!-- New bot messages: use TypingMessage -->
           <TypingMessage
             v-else
-            :text="message"
+            :text="typeof message === 'object' ? message.content : message"
             @typing-complete="handleTypingComplete"
           />
         </div>
@@ -129,16 +129,31 @@ export default {
     const flowData = getFlowData(flowName);
 
     // Handle restored session
-    function handleSessionRestored({ history, lastStepId }) {
-      console.log("Session restored with lastStepId:", lastStepId);
+    function handleSessionRestored(sessionData) {
+      console.log("Session restored with lastStepId:", sessionData.lastStepId);
       console.log("Button state before restore:", {
         showSessionButton: showSessionButton.value,
         sessionButtonType: sessionButtonType.value,
         pendingSessionButtonType: pendingSessionButtonType.value,
       });
 
-      chatMessages.value = history.map((msg) => msg.content);
-      messageTypes.value = history.map((msg) =>
+      // 1. Restore the full message history from the backend
+      if (sessionData.history && Array.isArray(sessionData.history)) {
+        chatMessages.value = sessionData.history.map((msg) => {
+          if (typeof msg === "object" && msg.role && msg.content) return msg;
+          return { role: "assistant", content: msg };
+        });
+      } else {
+        chatMessages.value = [];
+      }
+
+      // Debug: Confirm restoration
+      console.log(
+        "[ChatView] After restoration, messages:",
+        chatMessages.value
+      );
+
+      messageTypes.value = chatMessages.value.map((msg) =>
         msg.role === "assistant" ? "bot" : "user"
       );
       restoredIndexes.value = new Set(chatMessages.value.map((_, idx) => idx));
@@ -150,13 +165,26 @@ export default {
 
       // Only set button state if we have a valid step with showButton
       // AND we're not coming back from registration
-      if (lastStepId && !route.query.justRegistered) {
-        const step = flowData.steps.find((s) => s.name === lastStepId);
+      if (sessionData.lastStepId && !route.query.justRegistered) {
+        const step = flowData.steps.find(
+          (s) => s.name === sessionData.lastStepId
+        );
         console.log("Found step for lastStepId:", step);
         if (step && step.showButton) {
           showSessionButton.value = true;
           sessionButtonType.value = step.showButton.toLowerCase();
         }
+      }
+
+      // After restoration, check for nextStep
+      if (sessionData.nextStep) {
+        // Now it's safe to trigger the AI response, because chatMessages is fully restored
+        this.handleAiResponse({
+          message: "",
+          type: "bot",
+          showButton: sessionData.nextStep.showButton || null,
+          currentStep: sessionData.nextStep,
+        });
       }
 
       console.log("Button state after restore:", {
@@ -315,44 +343,52 @@ export default {
       this.scrollToBottom();
     },
 
-    handleAiResponse({ message, type, showButton }) {
-      console.log(
-        "AI response received:",
+    async handleAiResponse({
+      message,
+      type,
+      showButton,
+      currentStep: stepFromEvent,
+    }) {
+      console.log("[ChatView] handleAiResponse called with:", {
+        message,
         type,
-        message.substring(0, 30) + "...",
-        "showButton:",
-        showButton
-      );
-      console.log("Button state before update:", {
-        showSessionButton: this.showSessionButton,
-        sessionButtonType: this.sessionButtonType,
-        pendingSessionButtonType: this.pendingSessionButtonType,
+        showButton,
+        currentStep: stepFromEvent,
       });
 
-      this.chatMessages.push(message);
-      this.messageTypes.push(type);
-      this.restoredIndexes.value = new Set();
-
-      // Reset link button status
-      this.showLinkButton = false;
-
-      // --- Button logic ---
-      // Always clear button state first
+      // Clear any pending button state
       this.showSessionButton = false;
       this.sessionButtonType = "";
+      this.pendingSessionButtonType = "";
 
-      // Then set new state if showButton has a value
-      if (showButton) {
-        this.pendingSessionButtonType = showButton.toLowerCase();
-      } else {
-        this.pendingSessionButtonType = "";
+      // Add the message to the chat if it's not empty
+      if (message) {
+        this.chatMessages.push(message);
+        this.messageTypes.push(type);
       }
 
-      console.log("Button state after update:", {
-        showSessionButton: this.showSessionButton,
-        sessionButtonType: this.sessionButtonType,
-        pendingSessionButtonType: this.pendingSessionButtonType,
-      });
+      // If this is a bot message and we have a current step, check if we need to make an API call
+      if (type === "bot" && stepFromEvent) {
+        console.log("[ChatView] Current step:", stepFromEvent);
+
+        if (stepFromEvent.callAPI) {
+          console.log(
+            "[ChatView] Making API call for step:",
+            stepFromEvent.name
+          );
+
+          // Instead of making the API call here, emit an event to SessionRunner
+          // which will handle it through AiStep
+          this.sessionRunner?.handleUserSubmit();
+        }
+      }
+
+      // Update button state if provided
+      if (showButton) {
+        console.log("[ChatView] Setting button state:", showButton);
+        this.showSessionButton = true;
+        this.sessionButtonType = showButton;
+      }
 
       this.scrollToBottom();
     },

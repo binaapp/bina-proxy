@@ -281,6 +281,13 @@ const callClaude = async () => {
       system: systemMessage.value,
     };
 
+    // Add this log right here, before the API call:
+    console.log("[AiStep] Sending to AI:", {
+      messages: requestBody.messages,
+      system: requestBody.system,
+      currentMessage: currentMessage
+    });
+
     // Enhanced logging
     console.log("\n=== REQUEST DETAILS ===");
     console.log("Current Phase:", props.name);

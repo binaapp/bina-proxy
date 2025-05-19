@@ -32,6 +32,7 @@ const emit = defineEmits([
   "update:userInput",
   "debug-message",
   "session-restored",
+  "ai-step-trigger",
 ]);
 
 const userInput = computed({
@@ -84,6 +85,18 @@ onMounted(async () => {
               route.query.justRegistered === "1" &&
               currentStepIndex.value < props.flowData.steps.length - 1
             ) {
+              // Add a user message to the history
+              /* sessionHistory.value.push({
+                role: "user",
+                content: "Sign-up successful!",
+              });*/
+
+              userInput.value = "Sign-up successful!";
+
+              // Save this step to the database (optional but recommended for consistency)
+              await saveStepToDatabase("Sign-up successful!", "", false);
+
+              // Now advance to the next step as before
               currentStepIndex.value += 1;
               console.log(
                 "[SessionRunner] justRegistered detected, moved to next step:",
@@ -92,54 +105,101 @@ onMounted(async () => {
 
               // Trigger the next system message as if the user just advanced
               const nextStep = props.flowData.steps[currentStepIndex.value];
+              console.log("[SessionRunner] Next step after registration:", {
+                step: nextStep,
+                name: nextStep?.name,
+                callAPI: nextStep?.callAPI,
+              });
+
               if (nextStep) {
-                let introText = nextStep.introText || "";
-                if (userName.value) {
-                  introText = introText.replace(/\{name\}/g, userName.value);
-                }
-                const systemMessage = [
-                  introText.replace(/\\n/g, "\n"),
-                  nextStep.question,
-                  nextStep.options
-                    ?.map((opt, i) => `${String.fromCharCode(97 + i)}. ${opt}`)
-                    .join("\n"),
-                ]
-                  .filter(Boolean)
-                  .join("\n\n");
-
-                if (systemMessage.trim()) {
-                  sessionHistory.value.push({
-                    role: "assistant",
-                    content: systemMessage,
-                  });
+                // For AI steps, we don't need to construct a message
+                // Just emit the event with the current step
+                if (nextStep.callAPI) {
                   console.log(
-                    "[SessionRunner] Emitting ai-response for step:",
-                    nextStep.name,
-                    "showButton:",
-                    nextStep.showButton
+                    "[SessionRunner] Emitting ai-response for AI step:",
+                    nextStep.name
                   );
-
-                  // Explicitly set showButton to false for closing step
-                  const showButton =
-                    nextStep.name === "closing" ? false : nextStep.showButton;
-
                   emit("ai-response", {
-                    message: systemMessage,
+                    message: "", // Empty message since it's an AI step
                     type: "bot",
-                    showButton: showButton || null,
+                    showButton: nextStep.showButton || null,
+                    currentStep: nextStep, // Include the current step
                   });
+
+                  // Add this new section for justRegistered case
+                  if (route.query.justRegistered === "1") {
+                    console.log(
+                      "[SessionRunner] Triggering AiStep for justRegistered closing step"
+                    );
+                    // Create an instance of AiStep with the necessary props
+                    const aiStep = {
+                      history: sessionHistory.value,
+                      name: nextStep.name,
+                      systemPrompt: nextStep.instruction,
+                      flowData: props.flowData,
+                      sessionRunner: this,
+                    };
+
+                    // Emit a special event that ChatView will use to trigger AiStep
+                    emit("ai-step-trigger", {
+                      step: nextStep,
+                      aiStep: aiStep,
+                    });
+                  }
+                } else {
+                  // For non-AI steps, construct the message as before
+                  let introText = nextStep.introText || "";
+                  if (userName.value) {
+                    introText = introText.replace(/\{name\}/g, userName.value);
+                  }
+                  const systemMessage = [
+                    introText.replace(/\\n/g, "\n"),
+                    nextStep.question,
+                    nextStep.options
+                      ?.map(
+                        (opt, i) => `${String.fromCharCode(97 + i)}. ${opt}`
+                      )
+                      .join("\n"),
+                  ]
+                    .filter(Boolean)
+                    .join("\n\n");
+
+                  if (systemMessage.trim()) {
+                    sessionHistory.value.push({
+                      role: "assistant",
+                      content: systemMessage,
+                    });
+                    emit("ai-response", {
+                      message: systemMessage,
+                      type: "bot",
+                      showButton: nextStep.showButton || null,
+                      currentStep: nextStep,
+                    });
+                  }
                 }
               }
             }
           }
         }
         // Emit restored session history to parent (ChatView)
+        const nextStep =
+          data.steps && data.steps.length > 0
+            ? data.steps[data.steps.length - 1]
+            : null;
         emit("session-restored", {
           history: data.history,
           lastStepId:
             data.steps && data.steps.length > 0
               ? data.steps[data.steps.length - 1].step_id
               : null,
+          nextStep: nextStep && nextStep.callAPI ? nextStep : null,
+        });
+
+        console.log("[SessionRunner] Full session data:", {
+          sessionId: data.sessionId,
+          historyLength: data.history?.length,
+          history: data.history,
+          steps: data.steps,
         });
       } else {
         // Session not found, clear localStorage and start new session
@@ -303,7 +363,7 @@ const handleStepResult = async (result) => {
       currentStepIndex.value++; // Move this AFTER saving to DB
       const nextStep = props.flowData.steps[currentStepIndex.value];
 
-      // Check if next step is the closing message with no API call
+      // --- Handle non-AI closing step ---
       if (nextStep.name === "closing" && nextStep.callAPI === false) {
         // Create the closing message text
         const closingText = [
@@ -333,7 +393,23 @@ const handleStepResult = async (result) => {
           await saveStepToDatabase("", responseMessage);
         }
       }
+
+      // --- Handle AI closing step ---
+      if (nextStep.name === "closing" && nextStep.callAPI === true) {
+        // After the AI step result for closing, mark session as complete and save
+        isSessionComplete.value = true;
+        await saveStepToDatabase("", "", false);
+      }
     }
+  }
+
+  // Also, after the very last step (if not already handled), ensure session is marked complete
+  if (
+    currentStepIndex.value === props.flowData.steps.length - 1 &&
+    props.flowData.steps[currentStepIndex.value].name === "closing"
+  ) {
+    isSessionComplete.value = true;
+    await saveStepToDatabase("", result.reply, false);
   }
 
   // Send the complete response (may include both AI reply and closing message)
