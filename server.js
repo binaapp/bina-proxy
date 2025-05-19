@@ -4,8 +4,12 @@ const cors = require("cors");
 const fetch = require("node-fetch");
 const { sendEmail } = require('./sesEmailService');
 const rateLimit = require('express-rate-limit');
+const jwt = require('jsonwebtoken');
+const axios = require('axios');
 
 const mysql = require("mysql2/promise");
+
+const FIREBASE_PROJECT_ID = process.env.FIREBASE_PROJECT_ID;
 
 // Debug logging for environment variables
 console.log("Environment variables loaded:", {
@@ -514,6 +518,145 @@ app.post("/api/contact", contactLimiter, async (req, res) => {
   } catch (err) {
     console.error("Error sending contact form email:", err);
     res.status(500).json({ error: "Failed to send email" });
+  }
+});
+
+async function verifyFirebaseIdToken(idToken) {
+  // 1. Decode the JWT header to get the key ID (kid)
+  const decodedHeader = jwt.decode(idToken, { complete: true }).header;
+  const kid = decodedHeader.kid;
+
+  // 2. Fetch Firebase public keys
+  const { data: publicKeys } = await axios.get(
+    'https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com'
+  );
+
+  // 3. Find the correct public key
+  const cert = publicKeys[kid];
+  if (!cert) throw new Error('No matching public key found for kid: ' + kid);
+
+  // 4. Verify the token
+  const payload = jwt.verify(idToken, cert, {
+    algorithms: ['RS256'],
+    audience: FIREBASE_PROJECT_ID,
+    issuer: `https://securetoken.google.com/${FIREBASE_PROJECT_ID}`,
+  });
+
+  console.log('Saving user:', {
+    uid: payload.user_id,
+    email: payload.email,
+    name: payload.name
+  });
+
+  return payload; // contains uid, email, etc.
+}
+
+app.post('/api/firebase-login', async (req, res) => {
+  console.log("[Firebase Login] Received request body:", {
+    hasIdToken: !!req.body.idToken,
+    hasSessionId: !!req.body.sessionId,
+    sessionId: req.body.sessionId
+  });
+
+  const { idToken, sessionId } = req.body;
+  if (!idToken) {
+    console.log("[Firebase Login] Error: Missing idToken");
+    return res.status(400).json({ error: 'Missing idToken' });
+  }
+
+  try {
+    console.log("[Firebase Login] Verifying Firebase token...");
+    const payload = await verifyFirebaseIdToken(idToken);
+    console.log("[Firebase Login] Token verified successfully. Payload:", {
+      uid: payload.user_id,
+      email: payload.email,
+      name: payload.name,
+      hasEmail: !!payload.email,
+      hasName: !!payload.name
+    });
+
+    // Save to DB
+    const connection = await pool.getConnection();
+    console.log("[Firebase Login] Got database connection");
+
+    try {
+      const name = payload.name ? payload.name : '';
+      console.log("[Firebase Login] Attempting to save user to database:", {
+        uid: payload.user_id,
+        email: payload.email,
+        name: name
+      });
+
+      const [userResult] = await connection.query(
+        `INSERT INTO users (uid, email, name)
+         VALUES (?, ?, ?)
+         ON DUPLICATE KEY UPDATE email = VALUES(email), name = VALUES(name)`,
+        [payload.user_id, payload.email, name]
+      );
+      console.log("[Firebase Login] User save result:", {
+        affectedRows: userResult.affectedRows,
+        insertId: userResult.insertId,
+        message: userResult.message
+      });
+
+      if (sessionId) {
+        console.log("[Firebase Login] Updating session with user ID:", {
+          sessionId: sessionId,
+          uid: payload.user_id
+        });
+
+        const [sessionResult] = await connection.query(
+          `UPDATE user_sessions SET uid = ? WHERE id = ?`,
+          [payload.user_id, sessionId]
+        );
+        console.log("[Firebase Login] Session update result:", {
+          affectedRows: sessionResult.affectedRows,
+          message: sessionResult.message
+        });
+      } else {
+        console.log("[Firebase Login] No sessionId provided, skipping session update");
+      }
+
+      connection.release();
+      console.log("[Firebase Login] Database connection released");
+
+      res.json({ 
+        success: true, 
+        uid: payload.user_id, 
+        email: payload.email, 
+        name: payload.name || '' 
+      });
+      console.log("[Firebase Login] Success response sent to client");
+
+    } catch (dbError) {
+      connection.release();
+      console.error("[Firebase Login] Database error:", {
+        error: dbError,
+        message: dbError.message,
+        code: dbError.code,
+        sqlMessage: dbError.sqlMessage,
+        sqlState: dbError.sqlState
+      });
+      throw dbError; // Re-throw to be caught by outer catch
+    }
+
+  } catch (err) {
+    console.error("[Firebase Login] Error in login process:", {
+      name: err.name,
+      message: err.message,
+      stack: err.stack
+    });
+
+    if (err.name === 'JsonWebTokenError' || err.message?.includes('token')) {
+      console.error('[Firebase Login] Token verification error:', err);
+      res.status(401).json({ error: 'Invalid or expired token' });
+    } else {
+      console.error('[Firebase Login] Database error:', err);
+      res.status(500).json({ 
+        error: 'Database error',
+        details: process.env.NODE_ENV === 'development' ? err.message : undefined
+      });
+    }
   }
 });
 

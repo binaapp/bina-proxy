@@ -40,6 +40,18 @@
           </a>
         </div>
       </transition>
+
+      <!-- Add the button here -->
+      <transition name="fade">
+        <div class="button-container" v-if="showSessionButton">
+          <PrimaryButton
+            v-if="sessionButtonType === 'registration'"
+            @click="goToRegistration"
+          >
+            Register Now
+          </PrimaryButton>
+        </div>
+      </transition>
     </section>
 
     <div class="chat-box">
@@ -81,6 +93,8 @@ import TypingMessage from "@/components/TypingMessage.vue";
 import TypingIndicator from "@/components/TypingIndicator.vue";
 import { useInteractionLimiter } from "../composables/useInteractionLimiter.js";
 import { submitSession } from "@/utils/sessionApi";
+import PrimaryButton from "@/components/UI/PrimaryButton.vue";
+import { useRoute } from "vue-router";
 
 export default {
   name: "ChatView",
@@ -88,6 +102,7 @@ export default {
     SessionRunner,
     TypingMessage,
     TypingIndicator,
+    PrimaryButton,
   },
   setup() {
     const { incrementInteraction, isLimitReached } = useInteractionLimiter();
@@ -99,6 +114,10 @@ export default {
     const currentLink = ref("");
     const chatContentRef = ref(null); // Reference to chat content container
     const restoredIndexes = ref(new Set());
+    const showSessionButton = ref(false);
+    const sessionButtonType = ref(""); // e.g. "registration"
+    const pendingSessionButtonType = ref("");
+    const route = useRoute();
 
     // Get source from URL parameters
     const urlParams = new URLSearchParams(window.location.search);
@@ -110,13 +129,42 @@ export default {
     const flowData = getFlowData(flowName);
 
     // Handle restored session
-    function handleSessionRestored({ history }) {
+    function handleSessionRestored({ history, lastStepId }) {
+      console.log("Session restored with lastStepId:", lastStepId);
+      console.log("Button state before restore:", {
+        showSessionButton: showSessionButton.value,
+        sessionButtonType: sessionButtonType.value,
+        pendingSessionButtonType: pendingSessionButtonType.value,
+      });
+
       chatMessages.value = history.map((msg) => msg.content);
       messageTypes.value = history.map((msg) =>
         msg.role === "assistant" ? "bot" : "user"
       );
-      // Mark all current messages as restored
       restoredIndexes.value = new Set(chatMessages.value.map((_, idx) => idx));
+
+      // Always clear button state first
+      showSessionButton.value = false;
+      sessionButtonType.value = "";
+      pendingSessionButtonType.value = "";
+
+      // Only set button state if we have a valid step with showButton
+      // AND we're not coming back from registration
+      if (lastStepId && !route.query.justRegistered) {
+        const step = flowData.steps.find((s) => s.name === lastStepId);
+        console.log("Found step for lastStepId:", step);
+        if (step && step.showButton) {
+          showSessionButton.value = true;
+          sessionButtonType.value = step.showButton.toLowerCase();
+        }
+      }
+
+      console.log("Button state after restore:", {
+        showSessionButton: showSessionButton.value,
+        sessionButtonType: sessionButtonType.value,
+        pendingSessionButtonType: pendingSessionButtonType.value,
+      });
+
       nextTick(() => {
         if (chatContentRef.value) {
           chatContentRef.value.scrollTop = chatContentRef.value.scrollHeight;
@@ -139,6 +187,10 @@ export default {
       restoredIndexes,
       handleSessionRestored,
       source, // Add this
+      showSessionButton,
+      sessionButtonType,
+      pendingSessionButtonType,
+      route,
     };
   },
   methods: {
@@ -159,7 +211,14 @@ export default {
     },
 
     handleTypingComplete(data) {
-      // Only show the button after typing is complete and if there's a link
+      console.log("Typing complete, data:", data);
+      console.log("Button state before typing complete:", {
+        showSessionButton: this.showSessionButton,
+        sessionButtonType: this.sessionButtonType,
+        pendingSessionButtonType: this.pendingSessionButtonType,
+      });
+
+      // Handle link button
       if (data && data.hasLink) {
         this.currentLink = data.link;
         this.showLinkButton = true;
@@ -169,7 +228,23 @@ export default {
         this.currentLink = "";
       }
 
-      // Scroll to bottom when typing completes
+      // Handle session button - always clear first
+      this.showSessionButton = false;
+      this.sessionButtonType = "";
+
+      // Only set new button state if we have a pending type
+      if (this.pendingSessionButtonType) {
+        this.showSessionButton = true;
+        this.sessionButtonType = this.pendingSessionButtonType;
+        this.pendingSessionButtonType = "";
+      }
+
+      console.log("Button state after typing complete:", {
+        showSessionButton: this.showSessionButton,
+        sessionButtonType: this.sessionButtonType,
+        pendingSessionButtonType: this.pendingSessionButtonType,
+      });
+
       this.scrollToBottom();
     },
 
@@ -240,20 +315,45 @@ export default {
       this.scrollToBottom();
     },
 
-    handleAiResponse({ message, type }) {
+    handleAiResponse({ message, type, showButton }) {
       console.log(
         "AI response received:",
         type,
-        message.substring(0, 30) + "..."
+        message.substring(0, 30) + "...",
+        "showButton:",
+        showButton
       );
+      console.log("Button state before update:", {
+        showSessionButton: this.showSessionButton,
+        sessionButtonType: this.sessionButtonType,
+        pendingSessionButtonType: this.pendingSessionButtonType,
+      });
+
       this.chatMessages.push(message);
       this.messageTypes.push(type);
-      this.restoredIndexes.value = new Set(); // Clear restored indexes for new messages
+      this.restoredIndexes.value = new Set();
 
-      // Reset link button status - will be updated when typing completes
+      // Reset link button status
       this.showLinkButton = false;
 
-      // Scroll to bottom when AI response is added
+      // --- Button logic ---
+      // Always clear button state first
+      this.showSessionButton = false;
+      this.sessionButtonType = "";
+
+      // Then set new state if showButton has a value
+      if (showButton) {
+        this.pendingSessionButtonType = showButton.toLowerCase();
+      } else {
+        this.pendingSessionButtonType = "";
+      }
+
+      console.log("Button state after update:", {
+        showSessionButton: this.showSessionButton,
+        sessionButtonType: this.sessionButtonType,
+        pendingSessionButtonType: this.pendingSessionButtonType,
+      });
+
       this.scrollToBottom();
     },
 
@@ -295,6 +395,10 @@ export default {
           textarea.style.height = textarea.scrollHeight + "px";
         }
       });
+    },
+
+    goToRegistration() {
+      this.$router.push("/signup"); // Or use window.location.href = "/register";
     },
   },
   mounted() {
@@ -519,7 +623,7 @@ export default {
 
 .button-container {
   text-align: center;
-  margin-top: 2rem;
+  /*margin-top: 2rem;*/
 }
 
 .google-form-button {

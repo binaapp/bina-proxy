@@ -252,24 +252,18 @@
       }
     },
     {
-      "name": "email-capture",
+      "name": "registration",
       "callAPI": true,
-      "instruction": "Generate a short, emotionally attuned message that invites the user to receive a personal summary of this session by email. The tone should be warm, grounded, and not salesy. \n\nThe message should:\n- Reflect the importance of the reflection the user just did\n- Suggest that receiving a summary could help them carry it forward into their day-to-day\n- Mention briefly that the summary will include their key insight and next step (no details, just mention)\n- End with a clear, gentle invitation to leave their email to receive it\n- Reassure the user that no spam will be sent (but don't promise that we won't send anything)\n\nKeep the message to 4–6 sentences. Do not summarize the session or repeat insights already stated — this message is only an invitation to receive the full summary by email. Please use the original user's name in the message (not from the email).",
+      "showButton": "registration",
+"instruction": "Generate a short, emotionally attuned message that invites the user to register by clicking the button below. Registration will allow them to receive a personal summary of this session by email, and continue from where they left off in their next free session. The tone should be warm, grounded, and not salesy.\n\nThe message should:\n- Reflect the importance of the reflection the user just did\n- Suggest that registering will help them carry it forward into their day-to-day and make it easier to continue next time\n- Mention briefly that the summary will include their key insight and next step (no details, just mention)\n- End with a clear, gentle invitation to click the registration button\n- Reassure the user that no spam will be sent (but don't promise that we won't send anything)\n\nKeep the message to 4–6 sentences. Do not summarize the session or repeat insights already stated — this message is only an invitation to register and receive the full summary. Please use the original user's name in the message (not from the email).",
       "phaseEvaluation": {
-        "instructions": "Continue prompting until a valid email address is received.",
+        "instructions": "Continue prompting until the user registers",
         "conditions": {
           "continue": {
-            "when": "The user has not yet entered a valid email address",
+            "when": "The user keeps writing but hasn't registered",
             "actions": [
               "Set 'status': 'continue'",
-              "Gently invite the user again to share their email to receive their personal summary"
-            ]
-          },
-          "finish": {
-            "when": "The user has provided a valid email address",
-            "actions": [
-              "Set 'status': 'finish'",
-              "Acknowledge their response and proceed to the closing step"
+              "Gently invite the user again to register by leaving their email to receive their personal summary and continue next time"
             ]
           }
         }
@@ -277,8 +271,8 @@
     },
     {
       "name": "closing",
-      "callAPI": false,
-      "introText": "Thanks for sharing your email — your summary is on its way.\n\nYou’ve taken a powerful step by choosing to pause, reflect, and act. That’s the kind of leadership that creates real change — one thoughtful moment at a time.\n\nWe’re building more tools to support you — in your challenges, your growth, and your leadership.\n\nUntil next time, keep leading like yourself.\n\n— Bina"
+      "callAPI": true,
+      "instruction": "First, thank the user warmly for registering.\n\nThen, based on the attached summary, generate one strong, personalized sentence that reflects a meaningful step or realization from the session. This sentence should:\n- Mirror back a clear strength or inner quality the user demonstrated (e.g., courage, clarity, honesty, self-awareness, calm, leadership, compassion, etc.)\n- Show how they applied that strength to take a step, make a realization, or shift perspective\n- Be specific and grounded — avoid vague praise or generic coaching talk\n- Use a warm, empowering, human tone\n\nAfter the sentence, let the user know their email is on the way."
     }
   ]
 }

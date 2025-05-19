@@ -4,6 +4,7 @@ import { ref, reactive, computed, onMounted } from "vue";
 import AiStep from "./AiStep.vue";
 import { flowData } from "@/composables/useFlowData";
 import { submitSession, API_URL } from "@/utils/sessionApi";
+import { useRoute } from "vue-router";
 
 const props = defineProps({
   flowData: {
@@ -46,6 +47,7 @@ const sessionStartTime = ref(new Date().toISOString());
 const sessionId = ref(null);
 const isSessionComplete = ref(false);
 const currentStepDbId = ref(null);
+const route = useRoute();
 
 // === SESSION RESTORE LOGIC WITH LOGS ===
 onMounted(async () => {
@@ -67,17 +69,78 @@ onMounted(async () => {
         // Set currentStepIndex based on the last step in the DB
         if (data.steps && data.steps.length > 0) {
           const lastStep = data.steps[data.steps.length - 1];
-          console.log("[SessionRunner] Last step from DB:", lastStep);
           const idx = props.flowData.steps.findIndex(
-            (step) => step.name === lastStep.step_id // or lastStep.stepId, depending on your schema
+            (step) => step.name === lastStep.step_id
           );
-          console.log("[SessionRunner] Calculated currentStepIndex:", idx);
           if (idx !== -1) {
             currentStepIndex.value = idx;
+            console.log(
+              "[SessionRunner] Restored currentStepIndex:",
+              currentStepIndex.value
+            );
+
+            // If just registered, move to next step and trigger system message
+            if (
+              route.query.justRegistered === "1" &&
+              currentStepIndex.value < props.flowData.steps.length - 1
+            ) {
+              currentStepIndex.value += 1;
+              console.log(
+                "[SessionRunner] justRegistered detected, moved to next step:",
+                currentStepIndex.value
+              );
+
+              // Trigger the next system message as if the user just advanced
+              const nextStep = props.flowData.steps[currentStepIndex.value];
+              if (nextStep) {
+                let introText = nextStep.introText || "";
+                if (userName.value) {
+                  introText = introText.replace(/\{name\}/g, userName.value);
+                }
+                const systemMessage = [
+                  introText.replace(/\\n/g, "\n"),
+                  nextStep.question,
+                  nextStep.options
+                    ?.map((opt, i) => `${String.fromCharCode(97 + i)}. ${opt}`)
+                    .join("\n"),
+                ]
+                  .filter(Boolean)
+                  .join("\n\n");
+
+                if (systemMessage.trim()) {
+                  sessionHistory.value.push({
+                    role: "assistant",
+                    content: systemMessage,
+                  });
+                  console.log(
+                    "[SessionRunner] Emitting ai-response for step:",
+                    nextStep.name,
+                    "showButton:",
+                    nextStep.showButton
+                  );
+
+                  // Explicitly set showButton to false for closing step
+                  const showButton =
+                    nextStep.name === "closing" ? false : nextStep.showButton;
+
+                  emit("ai-response", {
+                    message: systemMessage,
+                    type: "bot",
+                    showButton: showButton || null,
+                  });
+                }
+              }
+            }
           }
         }
         // Emit restored session history to parent (ChatView)
-        emit("session-restored", { history: data.history });
+        emit("session-restored", {
+          history: data.history,
+          lastStepId:
+            data.steps && data.steps.length > 0
+              ? data.steps[data.steps.length - 1].step_id
+              : null,
+        });
       } else {
         // Session not found, clear localStorage and start new session
         console.log(
@@ -118,6 +181,7 @@ onMounted(() => {
       emit("ai-response", {
         message: initialMessage,
         type: "bot",
+        showButton: firstStep.showButton || null,
       });
     }
   }
@@ -273,9 +337,11 @@ const handleStepResult = async (result) => {
   }
 
   // Send the complete response (may include both AI reply and closing message)
+  const currentStep = props.flowData.steps[currentStepIndex.value];
   emit("ai-response", {
     message: responseMessage,
     type: "bot",
+    showButton: currentStep?.showButton || null,
   });
 
   // Reset waiting state
@@ -347,6 +413,7 @@ const handleUserSubmit = async () => {
           emit("ai-response", {
             message: responseText,
             type: "bot",
+            showButton: nextStep.showButton || null,
           });
         }, 800);
 

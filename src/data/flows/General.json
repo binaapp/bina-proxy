@@ -45,7 +45,7 @@
     {
       "name": "start",
       "introText": "Hey, I'm Bina – your coaching partner. Think of me as someone who's here to walk with you, step by step, through something that's been weighing on you at work. I won't tell you what to do, but I'll ask you the kind of questions that can help you see things more clearly – and feel more in control. Let's start this journey together.\n\nLet's start with where you are right now. What's been on your mind or taking up space lately?",
-      "callAPI": true,
+      "callAPI": false,
       "instruction": ""
     },
     {

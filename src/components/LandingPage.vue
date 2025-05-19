@@ -23,7 +23,7 @@
 
       <div class="start-button-container-left">
         <router-link to="/chat">
-          <button class="start-button">START NOW</button>
+          <PrimaryButton>START NOW</PrimaryButton>
         </router-link>
       </div>
     </div>
@@ -82,7 +82,7 @@
       </div>
       <div class="start-button-container">
         <router-link to="/chat">
-          <button class="start-button">START NOW</button>
+          <PrimaryButton>START NOW</PrimaryButton>
         </router-link>
       </div>
     </div>
@@ -186,7 +186,7 @@
       </div>
       <div class="start-button-container">
         <router-link to="/chat">
-          <button class="start-button">START NOW</button>
+          <PrimaryButton>START NOW</PrimaryButton>
         </router-link>
       </div>
     </div>
@@ -267,7 +267,7 @@
       -->
       <div class="start-button-container">
         <router-link to="/chat">
-          <button class="start-button">START NOW</button>
+          <PrimaryButton>START NOW</PrimaryButton>
         </router-link>
       </div>
     </div>
@@ -313,7 +313,7 @@
 
         <div class="start-button-container-left">
           <router-link to="/chat">
-            <button class="start-button">START NOW</button>
+            <PrimaryButton>START NOW</PrimaryButton>
           </router-link>
         </div>
       </div>
@@ -448,7 +448,7 @@
             </p>
             <div class="start-button-container-left">
               <router-link to="/chat">
-                <button class="start-button">START NOW</button>
+                <PrimaryButton>START NOW</PrimaryButton>
               </router-link>
             </div>
           </div>
@@ -473,7 +473,7 @@
 
           <div class="start-button-container-left">
             <router-link to="/chat">
-              <button class="start-button">START NOW</button>
+              <PrimaryButton>START NOW</PrimaryButton>
             </router-link>
           </div>
         </div>
@@ -555,11 +555,10 @@ h1 {
   display: flex;
   justify-content: left;
 }
-
+/*
 .start-button {
   background-color: var(--color-secondary);
   color: var(--color-primary);
-  /* padding: var(--spacing-sm) var(--spacing-lg);*/
   padding-bottom: var(--spacing-xs);
   padding-top: var(--spacing-xs);
   padding-left: var(--spacing-xl);
@@ -575,15 +574,15 @@ h1 {
 }
 
 .start-button:hover {
-  background-color: #d4b494; /* Consider adding var(--color-secondary-light) */
   transform: translateY(-2px);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.25); /* lifted & deeper */
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.25); 
 }
 
 .start-button:active {
   transform: translateY(0);
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2); /* pressed down */
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2); 
 }
+*/
 
 /* Sections */
 
@@ -1343,6 +1342,7 @@ a:active {
 <script setup>
 import { ref, onMounted } from "vue";
 import Header from "./AppHeader.vue";
+import PrimaryButton from "./UI/PrimaryButton.vue";
 
 const fullText = "Hi, I'm Bina.\nYour AI-powered coach.";
 const displayedText = ref("");
