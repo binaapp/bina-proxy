@@ -1,5 +1,6 @@
 import burnoutFlow from "@/data/flows/Burnout.json";
 import generalFlow from "@/data/flows/General.json";
+import quickBurnoutFlow from "@/data/flows/QuickBurnout.json";
 // We can add more flows here if needed in the future
 // import generalFlow from '@/data/flows/General.json'
 
@@ -13,6 +14,8 @@ export function getFlowData(flowName = "Burnout") {
   switch (flowName.toLowerCase()) {
     case "general":
       return generalFlow;
+    case "quickburnout":
+      return quickBurnoutFlow;
     case "burnout":
     default:
       return burnoutFlow;
