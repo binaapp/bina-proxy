@@ -122,6 +122,7 @@ import {
   createUserWithEmailAndPassword,
 } from "firebase/auth";
 import { useRouter } from "vue-router";
+import { getApiBase } from "@/utils/sessionApi";
 
 const email = ref("");
 const password = ref("");
@@ -131,49 +132,29 @@ const router = useRouter();
 async function onGoogleSignIn() {
   const provider = new GoogleAuthProvider();
   try {
+    console.log("[LoginUI] Starting Google sign-in");
+
     const result = await signInWithPopup(auth, provider);
     const user = result.user;
     const idToken = await user.getIdToken();
 
-    // Get the current session ID from localStorage
-    const sessionId = localStorage.getItem("binaSessionId");
-    console.log("Session ID being sent to backend:", sessionId);
-
-    await fetch("/api/firebase-login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        idToken,
-        sessionId, // Add the sessionId to the request
-      }),
+    // Add this to see the token payload
+    const tokenParts = idToken.split(".");
+    const payload = JSON.parse(atob(tokenParts[1]));
+    console.log("[LoginUI] Google token payload:", {
+      aud: payload.aud,
+      iss: payload.iss,
+      sub: payload.sub,
+      email: payload.email,
     });
 
-    if (window.opener) {
-      window.opener.location.href = "/chat?justRegistered=1";
-      window.close();
-    } else {
-      router.push({ path: "/chat", query: { justRegistered: "1" } });
-    }
-  } catch (error) {
-    console.error("Google sign-in error:", error);
-    alert("Google sign-in failed");
-  }
-}
-
-async function onEmailSignUp() {
-  try {
-    const userCredential = await createUserWithEmailAndPassword(
-      auth,
-      email.value,
-      password.value
-    );
-    const user = userCredential.user;
-    const idToken = await user.getIdToken();
-
     const sessionId = localStorage.getItem("binaSessionId");
-    console.log("Session ID being sent to backend:", sessionId);
+    console.log("[LoginUI] Session ID being sent to backend:", sessionId);
 
-    const response = await fetch("/api/firebase-login", {
+    const apiUrl = `${getApiBase()}/api/firebase-login`;
+    console.log("[LoginUI] Making request to:", apiUrl);
+
+    const response = await fetch(apiUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -181,15 +162,101 @@ async function onEmailSignUp() {
         sessionId,
       }),
     });
+
+    console.log("[LoginUI] Response status:", response.status);
+    console.log(
+      "[LoginUI] Response headers:",
+      Object.fromEntries(response.headers.entries())
+    );
+
     const data = await response.json();
+    console.log("[LoginUI] Response data:", data);
 
     if (response.ok && data.success) {
+      console.log("[LoginUI] Google login successful");
+      if (window.opener) {
+        window.opener.location.href = "/chat?justRegistered=1";
+        window.close();
+      } else {
+        router.push({ path: "/chat", query: { justRegistered: "1" } });
+      }
+    } else {
+      console.error("[LoginUI] Google login failed:", data.error);
+      alert(data.error || "Google sign-in failed");
+    }
+  } catch (error) {
+    console.error("[LoginUI] Google sign-in error:", {
+      name: error.name,
+      message: error.message,
+      stack: error.stack,
+    });
+    alert("Google sign-in failed");
+  }
+}
+
+async function onEmailSignUp() {
+  try {
+    console.log("[LoginUI] Firebase config:", {
+      projectId: process.env.VUE_APP_FIREBASE_PROJECT_ID,
+      authDomain: process.env.VUE_APP_FIREBASE_AUTH_DOMAIN,
+    });
+
+    const userCredential = await createUserWithEmailAndPassword(
+      auth,
+      email.value,
+      password.value
+    );
+
+    const user = userCredential.user;
+    const idToken = await user.getIdToken();
+
+    // Add this to see the token payload
+    const tokenParts = idToken.split(".");
+    const payload = JSON.parse(atob(tokenParts[1]));
+    console.log("[LoginUI] Token payload:", {
+      aud: payload.aud,
+      iss: payload.iss,
+      sub: payload.sub,
+      email: payload.email,
+    });
+
+    const sessionId = localStorage.getItem("binaSessionId");
+    console.log("[LoginUI] Session ID from localStorage:", sessionId);
+
+    const apiUrl = `${getApiBase()}/api/firebase-login`;
+    console.log("[LoginUI] Making request to:", apiUrl);
+
+    const response = await fetch(apiUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        idToken,
+        sessionId,
+      }),
+    });
+
+    console.log("[LoginUI] Response status:", response.status);
+    console.log(
+      "[LoginUI] Response headers:",
+      Object.fromEntries(response.headers.entries())
+    );
+
+    const data = await response.json();
+    console.log("[LoginUI] Response data:", data);
+
+    if (response.ok && data.success) {
+      console.log("[LoginUI] Login successful, redirecting to chat");
       router.push({ path: "/chat", query: { justRegistered: "1" } });
     } else {
+      console.error("[LoginUI] Login failed:", data.error);
       alert(data.error || "Registration failed. Please try again.");
     }
   } catch (error) {
-    console.error("Registration error:", error);
+    console.error("[LoginUI] Registration error:", {
+      name: error.name,
+      message: error.message,
+      stack: error.stack,
+    });
     alert(error.message);
   }
 }

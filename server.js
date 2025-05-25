@@ -522,40 +522,75 @@ app.post("/api/contact", contactLimiter, async (req, res) => {
 });
 
 async function verifyFirebaseIdToken(idToken) {
-  // 1. Decode the JWT header to get the key ID (kid)
-  const decodedHeader = jwt.decode(idToken, { complete: true }).header;
-  const kid = decodedHeader.kid;
+  console.log("[Firebase Auth] Starting token verification");
+  console.log("[Firebase Auth] Expected project ID:", FIREBASE_PROJECT_ID);
+  
+  try {
+    // 1. Decode the JWT header to get the key ID (kid)
+    const decodedHeader = jwt.decode(idToken, { complete: true }).header;
+    console.log("[Firebase Auth] Decoded token header:", decodedHeader);
+    
+    // Add this to see the actual token payload
+    const decodedPayload = jwt.decode(idToken, { complete: true }).payload;
+    console.log("[Firebase Auth] Actual token payload:", {
+      aud: decodedPayload.aud,  // This is the actual audience in the token
+      iss: decodedPayload.iss,
+      sub: decodedPayload.sub,
+      email: decodedPayload.email
+    });
+    
+    const kid = decodedHeader.kid;
+    console.log("[Firebase Auth] Key ID (kid):", kid);
 
-  // 2. Fetch Firebase public keys
-  const { data: publicKeys } = await axios.get(
-    'https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com'
-  );
+    // 2. Fetch Firebase public keys
+    console.log("[Firebase Auth] Fetching Firebase public keys...");
+    const { data: publicKeys } = await axios.get(
+      'https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com'
+    );
+    console.log("[Firebase Auth] Got public keys, available kids:", Object.keys(publicKeys));
 
-  // 3. Find the correct public key
-  const cert = publicKeys[kid];
-  if (!cert) throw new Error('No matching public key found for kid: ' + kid);
+    // 3. Find the correct public key
+    const cert = publicKeys[kid];
+    if (!cert) {
+      console.error("[Firebase Auth] No matching public key found for kid:", kid);
+      throw new Error('No matching public key found for kid: ' + kid);
+    }
+    console.log("[Firebase Auth] Found matching public key");
 
-  // 4. Verify the token
-  const payload = jwt.verify(idToken, cert, {
-    algorithms: ['RS256'],
-    audience: FIREBASE_PROJECT_ID,
-    issuer: `https://securetoken.google.com/${FIREBASE_PROJECT_ID}`,
-  });
+    // 4. Verify the token
+    console.log("[Firebase Auth] Verifying token with audience:", FIREBASE_PROJECT_ID);
+    const payload = jwt.verify(idToken, cert, {
+      algorithms: ['RS256'],
+      audience: FIREBASE_PROJECT_ID,
+      issuer: `https://securetoken.google.com/${FIREBASE_PROJECT_ID}`,
+    });
 
-  console.log('Saving user:', {
-    uid: payload.user_id,
-    email: payload.email,
-    name: payload.name
-  });
+    console.log("[Firebase Auth] Token verified successfully:", {
+      uid: payload.user_id,
+      email: payload.email,
+      name: payload.name,
+      audience: payload.aud,
+      issuer: payload.iss
+    });
 
-  return payload; // contains uid, email, etc.
+    return payload;
+  } catch (error) {
+    console.error("[Firebase Auth] Token verification failed:", {
+      name: error.name,
+      message: error.message,
+      stack: error.stack,
+      expectedAudience: FIREBASE_PROJECT_ID
+    });
+    throw error;
+  }
 }
 
 app.post('/api/firebase-login', async (req, res) => {
   console.log("[Firebase Login] Received request body:", {
     hasIdToken: !!req.body.idToken,
     hasSessionId: !!req.body.sessionId,
-    sessionId: req.body.sessionId
+    sessionId: req.body.sessionId,
+    headers: req.headers
   });
 
   const { idToken, sessionId } = req.body;
