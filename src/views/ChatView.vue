@@ -86,7 +86,7 @@
 
 <script>
 import { ref, nextTick } from "vue"; // Add nextTick import
-import { getFlowData } from "@/composables/useFlowData";
+import { getFlowData, DEFAULT_FLOW } from "@/composables/useFlowData";
 import coachData from "@/data/coaches/supportive-coach.json";
 import SessionRunner from "@/components/SessionRunner.vue";
 import TypingMessage from "@/components/TypingMessage.vue";
@@ -124,8 +124,8 @@ export default {
     const source =
       urlParams.get("source") || urlParams.get("utm_source") || "direct";
 
-    // Get flow name from query string (?flow=General)
-    const flowName = urlParams.get("flow") || "Burnout";
+    // Get flow name from query string
+    const flowName = urlParams.get("flow") || DEFAULT_FLOW;
     const flowData = getFlowData(flowName);
 
     // Handle restored session

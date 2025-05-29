@@ -54,50 +54,36 @@
     }
   },
   "steps": [
+
     {
-      "name": "start",
+      "name": "burnout-sources",
       "callAPI": false,
-      "collectsName": true,
-      "introText": "Hey, I'm Bina — your burnout coach. This will be quick and focused. I'll ask you just three questions to understand where you're at. Then, I'll reflect what I see and we'll find one small step you can take that actually helps.",
-      "question": "Let's start — how would you like me to call you?"
-    },
-    {
-      "name": "burnout-q1",
-      "callAPI": false,
-      "introText": "Nice to meet you, {name}!\n\nNow I will ask 3 questions and will address the answers afterwards.",
-      "question": "There are many sources of burnout. Which of these feels most true for you right now? (You can choose more than one)",
+      "introText": "Hi, I'm Bina, your coach. Let's get some clarity on what you can do today.",
+      "question": "Burnout can come from many places. Which of these feel most true for you right now? (You can choose more than one)",
       "options": [
         "I'm carrying too much emotional weight from helping or supporting others",
         "I don't feel supported by the people I work with",
+        "I'm juggling too many priorities at once",
         "I'm working nonstop and it's draining me physically",
+        "I'm stuck doing work that doesn't align with my values",
         "I feel disconnected and unmotivated in my work",
+        "When boundaries between work and personal life disappear",
         "I'm not even sure — something just feels off",
         "Other - please specify"
       ]
     },
     {
-      "name": "burnout-q2",
+      "name": "burnout-signs",
       "callAPI": false,
-      "question": "When burnout shows up for you, what do you notice first?",
+      "question": "When burnout shows up, what do you notice first — or when does it hit hardest?",
       "options": [
         "I feel exhausted even when I've had sleep",
         "I get short-tempered or emotionally reactive",
         "I lose interest in things I usually care about",
         "I stop taking care of myself",
+        "I feel it most when I don’t feel appreciated or recognized",
+        "I feel it most when I’m responsible for other people’s emotions",
         "I just push through, even when I feel awful",
-        "Other - please specify"
-      ]
-    },
-    {
-      "name": "burnout-q3",
-      "callAPI": false,
-      "question": "When do things usually feel hardest?",
-      "options": [
-        "When I'm responsible for other people's needs or emotions",
-        "When I'm juggling too many priorities at once",
-        "When I don't feel appreciated or recognized",
-        "When I'm stuck doing work that doesn't align with my values",
-        "When boundaries between work and personal life disappear",
         "Other - please specify"
       ]
     },
