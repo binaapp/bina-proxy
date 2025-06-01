@@ -58,13 +58,13 @@
       {
         "name": "q2",
         "callAPI": false,
-        "question": "Do you still feel motivated and engaged in your role?",
+        "question": "Do you still feel motivated and engaged in your work?",
         "options": ["Yes", "Somewhat", "No", "Completely drained", "Other - please specify"]
       },
       {
         "name": "q3",
         "callAPI": false,
-        "question": "What feels most challenging in your role right now?",
+        "question": "What feels most challenging in your work right now?",
         "options": ["Priorities/workload", "Lack of recognition", "Emotional burden from team", "Feeling isolated", "Other - please specify"]
       },
       {
