@@ -46,59 +46,8 @@
       {
         "name": "start",
         "callAPI": false,
-        "introText": "Hey, I'm Bina – your coach. I'm here to walk with you through the emotional weight you might be carrying from work. Together, we'll slow down, reflect, and uncover what's truly going on beneath the surface.",
-        "question": "Before we begin, how would you like me to call you during our session?"
-    },
-      {
-        "name": "q1",
-        "callAPI": false,
-        "question": "OK, now I'll ask you a few simple questions to better understand where you're at. You don't need to prepare anything—just answer honestly.\n\n How often do you feel physically or mentally drained from work?",
-        "options": ["Rarely", "Sometimes", "Often", "Almost always", "Other - please specify"]
-      },
-      {
-        "name": "q2",
-        "callAPI": false,
-        "question": "Do you still feel motivated and engaged in your work?",
-        "options": ["Yes", "Somewhat", "No", "Completely drained", "Other - please specify"]
-      },
-      {
-        "name": "q3",
-        "callAPI": false,
-        "question": "What feels most challenging in your work right now?",
-        "options": ["Priorities/workload", "Lack of recognition", "Emotional burden from team", "Feeling isolated", "Other - please specify"]
-      },
-      {
-        "name": "q4",
-        "callAPI": false,
-        "question": "One Last Question - How often do you take real breaks?",
-        "options": ["Regularly", "Sometimes", "Rarely", "Never", "Other - please specify"]
-      },
-      {
-        "name": "persona-identification",
-        "callAPI": true,
-        "instruction": "Analyze the four answers and reflect back the user's persona. Use the following guide:\n- Overcommitted Leader: A & C\n- Disillusioned Manager: Mostly B\n- Isolated Warrior: Mostly D\n- Caregiver: Mostly C\n- Exhausted Workhorse: Mostly D\nStart by describing the user's persona, then begin a coaching session with empathy and curiosity.",
-        "phaseEvaluation": {
-            "instructions": "First provide the persona analysis. Then evaluate the user's response to determine if they agree with the assessment.",
-            "conditions": {
-                "continue": {
-                    "when": "The user disagrees with or wants to refine the persona assessment",
-                    "actions": [
-                        "Set \"status\": \"continue\"",
-                        "Acknowledge their perspective",
-                        "Ask what aspects don't feel accurate",
-                        "Use their feedback to provide a more nuanced or different persona analysis"
-                    ]
-                },
-                "finish": {
-                    "when": "The user confirms or shows alignment with the persona assessment",
-                    "actions": [
-                        "Set \"status\": \"finish\"",
-                        "Acknowledge their confirmation",
-                        "Transition to the coaching conversation"
-                    ]
-                }
-            }
-        }
+        "introText": "Hey, I’m Bina — your coach. Let’s take a moment to slow down and focus on *you*.",
+        "question": "What’s something that’s been emotionally heavy or frustrating at work lately?"
       },
       {
         "name": "coaching-flow",
