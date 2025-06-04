@@ -48,7 +48,7 @@
             v-if="sessionButtonType === 'registration'"
             @click="goToRegistration"
           >
-            Sign Up Here
+            Click Here to Recieve My Analysis
           </PrimaryButton>
         </div>
       </transition>
@@ -256,11 +256,7 @@ export default {
         this.currentLink = "";
       }
 
-      // Handle session button - always clear first
-      this.showSessionButton = false;
-      this.sessionButtonType = "";
-
-      // Only set new button state if we have a pending type
+      // Handle session button - only show after typing is complete
       if (this.pendingSessionButtonType) {
         this.showSessionButton = true;
         this.sessionButtonType = this.pendingSessionButtonType;
@@ -359,7 +355,12 @@ export default {
       // Clear any pending button state
       this.showSessionButton = false;
       this.sessionButtonType = "";
-      this.pendingSessionButtonType = "";
+
+      // Store the button state to be shown after typing completes
+      if (showButton) {
+        console.log("[ChatView] Pending button state:", showButton);
+        this.pendingSessionButtonType = showButton;
+      }
 
       // Add the message to the chat if it's not empty
       if (message) {
@@ -381,12 +382,6 @@ export default {
           // which will handle it through AiStep
           this.sessionRunner?.handleUserSubmit();
         }
-      }
-
-      // Update button state if provided
-      if (showButton) {
-        console.log("[ChatView] Pending button state:", showButton);
-        this.pendingSessionButtonType = showButton;
       }
 
       this.scrollToBottom();

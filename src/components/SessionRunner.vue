@@ -3,8 +3,9 @@
 import { ref, reactive, computed, onMounted } from "vue";
 import AiStep from "./AiStep.vue";
 import { flowData } from "@/composables/useFlowData";
-import { submitSession, API_URL } from "@/utils/sessionApi";
+import { submitSession, API_URL, handleAction } from "@/utils/sessionApi";
 import { useRoute } from "vue-router";
+import { auth } from "../firebase";
 
 const props = defineProps({
   flowData: {
@@ -330,6 +331,12 @@ const saveStepToDatabase = async (
 };
 
 const handleStepResult = async (result) => {
+  console.log("[SessionRunner] handleStepResult called with:", {
+    result,
+    currentStepIndex: currentStepIndex.value,
+    currentStep: props.flowData.steps[currentStepIndex.value],
+  });
+
   emit("debug-message", "Received step result: " + result.status);
 
   // Save the AI result in session history first
@@ -351,6 +358,55 @@ const handleStepResult = async (result) => {
   // Save system message to database immediately (except for the very first system message)
   if (sessionId.value) {
     await saveStepToDatabase("", result.reply, false, stepNameToUse);
+  }
+
+  // Handle any actions specified in the step
+  const currentStepData = props.flowData.steps[currentStepIndex.value];
+  console.log("[SessionRunner] Current step data:", {
+    name: currentStepData?.name,
+    actions: currentStepData?.actions,
+    callAPI: currentStepData?.callAPI,
+  });
+
+  if (currentStepData?.actions && Array.isArray(currentStepData.actions)) {
+    console.log(
+      "[SessionRunner] Found actions to execute:",
+      currentStepData.actions
+    );
+
+    const currentUser = auth.currentUser;
+    if (!currentUser) {
+      console.error("[SessionRunner] No user found");
+      return;
+    }
+
+    const userEmail = currentUser.email;
+    console.log("[SessionRunner] Current user email:", userEmail);
+
+    for (const action of currentStepData.actions) {
+      try {
+        console.log("[SessionRunner] Executing action:", action.name);
+        await handleAction(action.name, {
+          sessionId: sessionId.value,
+          flowData: props.flowData,
+          conversationHistory: sessionHistory.value,
+          currentStep: currentStepData,
+          userEmail: userEmail,
+          instruction: action.instruction,
+          system: action.system,
+        });
+        console.log(
+          `[SessionRunner] Action ${action.name} executed successfully`
+        );
+      } catch (error) {
+        console.error(
+          `[SessionRunner] Failed to execute action ${action.name}:`,
+          error
+        );
+      }
+    }
+  } else {
+    console.log("[SessionRunner] No actions found in current step");
   }
 
   // Prepare to send response to ChatView

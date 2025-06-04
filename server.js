@@ -150,7 +150,7 @@ app.post("/api/claude", async (req, res, next) => {
 
     let response;
     const controller = new AbortController();
-    const timeoutMs = 15000; // 15 seconds
+    const timeoutMs = 30000; // 15 seconds
     const timeout = setTimeout(() => {
       console.error("Claude API request timed out after", timeoutMs, "ms");
       controller.abort();
@@ -703,6 +703,9 @@ app.use((err, req, res, next) => {
     message: err.message,
   });
 });
+
+const emailRoutes = require('./emailRoutes');
+app.use('/api', emailRoutes);
 
 const port = process.env.PORT || 3001;
 app.listen(port, "0.0.0.0", () => {

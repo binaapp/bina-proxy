@@ -110,7 +110,7 @@
               "You see what others miss",
               "You really listen",
               "You always know what to say or do",
-              "You’re so steady — I know I can count on you",
+              "You're so steady — I know I can count on you",
               "You make things clear and simple",
               "You're so creative",
               "You get things done — and done well",
@@ -165,7 +165,7 @@
               "when": "The user agrees that the reflection feels true or meaningful",
               "actions": [
                 "Set 'status': 'finish'",
-                "Acknowledge their connection and transition directly to the registration phase"
+                "Acknowledge their connection and move to the next phase, but use the full instructions of this phase!"
               ]
             }
           }
@@ -175,12 +175,31 @@
         "name": "registration",
         "callAPI": true,
         "showButton": "registration",
-        "instruction": "Invite the user to sign up to receive their full, personalized Genius Zone summary. This summary includes:\n- A clear description of their Genius Zone\n- Practical ways to use it at work and in life\n- Ideal career directions and decision-making tips\n- Strength-based communication styles and preferred environments\n\nUse a short example based on the user’s reflection to show what kind of insights they'll get (e.g., 'For someone like you, who thrives on creating new systems and spotting what’s missing — your summary will include ways to structure your week around high-impact building time.').\n\nMake the tone high-value, exciting, and personal. Reassure them there’s no spam — just their own custom insight. End with a warm, clear invitation like: 'To get your personalized Genius Zone summary — just sign up below.'"
-      },
+        "instruction": "Tell the user that what comes next could be one of the most meaningful and eye-opening reflections they've ever received. This is not a recap or a summary of answers — it’s a powerful, personal document that will give them language for who they truly are at their best. Let them know that this includes a deep emotional analysis of their Genius Zone, a clear and energizing definition of their professional identity, practical suggestions for ideal career paths and work environments, and guidance for making better decisions with more clarity and confidence. It also includes relationship insights, communication patterns, people who bring out their best, and potential blind spots to watch for. Finally, it ends with one powerful anchor sentence that captures the essence of their Genius Zone — something they can carry with them into any situation. Once they understand all of this, explain that this personalized reflection will be sent directly to their inbox. Reassure them that it’s not a newsletter, not spam, and not part of any email sequence — just one thoughtful, valuable email created uniquely for them. End with a warm, clear invitation to click the sign up button so they can receive it."
+    },
       {
         "name": "closing",
         "callAPI": true,
-        "instruction": "Thank the user warmly for registering. Share one sentence that reflects back a powerful quality you saw in their answers — something that clearly expresses their genius zone. Then confirm their full summary is on its way."
+        "instruction": "First, thank the user warmly for signing up.\n\nThen, based on the attached summary, generate one strong, personalized sentence that reflects a meaningful step or realization from the session. This sentence should:\n- Mirror back a clear strength or inner quality the user demonstrated (e.g., courage, clarity, honesty, self-awareness, calm, leadership, compassion, etc.)\n- Show how they applied that strength to take a step, make a realization, or shift perspective\n- Be specific and grounded — avoid vague praise or generic coaching talk\n- Use a warm, empowering, human tone\n\nAfter the sentence, let the user know their email is on its way.",
+        "introText": "Done! You're all set.\n\nYour personal session summary is on its way to your inbox.",
+        "question": "Let me share a final reflection with you.",
+        "showButton": null,
+        "actions": [
+          {
+            "name": "sendReflectionEmail",
+            "system": "You are Bina, a personal development coach who helps users discover their Genious Zone. Your task is to generate a comprehensive summary based on the conversation history and the provided instruction. Focus on creating a clear, emotionally resonant, and practically useful summary that helps the user recognize their strengths and potential.",
+            "instruction": "Please generate a comprehensive summary of this Genious Zone session following the structure below. Do not ask questions - just provide the summary directly. Do not include any subject line, title, or header - start directly with the first section. The email subject will be handled separately.\n\nStart with a warm greeting that is related to the user's genius zone and express genuine appreciation for the user's commitment to this journey of self-discovery. Acknowledge their courage in exploring their Genious Zone and thank them for using this tool. Then proceed with the summary.\n\nWrite the email summary in a warm, encouraging, and insightful tone. The purpose is to help the user recognize who they are at their best, what kind of environments and people bring out their genius, and what to look out for in order to thrive.\n\nUse the following structure:\n\n1. 🧠 **Deep Analysis: Your Genious Zone & What It Means About You**\n   - Open with a short emotional introduction that captures the user's core essence and way of operating in the world.\n   - Highlight how they think, how they naturally contribute, and what makes them different.\n\n2. ✨ **Your Professional Identity – Who You Are at Your Core**\n   - Write 4–6 sentences that describe how the user tends to think, solve problems, create, or lead.\n   - Emphasize the energetic and emotional flavor of how they work — are they strategic, steady, fast-moving, curious, deeply supportive, etc.\n   - Avoid generic or inflated language.\n\n3. 🎯 **Career Paths That Fit Your Genious Zone**\n   - Offer 4–6 career types, job functions, or work environments that match their strengths.\n   - Add 2–3 types of roles or settings that are likely to drain them or feel misaligned — frame these constructively.\n\n4. 👥 **People You Thrive With**\n   - List 4–5 traits of people who typically bring out their best.\n   - Then 2–3 traits or dynamics that tend to frustrate or exhaust them.\n\n5. 💞 **In a Relationship – What Works for You**\n   - Describe the kind of partner and relationship dynamic that would likely support them deeply.\n   - Name 2–3 common mismatches — traits or patterns that don't fit well with their Genious Zone.\n\n6. 🌱 **Things to Know About Yourself**\n   - Share 4–6 short, coaching-style insights about their behavior, patterns, or needs — things they might not always see but that help them thrive.\n   - These can include emotional blind spots, overlooked strengths, or subtle traps (e.g., 'You may undervalue what comes naturally to you').\n\n7. 🔑 **Anchor Phrase**\n   - Provide one powerful sentence that summarizes their Genious Zone in a way that can guide them during doubt or transition.\n   - It should feel like a personal mantra they can come back to. Example: 'Where others see noise, you find meaning.'\n\n**Formatting Guidelines:**\n- Use emoji icons at the beginning of each section heading (🧠 ✨ 🎯 👥 💞 🌱 🔑).\n- Use short paragraphs and line breaks for easy reading.\n- Write in second person ('you'), with warmth, clarity, and respect.\n- Do not give fixed career advice — offer insights, not prescriptions.\n- Avoid clichés, vague praise, or personality labels.\n\n**Your goal:**\nTo deliver a summary that feels like a mirror — reflecting the user's strengths and essence back to them with clarity, care, and practical direction. This email should feel personal, thoughtful, and like a turning point."
+          }
+        ],
+        "conditions": {
+          "continue": {
+            "when": "The user has signed up",
+            "actions": [
+              "Set 'status': 'complete'",
+              "Generate a personalized closing message"
+            ]
+          }
+        }
       }
     ]
 }

@@ -127,3 +127,42 @@ async submitUserSession() {
   }
 }
 */
+
+export async function handleAction(actionName, data) {
+  console.log("[sessionApi] handleAction called with:", {
+    actionName,
+    sessionId: data.sessionId,
+    hasFlowData: !!data.flowData,
+    hasConversationHistory: !!data.conversationHistory,
+    hasCurrentStep: !!data.currentStep,
+    userEmail: data.userEmail,
+  });
+
+  const apiBase = getApiBase();
+  // Convert camelCase to kebab-case
+  const kebabCaseAction = actionName
+    .replace(/([a-z0-9])([A-Z])/g, "$1-$2")
+    .toLowerCase();
+  const url = `${apiBase}/api/${kebabCaseAction}`;
+  console.log("[sessionApi] Making request to:", url);
+
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  });
+
+  console.log("[sessionApi] Response status:", response.status);
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error("[sessionApi] Error response:", errorText);
+    throw new Error(`Failed to execute action: ${actionName}`);
+  }
+
+  const responseData = await response.json();
+  console.log("[sessionApi] Success response:", responseData);
+  return responseData;
+}
