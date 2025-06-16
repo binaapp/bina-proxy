@@ -58,7 +58,7 @@
       <textarea
         v-model="userInput"
         placeholder="Message Bina"
-        @keyup.enter="sendMessage"
+        @keydown.enter.prevent="sendMessage"
         @input="autoResize"
         ref="chatInput"
         rows="1"
@@ -104,14 +104,11 @@ import { useRoute } from "vue-router";
 const route = useRoute();
 
 const flowData = ref(null);
+const chatInput = ref(null);
 
 onMounted(async () => {
-  console.log("Route params:", route.params);
-  console.log("Program param:", route.params.program);
-
-  // Case 1: /chat/maia - Load first session of the program
+  // Only set default if no program param
   if (route.params.program) {
-    console.log("Loading program:", route.params.program);
     try {
       flowData.value = await loadFirstSessionOfProgram(route.params.program);
       console.log("Loaded program data:", flowData.value);
@@ -119,12 +116,12 @@ onMounted(async () => {
       console.error("Error loading program session:", error);
       flowData.value = getFlowData(DEFAULT_FLOW);
     }
-  }
-  // Case 2: /chat - Use default flow
-  else {
-    console.log("Using default flow");
+  } else {
     flowData.value = getFlowData(DEFAULT_FLOW);
   }
+
+  console.log("Route params:", route.params);
+  console.log("Program param:", route.params.program);
 });
 
 const { incrementInteraction, isLimitReached } = useInteractionLimiter();
@@ -139,6 +136,8 @@ const restoredIndexes = ref(new Set());
 const showSessionButton = ref(false);
 const sessionButtonType = ref(""); // e.g. "registration"
 const pendingSessionButtonType = ref("");
+const sessionRestored = ref(false);
+const justRestored = ref(false);
 
 // Get source from URL parameters
 const urlParams = new URLSearchParams(window.location.search);
@@ -147,71 +146,89 @@ const source =
 
 // Handle restored session
 function handleSessionRestored(sessionData) {
-  console.log("Session restored with lastStepId:", sessionData.lastStepId);
-  console.log("Button state before restore:", {
-    showSessionButton: showSessionButton.value,
-    sessionButtonType: sessionButtonType.value,
-    pendingSessionButtonType: pendingSessionButtonType.value,
-  });
+  try {
+    console.log("Session restored with lastStepId:", sessionData.lastStepId);
 
-  // 1. Restore the full message history from the backend
-  if (sessionData.history && Array.isArray(sessionData.history)) {
-    chatMessages.value = sessionData.history.map((msg) => {
-      if (typeof msg === "object" && msg.role && msg.content) return msg;
-      return { role: "assistant", content: msg };
-    });
-  } else {
-    chatMessages.value = [];
-  }
+    // 1. Safely restore message history
+    if (sessionData.history && Array.isArray(sessionData.history)) {
+      chatMessages.value = sessionData.history.map((msg) => {
+        try {
+          if (typeof msg === "object" && msg.role && msg.content) {
+            return msg;
+          }
+          return { role: "assistant", content: String(msg) };
+        } catch (error) {
+          console.error("[ChatView] Error processing message:", error);
+          return { role: "assistant", content: "Error processing message" };
+        }
+      });
+    } else {
+      chatMessages.value = [];
+    }
 
-  // Debug: Confirm restoration
-  console.log("[ChatView] After restoration, messages:", chatMessages.value);
-
-  messageTypes.value = chatMessages.value.map((msg) =>
-    msg.role === "assistant" ? "bot" : "user"
-  );
-  restoredIndexes.value = new Set(chatMessages.value.map((_, idx) => idx));
-
-  // Always clear button state first
-  showSessionButton.value = false;
-  sessionButtonType.value = "";
-  pendingSessionButtonType.value = "";
-
-  // Only set button state if we have a valid step with showButton
-  // AND we're not coming back from registration
-  if (sessionData.lastStepId && !route.query.justRegistered) {
-    const step = flowData.value.steps.find(
-      (s) => s.name === sessionData.lastStepId
+    // 2. Safely set message types
+    messageTypes.value = chatMessages.value.map((msg) =>
+      msg.role === "assistant" ? "bot" : "user"
     );
-    console.log("Found step for lastStepId:", step);
-    if (step && step.showButton) {
-      showSessionButton.value = true;
-      sessionButtonType.value = step.showButton.toLowerCase();
-    }
-  }
 
-  // After restoration, check for nextStep
-  if (sessionData.nextStep) {
-    // Now it's safe to trigger the AI response, because chatMessages is fully restored
-    handleAiResponse({
-      message: "",
-      type: "bot",
-      showButton: sessionData.nextStep.showButton || null,
-      currentStep: sessionData.nextStep,
+    // 3. Safely set restored indexes
+    restoredIndexes.value = new Set(chatMessages.value.map((_, idx) => idx));
+
+    // 4. Safely handle button state
+    if (sessionData.lastStepId && !route.query.justRegistered) {
+      const step = flowData.value?.steps?.find(
+        (s) => s.name === sessionData.lastStepId
+      );
+      if (step?.showButton) {
+        showSessionButton.value = true;
+        sessionButtonType.value = String(step.showButton).toLowerCase();
+      }
+    }
+
+    // 5. Safely handle API step
+    if (sessionData.nextStep?.callAPI) {
+      try {
+        const aiStep = {
+          history: sessionData.history || [],
+          name: sessionData.nextStep.name,
+          systemPrompt: sessionData.nextStep.instruction || "",
+          flowData: flowData.value,
+          sessionRunner: sessionRunner.value,
+        };
+
+        if (sessionRunner.value) {
+          sessionRunner.value.$emit("ai-step-trigger", {
+            step: sessionData.nextStep,
+            aiStep: aiStep,
+          });
+        } else {
+          console.error("[ChatView] sessionRunner is not available");
+        }
+      } catch (error) {
+        console.error("[ChatView] Error setting up API step:", error);
+      }
+    }
+
+    sessionRestored.value = true;
+    justRestored.value = true;
+
+    // 6. Safely scroll to bottom
+    nextTick(() => {
+      if (chatContentRef.value) {
+        chatContentRef.value.scrollTop = chatContentRef.value.scrollHeight;
+      }
     });
+  } catch (error) {
+    console.error("[ChatView] Error in handleSessionRestored:", error);
+    // Reset to a safe state
+    chatMessages.value = [];
+    messageTypes.value = [];
+    restoredIndexes.value = new Set();
+    showSessionButton.value = false;
+    sessionButtonType.value = "";
+    sessionRestored.value = false;
+    justRestored.value = false;
   }
-
-  console.log("Button state after restore:", {
-    showSessionButton: showSessionButton.value,
-    sessionButtonType: sessionButtonType.value,
-    pendingSessionButtonType: pendingSessionButtonType.value,
-  });
-
-  nextTick(() => {
-    if (chatContentRef.value) {
-      chatContentRef.value.scrollTop = chatContentRef.value.scrollHeight;
-    }
-  });
 }
 
 const scrollToBottom = () => {
@@ -261,7 +278,7 @@ const sendMessage = () => {
   if (!userInput.value.trim()) return;
 
   // Check interaction limit
-  if (isLimitReached()) {
+  if (isLimitReached.value) {
     console.log("Daily interaction limit reached");
 
     // Add a simplified message without mentioning the specific number
@@ -318,7 +335,7 @@ const handleMessageSent = ({ message, type }) => {
   console.log("Message sent:", type, message);
   chatMessages.value.push(message);
   messageTypes.value.push(type);
-  restoredIndexes.value = new Set(); // Clear restored indexes for new messages
+  sessionRestored.value = false; // Reset after first user message
 
   // Scroll to bottom when user message is added
   scrollToBottom();
@@ -330,6 +347,20 @@ const handleAiResponse = async ({
   showButton,
   currentStep: stepFromEvent,
 }) => {
+  if (justRestored.value) {
+    justRestored.value = false;
+    return; // Ignore the first bot message after restore
+  }
+
+  console.log(
+    "[handleAiResponse] message:",
+    message,
+    "type:",
+    type,
+    "chatMessages:",
+    chatMessages.value
+  );
+
   console.log("[ChatView] handleAiResponse called with:", {
     message,
     type,
@@ -347,8 +378,12 @@ const handleAiResponse = async ({
     pendingSessionButtonType.value = showButton;
   }
 
-  // Add the message to the chat if it's not empty
-  if (message) {
+  // Add the message to the chat if it's not empty and not the same as the last message
+  if (
+    message &&
+    (chatMessages.value.length === 0 ||
+      chatMessages.value[chatMessages.value.length - 1] !== message)
+  ) {
     chatMessages.value.push(message);
     messageTypes.value.push(type);
   }

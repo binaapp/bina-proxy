@@ -52,172 +52,69 @@ const route = useRoute();
 
 // === SESSION RESTORE LOGIC WITH LOGS ===
 onMounted(async () => {
-  const savedSessionId = localStorage.getItem("binaSessionId");
-  console.log("[SessionRunner] onMounted: savedSessionId =", savedSessionId);
-  if (savedSessionId) {
-    try {
+  try {
+    const savedSessionId = localStorage.getItem("binaSessionId");
+    console.log("[SessionRunner] onMounted: savedSessionId =", savedSessionId);
+
+    if (savedSessionId) {
       const res = await fetch(`${API_URL}/${savedSessionId}`);
-      console.log(
-        "[SessionRunner] Fetched /api/session/:id, status:",
-        res.status
-      );
       if (res.ok) {
         const data = await res.json();
-        console.log("[SessionRunner] Session data from backend:", data);
-        sessionId.value = data.sessionId;
-        userName.value = data.userName;
-        sessionHistory.value = data.history;
-        // Set currentStepIndex based on the last step in the DB
-        if (data.steps && data.steps.length > 0) {
+
+        // Safely set session data
+        sessionId.value = data.sessionId || null;
+        userName.value = data.userName || "";
+        sessionHistory.value = Array.isArray(data.history) ? data.history : [];
+
+        if (data.steps?.length > 0) {
           const lastStep = data.steps[data.steps.length - 1];
-          const idx = props.flowData.steps.findIndex(
-            (step) => step.name === lastStep.step_id
+          const idx = props.flowData?.steps?.findIndex(
+            (step) => step?.name === lastStep?.step_id
           );
+
           if (idx !== -1) {
             currentStepIndex.value = idx;
-            console.log(
-              "[SessionRunner] Restored currentStepIndex:",
-              currentStepIndex.value
-            );
 
-            // If just registered, move to next step and trigger system message
-            if (
-              route.query.justRegistered === "1" &&
-              currentStepIndex.value < props.flowData.steps.length - 1
-            ) {
-              // Add a user message to the history
-              /* sessionHistory.value.push({
-                role: "user",
-                content: "Sign-up successful!",
-              });*/
-
-              userInput.value = "Sign-up successful!";
-
-              // Save this step to the database (optional but recommended for consistency)
-              await saveStepToDatabase("Sign-up successful!", "", false);
-
-              // Now advance to the next step as before
-              currentStepIndex.value += 1;
-              console.log(
-                "[SessionRunner] justRegistered detected, moved to next step:",
-                currentStepIndex.value
+            // Safely set isAwaitingAi
+            try {
+              const currentStep = props.flowData.steps[idx];
+              isAwaitingAi.value = currentStep?.callAPI === true;
+            } catch (error) {
+              console.error(
+                "[SessionRunner] Error setting isAwaitingAi:",
+                error
               );
-
-              // Trigger the next system message as if the user just advanced
-              const nextStep = props.flowData.steps[currentStepIndex.value];
-              console.log("[SessionRunner] Next step after registration:", {
-                step: nextStep,
-                name: nextStep?.name,
-                callAPI: nextStep?.callAPI,
-              });
-
-              if (nextStep) {
-                // For AI steps, we don't need to construct a message
-                // Just emit the event with the current step
-                if (nextStep.callAPI) {
-                  console.log(
-                    "[SessionRunner] Emitting ai-response for AI step:",
-                    nextStep.name
-                  );
-                  emit("ai-response", {
-                    message: "", // Empty message since it's an AI step
-                    type: "bot",
-                    showButton: nextStep.showButton || null,
-                    currentStep: nextStep, // Include the current step
-                  });
-
-                  // Add this new section for justRegistered case
-                  if (route.query.justRegistered === "1") {
-                    console.log(
-                      "[SessionRunner] Triggering AiStep for justRegistered closing step"
-                    );
-                    // Create an instance of AiStep with the necessary props
-                    const aiStep = {
-                      history: sessionHistory.value,
-                      name: nextStep.name,
-                      systemPrompt: nextStep.instruction,
-                      flowData: props.flowData,
-                      sessionRunner: this,
-                    };
-
-                    // Emit a special event that ChatView will use to trigger AiStep
-                    emit("ai-step-trigger", {
-                      step: nextStep,
-                      aiStep: aiStep,
-                    });
-                  }
-                } else {
-                  // For non-AI steps, construct the message as before
-                  let introText = nextStep.introText || "";
-                  if (userName.value) {
-                    introText = introText.replace(/\{name\}/g, userName.value);
-                  }
-                  const systemMessage = [
-                    introText.replace(/\\n/g, "\n"),
-                    nextStep.question,
-                    nextStep.options
-                      ?.map(
-                        (opt, i) => `${String.fromCharCode(97 + i)}. ${opt}`
-                      )
-                      .join("\n"),
-                  ]
-                    .filter(Boolean)
-                    .join("\n\n");
-
-                  if (systemMessage.trim()) {
-                    sessionHistory.value.push({
-                      role: "assistant",
-                      content: systemMessage,
-                    });
-                    emit("ai-response", {
-                      message: systemMessage,
-                      type: "bot",
-                      showButton: nextStep.showButton || null,
-                      currentStep: nextStep,
-                    });
-                  }
-                }
-              }
+              isAwaitingAi.value = false;
             }
+
+            // Safely emit session restored
+            emit("session-restored", {
+              history: sessionHistory.value,
+              lastStepId: lastStep?.step_id || null,
+              nextStep: props.flowData.steps[idx]?.callAPI
+                ? props.flowData.steps[idx]
+                : null,
+            });
           }
         }
-        // Emit restored session history to parent (ChatView)
-        const nextStep =
-          data.steps && data.steps.length > 0
-            ? data.steps[data.steps.length - 1]
-            : null;
-        emit("session-restored", {
-          history: data.history,
-          lastStepId:
-            data.steps && data.steps.length > 0
-              ? data.steps[data.steps.length - 1].step_id
-              : null,
-          nextStep: nextStep && nextStep.callAPI ? nextStep : null,
-        });
-
-        console.log("[SessionRunner] Full session data:", {
-          sessionId: data.sessionId,
-          historyLength: data.history?.length,
-          history: data.history,
-          steps: data.steps,
-        });
-      } else {
-        // Session not found, clear localStorage and start new session
-        console.log(
-          "[SessionRunner] Session not found in backend, clearing localStorage."
-        );
-        localStorage.removeItem("binaSessionId");
       }
-    } catch (e) {
-      console.error("[SessionRunner] Failed to restore session:", e);
     }
-  } else {
-    console.log("[SessionRunner] No saved sessionId in localStorage.");
+  } catch (error) {
+    console.error("[SessionRunner] Failed to restore session:", error);
+    // Reset to a safe state
+    sessionId.value = null;
+    userName.value = "";
+    sessionHistory.value = [];
+    currentStepIndex.value = 0;
+    isAwaitingAi.value = false;
   }
 });
 
 // Initialize chat with first message
 onMounted(() => {
+  const savedSessionId = localStorage.getItem("binaSessionId");
+  if (savedSessionId) return; // Only run if no session to restore
+
   // Check if it's the first step and has introText
   const firstStep = props.flowData.steps[0];
   if (firstStep && firstStep.introText) {
