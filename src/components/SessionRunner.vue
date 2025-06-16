@@ -2,7 +2,6 @@
 /* eslint-disable no-unused-vars */
 import { ref, reactive, computed, onMounted } from "vue";
 import AiStep from "./AiStep.vue";
-import { flowData } from "@/composables/useFlowData";
 import { submitSession, API_URL, handleAction } from "@/utils/sessionApi";
 import { useRoute } from "vue-router";
 import { auth } from "../firebase";

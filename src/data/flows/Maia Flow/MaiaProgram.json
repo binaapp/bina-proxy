@@ -1,0 +1,12 @@
+{
+  "id": "maia_program",
+  "name": "Maia Coaching Program",
+  "description": "A multi-session coaching journey guided by Maia.",
+  "sessions": [
+    {
+      "id": "first_session",
+      "file": "Maia Flow/FirstSession.json",
+      "title": "First Session: Introduction & Trust Building"
+    }
+  ]
+}

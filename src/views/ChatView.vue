@@ -69,6 +69,7 @@
 
     <!-- SessionRunner handles the logic -->
     <SessionRunner
+      v-if="flowData"
       ref="sessionRunner"
       :userInput="userInput"
       @update:userInput="(value) => (userInput = value)"
@@ -84,9 +85,13 @@
   </div>
 </template>
 
-<script>
-import { ref, nextTick } from "vue"; // Add nextTick import
-import { getFlowData, DEFAULT_FLOW } from "@/composables/useFlowData";
+<script setup>
+import { ref, nextTick, onMounted } from "vue";
+import {
+  getFlowData,
+  DEFAULT_FLOW,
+  loadFirstSessionOfProgram,
+} from "@/composables/useFlowData";
 import coachData from "@/data/coaches/supportive-coach.json";
 import SessionRunner from "@/components/SessionRunner.vue";
 import TypingMessage from "@/components/TypingMessage.vue";
@@ -96,349 +101,317 @@ import { submitSession } from "@/utils/sessionApi";
 import PrimaryButton from "@/components/UI/PrimaryButton.vue";
 import { useRoute } from "vue-router";
 
-export default {
-  name: "ChatView",
-  components: {
-    SessionRunner,
-    TypingMessage,
-    TypingIndicator,
-    PrimaryButton,
-  },
-  setup() {
-    const { incrementInteraction, isLimitReached } = useInteractionLimiter();
-    const sessionRunner = ref(null);
-    const userInput = ref("");
-    const chatMessages = ref([]);
-    const messageTypes = ref([]);
-    const showLinkButton = ref(false);
-    const currentLink = ref("");
-    const chatContentRef = ref(null); // Reference to chat content container
-    const restoredIndexes = ref(new Set());
-    const showSessionButton = ref(false);
-    const sessionButtonType = ref(""); // e.g. "registration"
-    const pendingSessionButtonType = ref("");
-    const route = useRoute();
+const route = useRoute();
 
-    // Get source from URL parameters
-    const urlParams = new URLSearchParams(window.location.search);
-    const source =
-      urlParams.get("source") || urlParams.get("utm_source") || "direct";
+const flowData = ref(null);
 
-    // Get flow name from query string
-    const flowName = urlParams.get("flow") || DEFAULT_FLOW;
-    const flowData = getFlowData(flowName);
+onMounted(async () => {
+  console.log("Route params:", route.params);
+  console.log("Program param:", route.params.program);
 
-    // Handle restored session
-    function handleSessionRestored(sessionData) {
-      console.log("Session restored with lastStepId:", sessionData.lastStepId);
-      console.log("Button state before restore:", {
-        showSessionButton: showSessionButton.value,
-        sessionButtonType: sessionButtonType.value,
-        pendingSessionButtonType: pendingSessionButtonType.value,
-      });
-
-      // 1. Restore the full message history from the backend
-      if (sessionData.history && Array.isArray(sessionData.history)) {
-        chatMessages.value = sessionData.history.map((msg) => {
-          if (typeof msg === "object" && msg.role && msg.content) return msg;
-          return { role: "assistant", content: msg };
-        });
-      } else {
-        chatMessages.value = [];
-      }
-
-      // Debug: Confirm restoration
-      console.log(
-        "[ChatView] After restoration, messages:",
-        chatMessages.value
-      );
-
-      messageTypes.value = chatMessages.value.map((msg) =>
-        msg.role === "assistant" ? "bot" : "user"
-      );
-      restoredIndexes.value = new Set(chatMessages.value.map((_, idx) => idx));
-
-      // Always clear button state first
-      showSessionButton.value = false;
-      sessionButtonType.value = "";
-      pendingSessionButtonType.value = "";
-
-      // Only set button state if we have a valid step with showButton
-      // AND we're not coming back from registration
-      if (sessionData.lastStepId && !route.query.justRegistered) {
-        const step = flowData.steps.find(
-          (s) => s.name === sessionData.lastStepId
-        );
-        console.log("Found step for lastStepId:", step);
-        if (step && step.showButton) {
-          showSessionButton.value = true;
-          sessionButtonType.value = step.showButton.toLowerCase();
-        }
-      }
-
-      // After restoration, check for nextStep
-      if (sessionData.nextStep) {
-        // Now it's safe to trigger the AI response, because chatMessages is fully restored
-        this.handleAiResponse({
-          message: "",
-          type: "bot",
-          showButton: sessionData.nextStep.showButton || null,
-          currentStep: sessionData.nextStep,
-        });
-      }
-
-      console.log("Button state after restore:", {
-        showSessionButton: showSessionButton.value,
-        sessionButtonType: sessionButtonType.value,
-        pendingSessionButtonType: pendingSessionButtonType.value,
-      });
-
-      nextTick(() => {
-        if (chatContentRef.value) {
-          chatContentRef.value.scrollTop = chatContentRef.value.scrollHeight;
-        }
-      });
+  // Case 1: /chat/maia - Load first session of the program
+  if (route.params.program) {
+    console.log("Loading program:", route.params.program);
+    try {
+      flowData.value = await loadFirstSessionOfProgram(route.params.program);
+      console.log("Loaded program data:", flowData.value);
+    } catch (error) {
+      console.error("Error loading program session:", error);
+      flowData.value = getFlowData(DEFAULT_FLOW);
     }
+  }
+  // Case 2: /chat - Use default flow
+  else {
+    console.log("Using default flow");
+    flowData.value = getFlowData(DEFAULT_FLOW);
+  }
+});
 
-    return {
-      sessionRunner,
-      userInput,
-      chatMessages,
-      messageTypes,
-      flowData,
-      coachData,
-      incrementInteraction,
-      isLimitReached,
-      showLinkButton,
-      currentLink,
-      chatContentRef, // Add the ref to template
-      restoredIndexes,
-      handleSessionRestored,
-      source, // Add this
-      showSessionButton,
-      sessionButtonType,
-      pendingSessionButtonType,
-      route,
-    };
-  },
-  methods: {
-    // Scroll chat to bottom
-    scrollToBottom() {
-      nextTick(() => {
-        if (this.chatContentRef) {
-          const element = this.chatContentRef;
-          element.scrollTop = element.scrollHeight;
-        }
-      });
-    },
+const { incrementInteraction, isLimitReached } = useInteractionLimiter();
+const sessionRunner = ref(null);
+const userInput = ref("");
+const chatMessages = ref([]);
+const messageTypes = ref([]);
+const showLinkButton = ref(false);
+const currentLink = ref("");
+const chatContentRef = ref(null); // Reference to chat content container
+const restoredIndexes = ref(new Set());
+const showSessionButton = ref(false);
+const sessionButtonType = ref(""); // e.g. "registration"
+const pendingSessionButtonType = ref("");
 
-    hideTypingIndicator() {
-      if (this.sessionRunner) {
-        this.sessionRunner.isAwaitingAi = false;
-      }
-    },
+// Get source from URL parameters
+const urlParams = new URLSearchParams(window.location.search);
+const source =
+  urlParams.get("source") || urlParams.get("utm_source") || "direct";
 
-    handleTypingComplete(data) {
-      console.log("Typing complete, data:", data);
-      console.log("Button state before typing complete:", {
-        showSessionButton: this.showSessionButton,
-        sessionButtonType: this.sessionButtonType,
-        pendingSessionButtonType: this.pendingSessionButtonType,
-      });
+// Handle restored session
+function handleSessionRestored(sessionData) {
+  console.log("Session restored with lastStepId:", sessionData.lastStepId);
+  console.log("Button state before restore:", {
+    showSessionButton: showSessionButton.value,
+    sessionButtonType: sessionButtonType.value,
+    pendingSessionButtonType: pendingSessionButtonType.value,
+  });
 
-      // Handle link button
-      if (data && data.hasLink) {
-        this.currentLink = data.link;
-        this.showLinkButton = true;
-        console.log("Link detected, showing button:", this.currentLink);
-      } else {
-        this.showLinkButton = false;
-        this.currentLink = "";
-      }
+  // 1. Restore the full message history from the backend
+  if (sessionData.history && Array.isArray(sessionData.history)) {
+    chatMessages.value = sessionData.history.map((msg) => {
+      if (typeof msg === "object" && msg.role && msg.content) return msg;
+      return { role: "assistant", content: msg };
+    });
+  } else {
+    chatMessages.value = [];
+  }
 
-      // Handle session button - only show after typing is complete
-      if (this.pendingSessionButtonType) {
-        this.showSessionButton = true;
-        this.sessionButtonType = this.pendingSessionButtonType;
-        this.pendingSessionButtonType = "";
-      }
+  // Debug: Confirm restoration
+  console.log("[ChatView] After restoration, messages:", chatMessages.value);
 
-      console.log("Button state after typing complete:", {
-        showSessionButton: this.showSessionButton,
-        sessionButtonType: this.sessionButtonType,
-        pendingSessionButtonType: this.pendingSessionButtonType,
-      });
+  messageTypes.value = chatMessages.value.map((msg) =>
+    msg.role === "assistant" ? "bot" : "user"
+  );
+  restoredIndexes.value = new Set(chatMessages.value.map((_, idx) => idx));
 
-      this.scrollToBottom();
-    },
+  // Always clear button state first
+  showSessionButton.value = false;
+  sessionButtonType.value = "";
+  pendingSessionButtonType.value = "";
 
-    sendMessage() {
-      if (!this.userInput.trim()) return;
+  // Only set button state if we have a valid step with showButton
+  // AND we're not coming back from registration
+  if (sessionData.lastStepId && !route.query.justRegistered) {
+    const step = flowData.value.steps.find(
+      (s) => s.name === sessionData.lastStepId
+    );
+    console.log("Found step for lastStepId:", step);
+    if (step && step.showButton) {
+      showSessionButton.value = true;
+      sessionButtonType.value = step.showButton.toLowerCase();
+    }
+  }
 
-      // Check interaction limit
-      if (this.isLimitReached) {
-        console.log("Daily interaction limit reached");
+  // After restoration, check for nextStep
+  if (sessionData.nextStep) {
+    // Now it's safe to trigger the AI response, because chatMessages is fully restored
+    handleAiResponse({
+      message: "",
+      type: "bot",
+      showButton: sessionData.nextStep.showButton || null,
+      currentStep: sessionData.nextStep,
+    });
+  }
 
-        // Add a simplified message without mentioning the specific number
-        this.chatMessages.push(
-          "You've reached your daily interaction limit with Bina. " +
-            "Please come back tomorrow to continue your coaching journey. " +
-            "This limit helps us provide quality coaching to all users."
-        );
-        this.messageTypes.push("bot");
+  console.log("Button state after restore:", {
+    showSessionButton: showSessionButton.value,
+    sessionButtonType: sessionButtonType.value,
+    pendingSessionButtonType: pendingSessionButtonType.value,
+  });
 
-        // Scroll to show the limit message
-        this.scrollToBottom();
-        return;
-      }
+  nextTick(() => {
+    if (chatContentRef.value) {
+      chatContentRef.value.scrollTop = chatContentRef.value.scrollHeight;
+    }
+  });
+}
 
-      // Attempt to increment the interaction counter
-      if (!this.incrementInteraction()) {
-        console.log(
-          "Daily interaction limit reached while attempting to increment"
-        );
+const scrollToBottom = () => {
+  nextTick(() => {
+    if (chatContentRef.value) {
+      const element = chatContentRef.value;
+      element.scrollTop = element.scrollHeight;
+    }
+  });
+};
 
-        // Add a simplified message without mentioning the specific number
-        this.chatMessages.push(
-          "You've reached your daily interaction limit with Bina. " +
-            "Please come back tomorrow to continue your coaching journey. " +
-            "This limit helps us provide quality coaching to all users."
-        );
-        this.messageTypes.push("bot");
+const handleTypingComplete = (data) => {
+  console.log("Typing complete, data:", data);
+  console.log("Button state before typing complete:", {
+    showSessionButton: showSessionButton.value,
+    sessionButtonType: sessionButtonType.value,
+    pendingSessionButtonType: pendingSessionButtonType.value,
+  });
 
-        // Scroll to show the limit message
-        this.scrollToBottom();
-        return;
-      }
+  // Handle link button
+  if (data && data.hasLink) {
+    currentLink.value = data.link;
+    showLinkButton.value = true;
+    console.log("Link detected, showing button:", currentLink.value);
+  } else {
+    showLinkButton.value = false;
+    currentLink.value = "";
+  }
 
-      // Hide link button when user sends a message
-      this.showLinkButton = false;
+  // Handle session button - only show after typing is complete
+  if (pendingSessionButtonType.value) {
+    showSessionButton.value = true;
+    sessionButtonType.value = pendingSessionButtonType.value;
+    pendingSessionButtonType.value = "";
+  }
 
-      // Let SessionRunner handle the message
-      this.sessionRunner?.handleUserSubmit();
+  console.log("Button state after typing complete:", {
+    showSessionButton: showSessionButton.value,
+    sessionButtonType: sessionButtonType.value,
+    pendingSessionButtonType: pendingSessionButtonType.value,
+  });
 
-      // Reset textarea height after sending
-      this.$nextTick(() => {
-        const textarea = this.$refs.chatInput;
-        if (textarea) {
-          textarea.style.height = "auto";
-        }
-      });
+  scrollToBottom();
+};
 
-      // Scroll to bottom immediately after sending
-      this.scrollToBottom();
-    },
+const sendMessage = () => {
+  if (!userInput.value.trim()) return;
 
-    handleMessageSent({ message, type }) {
-      console.log("Message sent:", type, message);
-      this.chatMessages.push(message);
-      this.messageTypes.push(type);
-      this.restoredIndexes.value = new Set(); // Clear restored indexes for new messages
+  // Check interaction limit
+  if (isLimitReached()) {
+    console.log("Daily interaction limit reached");
 
-      // Scroll to bottom when user message is added
-      this.scrollToBottom();
-    },
+    // Add a simplified message without mentioning the specific number
+    chatMessages.value.push(
+      "You've reached your daily interaction limit with Bina. " +
+        "Please come back tomorrow to continue your coaching journey. " +
+        "This limit helps us provide quality coaching to all users."
+    );
+    messageTypes.value.push("bot");
 
-    async handleAiResponse({
-      message,
-      type,
-      showButton,
-      currentStep: stepFromEvent,
-    }) {
-      console.log("[ChatView] handleAiResponse called with:", {
-        message,
-        type,
-        showButton,
-        currentStep: stepFromEvent,
-      });
+    // Scroll to show the limit message
+    scrollToBottom();
+    return;
+  }
 
-      // Clear any pending button state
-      this.showSessionButton = false;
-      this.sessionButtonType = "";
+  // Attempt to increment the interaction counter
+  if (!incrementInteraction()) {
+    console.log(
+      "Daily interaction limit reached while attempting to increment"
+    );
 
-      // Store the button state to be shown after typing completes
-      if (showButton) {
-        console.log("[ChatView] Pending button state:", showButton);
-        this.pendingSessionButtonType = showButton;
-      }
+    // Add a simplified message without mentioning the specific number
+    chatMessages.value.push(
+      "You've reached your daily interaction limit with Bina. " +
+        "Please come back tomorrow to continue your coaching journey. " +
+        "This limit helps us provide quality coaching to all users."
+    );
+    messageTypes.value.push("bot");
 
-      // Add the message to the chat if it's not empty
-      if (message) {
-        this.chatMessages.push(message);
-        this.messageTypes.push(type);
-      }
+    // Scroll to show the limit message
+    scrollToBottom();
+    return;
+  }
 
-      // If this is a bot message and we have a current step, check if we need to make an API call
-      if (type === "bot" && stepFromEvent) {
-        console.log("[ChatView] Current step:", stepFromEvent);
+  // Hide link button when user sends a message
+  showLinkButton.value = false;
 
-        if (stepFromEvent.callAPI) {
-          console.log(
-            "[ChatView] Making API call for step:",
-            stepFromEvent.name
-          );
+  // Let SessionRunner handle the message
+  sessionRunner.value?.handleUserSubmit();
 
-          // Instead of making the API call here, emit an event to SessionRunner
-          // which will handle it through AiStep
-          this.sessionRunner?.handleUserSubmit();
-        }
-      }
+  // Reset textarea height after sending
+  nextTick(() => {
+    const textarea = chatInput.value;
+    if (textarea) {
+      textarea.style.height = "auto";
+    }
+  });
 
-      this.scrollToBottom();
-    },
+  // Scroll to bottom immediately after sending
+  scrollToBottom();
+};
 
-    handleSessionComplete(sessionData) {
-      console.log("Session completed:", sessionData);
+const handleMessageSent = ({ message, type }) => {
+  console.log("Message sent:", type, message);
+  chatMessages.value.push(message);
+  messageTypes.value.push(type);
+  restoredIndexes.value = new Set(); // Clear restored indexes for new messages
 
-      // Submit the completed session to the database
-      try {
-        submitSession({
-          startedAt: new Date(Date.now() - 600000).toISOString(), // Default to 10 minutes ago
-          endedAt: new Date().toISOString(),
-          completed: true,
-          flowSteps: sessionData.history.map((msg, index) => ({
-            stepId: `step-${index}`,
-            startedAt: new Date(
-              Date.now() - (600000 - index * 30000)
-            ).toISOString(),
-            endedAt: new Date(
-              Date.now() - (600000 - (index + 1) * 30000)
-            ).toISOString(),
-            userText: msg.role === "user" ? msg.content : "",
-            systemText: msg.role === "assistant" ? msg.content : "",
-          })),
-          feedback: null, // Feedback will be submitted separately through the form
-        });
-      } catch (error) {
-        console.error("Failed to submit session:", error);
-      }
+  // Scroll to bottom when user message is added
+  scrollToBottom();
+};
 
-      // Scroll to bottom at session completion
-      this.scrollToBottom();
-    },
+const handleAiResponse = async ({
+  message,
+  type,
+  showButton,
+  currentStep: stepFromEvent,
+}) => {
+  console.log("[ChatView] handleAiResponse called with:", {
+    message,
+    type,
+    showButton,
+    currentStep: stepFromEvent,
+  });
 
-    autoResize() {
-      this.$nextTick(() => {
-        const textarea = this.$refs.chatInput;
-        if (textarea) {
-          textarea.style.height = "auto";
-          textarea.style.height = textarea.scrollHeight + "px";
-        }
-      });
-    },
+  // Clear any pending button state
+  showSessionButton.value = false;
+  sessionButtonType.value = "";
 
-    goToRegistration() {
-      this.$router.push("/signup"); // Or use window.location.href = "/register";
-    },
-  },
-  mounted() {
-    // Initial scroll to bottom when component mounts
-    this.scrollToBottom();
-  },
-  updated() {
-    // Scroll to bottom on any update to the component
-    this.scrollToBottom();
-  },
+  // Store the button state to be shown after typing completes
+  if (showButton) {
+    console.log("[ChatView] Pending button state:", showButton);
+    pendingSessionButtonType.value = showButton;
+  }
+
+  // Add the message to the chat if it's not empty
+  if (message) {
+    chatMessages.value.push(message);
+    messageTypes.value.push(type);
+  }
+
+  // If this is a bot message and we have a current step, check if we need to make an API call
+  if (type === "bot" && stepFromEvent) {
+    console.log("[ChatView] Current step:", stepFromEvent);
+
+    if (stepFromEvent.callAPI) {
+      console.log("[ChatView] Making API call for step:", stepFromEvent.name);
+
+      // Instead of making the API call here, emit an event to SessionRunner
+      // which will handle it through AiStep
+      sessionRunner.value?.handleUserSubmit();
+    }
+  }
+
+  scrollToBottom();
+};
+
+const handleSessionComplete = (sessionData) => {
+  console.log("Session completed:", sessionData);
+
+  // Submit the completed session to the database
+  try {
+    submitSession({
+      startedAt: new Date(Date.now() - 600000).toISOString(), // Default to 10 minutes ago
+      endedAt: new Date().toISOString(),
+      completed: true,
+      flowSteps: sessionData.history.map((msg, index) => ({
+        stepId: `step-${index}`,
+        startedAt: new Date(
+          Date.now() - (600000 - index * 30000)
+        ).toISOString(),
+        endedAt: new Date(
+          Date.now() - (600000 - (index + 1) * 30000)
+        ).toISOString(),
+        userText: msg.role === "user" ? msg.content : "",
+        systemText: msg.role === "assistant" ? msg.content : "",
+      })),
+      feedback: null, // Feedback will be submitted separately through the form
+    });
+  } catch (error) {
+    console.error("Failed to submit session:", error);
+  }
+
+  // Scroll to bottom at session completion
+  scrollToBottom();
+};
+
+const autoResize = () => {
+  nextTick(() => {
+    const textarea = chatInput.value;
+    if (textarea) {
+      textarea.style.height = "auto";
+      textarea.style.height = textarea.scrollHeight + "px";
+    }
+  });
+};
+
+const goToRegistration = () => {
+  // Use router.push instead of window.location.href
+  router.push("/signup");
 };
 </script>
 
