@@ -3,6 +3,27 @@
 </template>
 
 <script setup>
+import { useHead } from "@vueuse/head";
+
+useHead({
+  title: "bina – Lead with Clarity and Confidence",
+  meta: [
+    {
+      name: "description",
+      content:
+        "Your AI coaching companion to help you lead with clarity, confidence, and emotional resilience.",
+    },
+    {
+      property: "og:title",
+      content: "bina – Lead with Clarity and Confidence",
+    },
+    {
+      property: "og:description",
+      content:
+        "Your AI coaching companion to help you lead with clarity, confidence, and emotional resilience.",
+    },
+  ],
+});
 //import LandingPage from "./components/LandingPage.vue";
 </script>
 

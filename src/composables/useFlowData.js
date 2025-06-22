@@ -8,7 +8,7 @@ import maiaProgram from "@/data/flows/Maia Flow/MaiaProgram.json";
 // import generalFlow from '@/data/flows/General.json'
 
 // Define the default flow name as a constant
-export const DEFAULT_FLOW = "geniuszone";
+export const DEFAULT_FLOW = "qcoachmaia";
 
 // Returns the flow data based on the flowName parameter
 export function getFlowData(flowName = DEFAULT_FLOW) {
@@ -24,7 +24,7 @@ export function getFlowData(flowName = DEFAULT_FLOW) {
     case "qcoachmaia":
       return qCoachMaiaFlow;
     default:
-      return geniusZoneFlow;
+      return qCoachMaiaFlow;
   }
 }
 

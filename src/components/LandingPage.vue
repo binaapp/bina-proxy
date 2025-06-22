@@ -7,21 +7,22 @@
       </h1>
 
       <p class="subtitle">
-        I'm here to help you navigate your professional challenges.
+        We at Bina built an AI-powered coach — designed to help you stay
+        grounded, think clearly, and navigate real work challenges with calm,
+        focus, and conviction.
       </p>
 
       <h2 class="secondary-heading">
-        In our private conversations, you'll gain clarity, reconnect with your
-        confidence, and map out simple steps you can trust that move you toward
-        what matters most.
+        One private conversation at a time, you'll gain the clarity, inner
+        strength, and resilience to move forward with intention.
       </h2>
-
+      <!--
       <p class="cta-text">
         Ready to take the first step?<br />
         Start your free session.
       </p>
-
-      <div class="start-button-container-left">
+    -->
+      <div class="start-button-container">
         <router-link to="/chat">
           <PrimaryButton>START NOW</PrimaryButton>
         </router-link>
@@ -84,6 +85,55 @@
         <router-link to="/chat">
           <PrimaryButton>START NOW</PrimaryButton>
         </router-link>
+      </div>
+    </div>
+    <!-- Why Bina Section -->
+    <div id="why-bina" class="why-bina-section">
+      <h2 class="why-bina-title">Why Bina</h2>
+      <div class="why-bina-content">
+        <p>Hi, I'm Maia. The Human coach behind Bina.</p>
+        <p>
+          I spent over 20 years in leadership, making decisions, leading teams,
+          and holding it all together.<br />
+          On the outside, I looked confident. On the inside, I carried pressure,
+          doubt, and the constant feeling that I had to prove myself.
+        </p>
+        <p>
+          There were moments I felt completely alone. Not because I wasn't
+          capable but because I didn't have a space to pause, to reflect, to be
+          human. I didn't need more advice. I needed a coach.<br />
+          Someone to help me quiet the noise, reconnect with what matters, and
+          move forward with clarity.
+        </p>
+        <p>
+          Later, I became a coach myself — because coaching changed everything
+          for me. It gave me the space to think clearly. The tools to navigate
+          hard moments. And the ability to lead with confidence.
+        </p>
+        <p>
+          That's why I created Bina.<br />
+          Bina brings the power of coaching to more people — through AI.<br />
+          It gives you private, emotionally intelligent conversations that help
+          you build the mental clarity and confidence to lead yourself, not just
+          your team.
+        </p>
+        <p>
+          I didn't build it alone. Two incredible partners, Chen and Neta —
+          brought their own hard-won insights from years of leadership, HR, and
+          startup life. Together, we turned a personal mission into something
+          scalable and deeply human.
+        </p>
+        <p>
+          When you start your first session, I'll be there.<br />
+          We'll start wherever you are, with something that's been on your mind
+          and walk through it together.<br />
+          It takes about 15 minutes.
+        </p>
+        <div class="start-button-container">
+          <router-link to="/chat">
+            <PrimaryButton>START NOW</PrimaryButton>
+          </router-link>
+        </div>
       </div>
     </div>
 
@@ -311,7 +361,7 @@
           </p>
         </div>
 
-        <div class="start-button-container-left">
+        <div class="start-button-container">
           <router-link to="/chat">
             <PrimaryButton>START NOW</PrimaryButton>
           </router-link>
@@ -319,111 +369,87 @@
       </div>
     </div>
 
-    <!--   <div class="team">
+    <div class="team">
       <h2 class="team-title">Meet the team</h2>
 
       <div class="team-intro">
-        <h3 class="team-subtitle">The people behind Bina</h3>
-
-        <p class="team-description">
-          Real leaders, real fears, real experience —<br />
-          built into a tool that actually understands you.
-        </p>
+        <h3 class="team-subtitle">The people behind Bina<br /></h3>
 
         <div class="team-story">
           <p>
-            We're three women from the high-tech world, and we've lived the
-            pressure.
+            Bina was built by three women who've led through pressure and doubt
+            and know how powerful real support can be.
           </p>
 
           <p>
-            Each of us climbed the ladder, led teams, made decisions that kept
-            us up at night, and smiled through the moments we felt completely
-            alone. We were expected to have all the answers, stay strong, and
-            show up perfectly, even when we were filled with doubt.
-          </p>
-
-          <p>And we realized something. We weren't the only ones.</p>
-
-          <p>
-            We each faced the same silent questions.<br />
-            <em
-              >Am I doing this right? Does anyone actually see what I'm
-              holding?</em
-            ><br />
-            We each felt the same gap between what leadership demands and the
-            support that actually exists.
+            We created Bina because we each wished we had something like it. Not
+            another self-help hack. Not advice from someone who doesn't get it.
+            But real coaching, the kind that helps you slow down, see clearly,
+            and move forward with confidence.
           </p>
 
           <p>
-            That's why we came together to create
-            <span class="highlight">Bina</span>.<br />
-            Because we believe leadership shouldn't feel lonely.<br />
-            Managers shouldn't have to figure it all out in the dark.<br />
-            Coaching shouldn't be a luxury. It should be a tool for anyone who
-            wants to grow, lead, and feel good doing it.
-          </p>
-
-          <p>
-            <span class="highlight">Bina</span> is the coach we each wished we
-            had.<br />
-            It's built on deep reflection, real insight, and emotional clarity.
-            It gives you a space to think clearly, feel supported, and act with
-            confidence.
+            We believe real coaching shouldn't be a luxury. It should be a tool
+            for anyone who wants to grow, succeed, and feel good doing it.
           </p>
         </div>
 
         <div class="team-members">
           <div class="team-member">
             <img src="/chen.jpg" alt="Chen Lev Ami" class="member-img" />
-            <h4 class="member-name">Chen Lev Ami</h4>
-            <p class="member-bio">
-              Thirteen years ago, Chen founded Yummi—a marketplace connecting
-              home cooks with families across Israel. As a solo founder, she
-              built the company from the ground up, driven by a deep belief in
-              the power of real connection. Over the years, she discovered
-              something unexpected: the biggest factor in Yummi's success was
-              her own inner state. This insight sparked a personal journey into
-              coaching, emotional clarity, and self-leadership. Today, as the
-              founder of Bina, she's on a mission to help others find that same
-              clarity—using the most powerful tool she's encountered: AI.
-            </p>
+            <div class="member-info">
+              <h4 class="member-name">Chen Lev Ami</h4>
+              <p class="member-bio">
+                Thirteen years ago, Chen founded Yummi—a marketplace connecting
+                home cooks with families across Israel. As a solo founder, she
+                built the company from the ground up, driven by a deep belief in
+                the power of real connection. Over the years, she discovered
+                something unexpected: the biggest factor in Yummi's success was
+                her own inner state. This insight sparked a personal journey
+                into coaching, emotional clarity, and self-leadership. Today, as
+                the founder of Bina, she's on a mission to help others find that
+                same clarity—using the most powerful tool she's encountered: AI.
+              </p>
+            </div>
           </div>
 
           <div class="team-member">
             <img src="/maia.jpg" alt="Maia Geberovich" class="member-img" />
-            <h4 class="member-name">Maia Geberovich</h4>
-            <p class="member-bio">
-              Maia has led large teams and complex cross-functional projects in
-              global high-tech companies for over 15 years. Today, as a
-              leadership coach, she brings that real-world experience into every
-              conversation, helping managers cut through noise, connect with
-              their strengths, and lead from a place of self-awareness and
-              impact. She's known for her deep intuition, directness, and
-              ability to ask the one question that changes everything.
-            </p>
+            <div class="member-info">
+              <h4 class="member-name">Maia Geberovich</h4>
+              <p class="member-bio">
+                Maia has led large teams and complex cross-functional projects
+                in global high-tech companies for over 15 years. Today, as a
+                leadership coach, she brings that real-world experience into
+                every conversation, helping managers cut through noise, connect
+                with their strengths, and lead from a place of self-awareness
+                and impact. She's known for her deep intuition, directness, and
+                ability to ask the one question that changes everything.
+              </p>
+            </div>
           </div>
 
           <div class="team-member">
             <img src="/neta.jpg" alt="Neta Geva" class="member-img" />
-            <h4 class="member-name">Neta Geva</h4>
-            <p class="member-bio">
-              Neta Geva combines analytical thinking with deep human insight.
-              With a background in philosophy and physics, and over 8 years in
-              human resources, she offers a unique perspective on leadership and
-              organizational growth. As an HR executive at Lightricks, she
-              scaled the company from 70 to 600 employees, led a 30-person
-              department, and was part of the executive leadership team.
-              Currently, she consults for early-stage startups, helping build
-              scalable, people-centered foundations. As a co-founder, she's
-              passionate about leveraging AI to deepen self-awareness and human
-              connection.
-            </p>
+            <div class="member-info">
+              <h4 class="member-name">Neta Geva</h4>
+              <p class="member-bio">
+                Neta Geva combines analytical thinking with deep human insight.
+                With a background in philosophy and physics, and over 8 years in
+                human resources, she offers a unique perspective on leadership
+                and organizational growth. As an HR executive at Lightricks, she
+                scaled the company from 70 to 600 employees, led a 30-person
+                department, and was part of the executive leadership team.
+                Currently, she consults for early-stage startups, helping build
+                scalable, people-centered foundations. As a co-founder, she's
+                passionate about leveraging AI to deepen self-awareness and
+                human connection.
+              </p>
+            </div>
           </div>
         </div>
       </div>
     </div>
-    -->
 
     <div id="vision" class="vision-section">
       <div class="vision-container">
@@ -446,7 +472,7 @@
               strength, and lead your professional journey with clarity and
               courage.
             </p>
-            <div class="start-button-container-left">
+            <div class="start-button-container">
               <router-link to="/chat">
                 <PrimaryButton>START NOW</PrimaryButton>
               </router-link>
@@ -471,7 +497,7 @@
             up at work, with more clarity, confidence, and purpose.
           </h4>
 
-          <div class="start-button-container-left">
+          <div class="start-button-container">
             <router-link to="/chat">
               <PrimaryButton>START NOW</PrimaryButton>
             </router-link>
@@ -525,17 +551,18 @@ h1 {
 }
 
 .subtitle {
-  font-size: var(--font-size-lg);
+  font-size: var(--font-size-md);
   color: var(--color-text-light);
   /*margin-bottom: var(--spacing-xl);*/
   line-height: 1.5;
 }
 
 .secondary-heading {
-  font-size: var(--font-size-lg);
+  font-size: var(--font-size-md);
   font-weight: 450;
   /*margin-bottom: 24px;*/
   color: #c4a27e;
+  line-height: 1.5;
 }
 
 .cta-text {
@@ -550,11 +577,6 @@ h1 {
   justify-content: center;
 }
 
-.start-button-container-left {
-  width: 100%;
-  display: flex;
-  justify-content: left;
-}
 /*
 .start-button {
   background-color: var(--color-secondary);
@@ -722,6 +744,44 @@ h1 {
   font-weight: 400;
 }
 
+.why-bina-section {
+  background-color: #f5ece3;
+  padding-bottom: var(--spacing-md);
+  width: 100%;
+  align-items: center;
+}
+
+.why-bina-title {
+  font-family: var(--font-family-heading);
+  font-size: var(--font-size-xxl);
+  color: var(--color-primary);
+  text-align: center;
+  margin-bottom: var(--spacing-lg);
+  font-weight: 700;
+  max-width: var(--max-content-width, 1200px);
+  width: 80%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.why-bina-content {
+  max-width: var(--max-content-width, 1200px);
+  width: 80%;
+  margin: 0 auto;
+  font-size: var(--font-size-md);
+  color: var(--color-primary);
+  line-height: 1.6;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.why-bina-content p {
+  margin-top: 0;
+  margin-bottom: 0.5em; /* or adjust to your liking, e.g. 0.75em or 8px */
+}
+
 /* Why it Works Section */
 .why-it-works {
   background-color: #f5ece3; /* Consider adding var(--color-background-alt) */
@@ -852,8 +912,11 @@ h1 {
 .profile-img {
   width: 50px;
   height: 50px;
-  border-radius: var(--border-radius-circular);
+  border-radius: 50%;
   object-fit: cover;
+  flex-shrink: 0;
+  margin-bottom: 0;
+  display: block;
 }
 
 .profile-name {
@@ -886,6 +949,7 @@ h1 {
 .faq-title {
   /* margin-bottom: var(--spacing-md);*/
   color: var(--color-primary);
+  text-align: center;
 }
 
 .faq-question {
@@ -902,86 +966,107 @@ h1 {
 
 /* Team Section */
 .team {
-  background-color: var(--color-primary);
-  padding: var(--spacing-xl) var(--spacing-md);
+  background-color: #f5ece3; /* Match the rest of the page */
+  padding: 20px 0 64px 0;
   width: 100%;
-  color: var(--color-text-light);
+  color: #234052; /* Use your --color-primary if defined */
+  text-align: center;
 }
 
 .team-title {
   font-family: var(--font-family-heading);
   font-size: var(--font-size-xxl);
-  color: var(--color-secondary);
+  color: #234052; /* Use your --color-primary if defined */
   text-align: center;
-  margin-bottom: var(--spacing-md);
+  margin-bottom: 2.5rem;
+  font-weight: 700;
 }
 
 .team-subtitle {
   font-size: var(--font-size-lg);
-  color: var(--color-text-light);
-  text-align: center;
-  margin-bottom: var(--spacing-xl);
+  color: #234052;
+  font-weight: 600;
+  text-align: left;
+  width: 80%;
+  margin: 0 auto 1.5rem auto;
+  line-height: 1.15;
 }
 
-.team-description {
-  max-width: var(--content-width);
-  margin: 0 auto var(--spacing-xl);
-  text-align: center;
-  font-size: var(--font-size-md);
-  line-height: 1.6;
-}
-
+.team-description,
 .team-story {
-  font-size: 1.25rem;
+  font-size: var(--font-size-md);
+  color: #234052; /* Use your --color-primary if defined */
+  text-align: left;
+  width: 80%;
+  margin: 0 auto 1.5rem auto;
   line-height: 1.6;
-  margin-bottom: 64px;
-}
-
-.team-story p {
-  margin-bottom: 24px;
+  font-weight: 400;
 }
 
 .team-story em {
-  color: #c4a27e;
-  font-style: normal;
+  color: #234052; /* Use your --color-primary if defined */
+  font-style: italic;
+  font-weight: 400;
+  display: block;
+  margin: 1rem 0 0.5rem 0;
+  font-size: var(--font-size-md);
+}
+
+.team-story p {
+  margin-top: 0;
+  margin-bottom: 1.1em;
 }
 
 .team-members {
   display: flex;
-  gap: var(--spacing-lg);
-  margin-top: var(--spacing-xl);
-  justify-content: center;
-  max-width: var(--content-width);
+  flex-direction: column;
+  gap: 64px;
+  margin-top: 48px;
   margin-left: auto;
   margin-right: auto;
 }
 
 .team-member {
-  flex: 1;
-  text-align: center;
+  display: flex;
+  align-items: flex-start;
+  gap: 48px;
+  margin-bottom: 0;
+  text-align: left;
+  max-width: var(--max-content-width, 1200px);
+  width: 80%;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .member-img {
-  width: 180px;
-  height: 180px;
-  border-radius: var(--border-radius-circular);
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
   object-fit: cover;
-  margin-bottom: var(--spacing-md);
+  flex-shrink: 0;
+  margin-bottom: 0;
+  display: block;
+}
+
+.member-info {
+  flex: 1;
 }
 
 .member-name {
   font-size: var(--font-size-lg);
-  color: var(--color-secondary);
-  margin-bottom: var(--spacing-xs);
   font-weight: 600;
+  color: #234052;
+  margin-bottom: 1rem;
+  margin-top: 0;
 }
 
 .member-bio {
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-md);
+  color: #234052;
+  margin: 0;
   line-height: 1.6;
-  max-width: 320px;
-  margin: 0 auto;
 }
+
 /* Vision Section */
 .vision-section {
   background-color: var(--color-primary);
@@ -1011,12 +1096,12 @@ h1 {
   font-weight: 700;
   margin-bottom: 32px;
   color: var(--color-secondary);
-  text-align: left;
+  text-align: center;
 }
 
 .vision-text,
 .mission-highlight {
-  font-size: var(--font-size-lg);
+  font-size: var(--font-size-md);
   line-height: 1.4;
   margin-bottom: var(--spacing-lg);
   color: var(--color-text-light);
@@ -1050,10 +1135,11 @@ h1 {
   font-size: var(--font-size-xxl);
   color: var(--color-secondary);
   margin-bottom: var(--spacing-md);
+  text-align: center;
 }
 
 .ready-heading {
-  font-size: var(--font-size-lg);
+  font-size: var(--font-size-md);
   color: var(--color-primary);
   margin-bottom: var(--spacing-md);
   font-weight: 450;
@@ -1061,7 +1147,7 @@ h1 {
 }
 
 .ready-cta {
-  font-size: var(--font-size-lg);
+  font-size: var(--font-size-md);
   line-height: 1.6;
   color: var(--color-primary);
   margin-bottom: var(--spacing-lg);
@@ -1323,11 +1409,41 @@ h1 {
   .vision-container,
   .ready-container,
   .faq-container {
-    width: 100% !important;
-    max-width: 600px; /* adjust as needed for your design */
+    width: 100%;
+    max-width: 600px;
     margin: 0 auto;
     padding-left: var(--spacing-sm);
     padding-right: var(--spacing-sm);
+    box-sizing: border-box;
+  }
+
+  .why-bina-title {
+    text-align: center;
+  }
+
+  .why-bina-title,
+  .why-bina-content {
+    width: 100%;
+    padding-left: var(--spacing-sm);
+    padding-right: var(--spacing-sm);
+    box-sizing: border-box;
+  }
+}
+
+@media (max-width: 900px) {
+  .member-img {
+    width: 140px;
+    height: 140px;
+    min-width: 140px;
+    min-height: 140px;
+    max-width: 140px;
+    max-height: 140px;
+  }
+
+  .team-story,
+  .team-subtitle .team-members {
+    max-width: 100%;
+    padding: 0 var(--spacing-sm);
     box-sizing: border-box;
   }
 }
@@ -1337,6 +1453,17 @@ a:visited,
 a:active {
   text-decoration: none !important;
 }
+
+@media (max-width: 900px) {
+  .member-img {
+    width: 140px;
+    height: 140px;
+    min-width: 140px;
+    min-height: 140px;
+    max-width: 140px;
+    max-height: 140px;
+  }
+}
 </style>
 
 <script setup>
@@ -1344,7 +1471,7 @@ import { ref, onMounted } from "vue";
 import Header from "./AppHeader.vue";
 import PrimaryButton from "./UI/PrimaryButton.vue";
 
-const fullText = "Hi, I'm Bina.\nYour AI-powered coach.";
+const fullText = "Lead with confidence.\nBuild your mental foundation.";
 const displayedText = ref("");
 const typingSpeed = 60; // ms per character
 

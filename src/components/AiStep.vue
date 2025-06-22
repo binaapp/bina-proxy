@@ -390,6 +390,12 @@ const callClaude = async () => {
 
 <template>
   <div v-if="isLoading"></div>
+  <div v-else-if="error" class="ai-error-message">
+    <p>
+      There was a problem processing your request. Please try refreshing the page and continue again.<br>
+      <span style="color: #888; font-size: 0.9em;">Error: {{ error }}</span>
+    </p>
+  </div>
 </template>
 
 <style scoped>
