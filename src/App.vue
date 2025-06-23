@@ -1,9 +1,11 @@
 <template>
   <router-view />
+  <AppFooter />
 </template>
 
 <script setup>
 import { useHead } from "@vueuse/head";
+import AppFooter from "./components/UI/AppFooter.vue";
 
 useHead({
   title: "bina – Lead with Clarity and Confidence",

@@ -3,6 +3,7 @@ import ChatView from "../views/ChatView.vue";
 import LandingPage from "../components/LandingPage.vue";
 import ContactUs from "../components/ContactUs.vue";
 import LoginUI from "../components/LoginUI.vue";
+import ArticleView from "../views/ArticleView.vue";
 
 const router = createRouter({
   history: createWebHistory("/"),
@@ -26,6 +27,11 @@ const router = createRouter({
       path: "/signup",
       name: "signup",
       component: LoginUI,
+    },
+    {
+      path: "/articles/:slug",
+      name: "article",
+      component: ArticleView,
     },
   ],
 });

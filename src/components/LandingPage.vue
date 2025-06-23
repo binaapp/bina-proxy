@@ -369,7 +369,7 @@
       </div>
     </div>
 
-    <div class="team">
+    <div id="team" class="team">
       <h2 class="team-title">Meet the team</h2>
 
       <div class="team-intro">
@@ -419,7 +419,7 @@
               <h4 class="member-name">Maia Geberovich</h4>
               <p class="member-bio">
                 Maia has led large teams and complex cross-functional projects
-                in global high-tech companies for over 15 years. Today, as a
+                in global high-tech companies for over 20 years. Today, as a
                 leadership coach, she brings that real-world experience into
                 every conversation, helping managers cut through noise, connect
                 with their strengths, and lead from a place of self-awareness

@@ -394,6 +394,41 @@ const handleUserSubmit = async () => {
     content: currentInputText,
   });
 
+  // Check if this is the first user message (start trial event)
+  const userMessages = sessionHistory.value.filter(
+    (msg) => msg.role === "user"
+  );
+  const isFirstUserMessage = userMessages.length === 1;
+
+  // Debug log to verify the logic
+  console.log(
+    "[Debug] User messages count:",
+    userMessages.length,
+    "Is first message:",
+    isFirstUserMessage
+  );
+
+  // Fire StartTrial event only in production when user first writes a message
+  if (isFirstUserMessage) {
+    const hostname = window.location.hostname;
+    const isProduction =
+      hostname === "binaapp.com" || hostname === "www.binaapp.com";
+
+    console.log("[Debug] Hostname:", hostname, "Is production:", isProduction);
+
+    if (window.fbq && isProduction) {
+      console.log("[FB Pixel] Firing StartTrial event in production");
+      fbq("track", "StartTrial", {
+        content_name: "Session Started",
+        status: "success",
+      });
+    } else if (isFirstUserMessage) {
+      console.log(
+        "[FB Pixel] Skipping StartTrial event - not in production environment"
+      );
+    }
+  }
+
   // Notify ChatView of message sent
   emit("message-sent", {
     message: currentInputText,
