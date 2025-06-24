@@ -15,7 +15,7 @@
         <a href="/#vision" class="footer-link">Vision & Mission</a><br />
         <a href="/#team" class="footer-link">Meet the Founders</a><br />
         <a href="/contact" class="footer-link">Contact Us</a><br />
-        <a href="/privacy" class="footer-link">Privacy Policy</a>
+        <a href="/blog" class="footer-link">Blog</a>
       </div>
       <div class="footer-section">
         <div>
@@ -47,6 +47,7 @@
   width: 100%;
   box-sizing: border-box;
   text-align: left;
+  overflow-x: hidden;
 }
 .footer-inner {
   display: flex;
@@ -88,6 +89,8 @@
     max-width: 100vw;
     margin-left: 0;
     padding: 0 16px;
+    box-sizing: border-box;
+    overflow-x: hidden;
   }
   .footer-section {
     margin-bottom: 20px;

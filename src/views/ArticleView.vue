@@ -32,3 +32,20 @@ async function loadArticle() {
 
 watch(() => route.params.slug, loadArticle, { immediate: true });
 </script>
+
+<style scoped>
+.sidebar-read-more {
+  display: inline-block;
+  margin-top: 0.7rem;
+  color: #1a0dab;
+  text-decoration: underline;
+  font-size: 1rem;
+  cursor: pointer;
+}
+.sidebar-read-more:visited {
+  color: #551a8b;
+}
+.sidebar-read-more:hover {
+  color: #0056b3;
+}
+</style>

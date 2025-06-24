@@ -127,14 +127,16 @@ import ArticleLayout from "../../components/ArticleLayout.vue";
 // Dummy data for the "Additional Articles" sidebar
 const otherArticles = ref([
   {
-    title: "It's not just business when it feels personal",
+    title: "Why Proving Yourself is the Wrong Mindset for Career Success",
     excerpt:
-      "How to handle work situations that trigger a personal response and navigate them with grace.",
+      "Have you ever felt that sinking feeling in your stomach when starting a new role, walking into a crucial meeting, or facing an interview? It's the dreadful thought, 'I have to prove myself.'...",
+    link: "/articles/value-based-mindset",
   },
   {
-    title: "The Art of Saying No",
+    title: "Mastering Office Politics with Integrity",
     excerpt:
-      "Reclaim your time and energy by learning how to set boundaries without guilt.",
+      "Over two decades of work in the corporate and high-tech industry taught me a crucial lesson about office politics that I wish someone would have thought me while I was still onboarding...",
+    link: "/articles/mastering-office-politics",
   },
 ]);
 </script>

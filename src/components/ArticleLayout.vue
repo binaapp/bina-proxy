@@ -24,6 +24,13 @@
         >
           <h3 class="sidebar-card-title">{{ item.title }}</h3>
           <p class="sidebar-card-excerpt">{{ item.excerpt }}</p>
+          <router-link
+            v-if="item.link"
+            :to="item.link"
+            class="sidebar-read-more"
+          >
+            Read more
+          </router-link>
         </div>
       </aside>
     </div>
@@ -71,13 +78,13 @@ defineProps({
   font-weight: bold;
   text-align: left;
   margin-bottom: 2rem;
-  color: #13344b;
+  color: var(--color-primary);
   line-height: 1.2;
 }
 
 .article-content {
-  font-size: var(--font-size-sm);
-  color: #20405a;
+  font-size: var(--font-size-md);
+  color: var(--color-primary);
   text-align: left;
 }
 
@@ -94,7 +101,7 @@ defineProps({
   font-weight: bold;
   margin-top: 2rem;
   margin-bottom: 1rem;
-  color: #13344b;
+  color: var(--color-primary);
 }
 
 .article-content p {
@@ -110,7 +117,7 @@ defineProps({
   font-size: 1.3rem;
   font-weight: bold;
   margin-bottom: 1.5rem;
-  color: #13344b;
+  color: var(--color-primary);
   text-align: center;
 }
 
@@ -123,15 +130,17 @@ defineProps({
 }
 
 .sidebar-card-title {
-  font-size: 1.1rem;
+  font-size: var(--font-size-md);
   font-weight: bold;
   margin-bottom: 0.7rem;
-  color: #13344b;
+  color: var(--color-primary);
+  text-align: left;
 }
 
 .sidebar-card-excerpt {
-  color: #20405a;
-  font-size: 1rem;
+  color: var(--color-primary);
+  font-size: var(--font-size-md);
+  text-align: left;
 }
 
 .button-container {
@@ -139,10 +148,27 @@ defineProps({
   text-align: center;
 }
 
+.sidebar-read-more {
+  display: inline-block;
+  margin-top: 0.7rem;
+  color: #1a0dab;
+  text-decoration: underline;
+  font-size: 1rem;
+  cursor: pointer;
+}
+.sidebar-read-more:visited {
+  color: #551a8b;
+}
+.sidebar-read-more:hover {
+  color: #0056b3;
+}
+
 @media (max-width: 900px) {
   .article-layout {
     flex-direction: column;
     gap: 2rem;
+    box-sizing: border-box;
+    overflow-x: hidden;
   }
   .article-sidebar {
     min-width: unset;

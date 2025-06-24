@@ -34,8 +34,8 @@
           >
         </li>
         <li>
-          <a href="#" @click.prevent="goToSection('testimonials')"
-            >Testimonials</a
+          <router-link to="/blog" class="menu-link" @click="menuOpen = false"
+            >Blog</router-link
           >
         </li>
         <li>
