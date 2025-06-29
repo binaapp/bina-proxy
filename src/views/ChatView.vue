@@ -143,15 +143,31 @@ export default {
     const flowData = ref(null);
 
     onMounted(async () => {
-      const sessionName = route.params.program || "qcoachmaia";
+      console.log("route.params:", route.params); // Log the route params
+      const sessionName = route.params.program || "GeneralShort";
+      console.log("Resolved sessionName:", sessionName); // Log the resolved session name
       try {
         flowData.value = await loadFlowBySessionName(sessionName);
+        console.log(
+          "Loaded flowData for session:",
+          sessionName,
+          flowData.value
+        ); // Log loaded data
       } catch (e) {
+        console.error("Failed to load flow for session:", sessionName, e);
         // fallback to QCoachMaia if not found
-        const { default: fallbackFlow } = await import(
-          "@/data/flows/QCoachMaia.json"
-        );
-        flowData.value = fallbackFlow;
+        try {
+          const { default: fallbackFlow } = await import(
+            "@/data/flows/GeneralShort.json"
+          );
+          flowData.value = fallbackFlow;
+          console.log("Loaded fallback flow QCoachMaia.json");
+        } catch (fallbackError) {
+          console.error(
+            "Failed to load fallback QCoachMaia.json",
+            fallbackError
+          );
+        }
       }
     });
 
