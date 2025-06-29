@@ -1,8 +1,6 @@
 <template>
   <div class="chat-wrapper">
-    <header class="chat-header">
-      <img src="/bina-logo.png" alt="Bina Logo" />
-    </header>
+    <AppHeader />
 
     <section class="chat-content" ref="chatContentRef">
       <transition-group name="fade" tag="div">
@@ -12,19 +10,45 @@
           :class="['message', messageTypes[index]]"
         >
           <!-- User messages: always use the same markup -->
-          <div v-if="messageTypes[index] === 'user'" class="user-message">
-            {{ typeof message === "object" ? message.content : message }}
+          <div
+            v-if="messageTypes[index] === 'user'"
+            class="user-message-container"
+          >
+            <div class="user-message-lines">
+              <div class="user-message-bubble">
+                {{ message }}
+              </div>
+            </div>
+            <img
+              src="/user.png"
+              alt="User"
+              class="user-avatar"
+              style="margin-top: 0.25rem"
+            />
           </div>
-          <!-- Restored bot messages: plain text, no typing -->
-          <span v-else-if="restoredIndexes && restoredIndexes.has(index)">
-            {{ typeof message === "object" ? message.content : message }}
-          </span>
-          <!-- New bot messages: use TypingMessage -->
-          <TypingMessage
-            v-else
-            :text="typeof message === 'object' ? message.content : message"
-            @typing-complete="handleTypingComplete"
-          />
+          <!-- Bot messages: show Maia's avatar and message bubble(s) -->
+          <div v-else class="bot-message-container">
+            <img
+              src="/maia.jpg"
+              alt="Maia"
+              class="maia-avatar"
+              style="margin-top: 0.25rem"
+            />
+            <div class="bot-message-lines">
+              <div
+                v-for="(line, lineIdx) in getVisibleBotMessageLines(
+                  message,
+                  index
+                )"
+                :key="'botmsg-' + index + '-' + lineIdx"
+                class="bot-message-line"
+              >
+                <div class="bot-message">
+                  {{ line }}
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </transition-group>
 
@@ -40,31 +64,23 @@
           </a>
         </div>
       </transition>
-
-      <!-- Add the button here -->
-      <transition name="fade">
-        <div class="button-container" v-if="showSessionButton">
-          <PrimaryButton
-            v-if="sessionButtonType === 'registration'"
-            @click="goToRegistration"
-          >
-            Click Here to Recieve My Analysis
-          </PrimaryButton>
-        </div>
-      </transition>
     </section>
 
     <div class="chat-box">
       <textarea
         v-model="userInput"
-        placeholder="Message Bina"
-        @keydown.enter.prevent="sendMessage"
+        placeholder="Type anything, I'm listening"
+        @keyup.enter="sendMessage"
         @input="autoResize"
+        class="chat-input"
         ref="chatInput"
+        :disabled="isLimitReached"
         rows="1"
-        style="overflow: hidden; resize: none"
+        style="resize: none; overflow: hidden"
       ></textarea>
-      <button @click="sendMessage">&#8593;</button>
+      <button class="send-btn" @click="sendMessage" :disabled="isLimitReached">
+        SEND
+      </button>
     </div>
 
     <!-- SessionRunner handles the logic -->
@@ -85,372 +101,312 @@
   </div>
 </template>
 
-<script setup>
-import { ref, nextTick, onMounted } from "vue";
-import {
-  getFlowData,
-  DEFAULT_FLOW,
-  loadFirstSessionOfProgram,
-} from "@/composables/useFlowData";
+<script>
+import { ref, nextTick, onMounted, watch } from "vue";
+import { loadFlowBySessionName } from "@/composables/useFlowData"; // <-- change import
 import coachData from "@/data/coaches/supportive-coach.json";
 import SessionRunner from "@/components/SessionRunner.vue";
-import TypingMessage from "@/components/TypingMessage.vue";
+// import TypingMessage from "@/components/TypingMessage.vue"; // <-- commented out
 import TypingIndicator from "@/components/TypingIndicator.vue";
 import { useInteractionLimiter } from "../composables/useInteractionLimiter.js";
 import { submitSession } from "@/utils/sessionApi";
-import PrimaryButton from "@/components/UI/PrimaryButton.vue";
-import { useRoute } from "vue-router";
+import AppHeader from "@/components/AppHeader.vue";
+import { useRoute } from "vue-router"; // <-- add this
 
-const route = useRoute();
+export default {
+  name: "ChatView",
+  components: {
+    AppHeader,
+    SessionRunner,
+    // TypingMessage, // <-- commented out
+    TypingIndicator,
+  },
+  setup() {
+    const { incrementInteraction, isLimitReached } = useInteractionLimiter();
+    const sessionRunner = ref(null);
+    const userInput = ref("");
+    const chatMessages = ref([]);
+    const messageTypes = ref([]);
+    const showLinkButton = ref(false);
+    const currentLink = ref("");
+    const chatContentRef = ref(null); // Reference to chat content container
+    const restoredIndexes = ref(new Set());
+    const visibleBotLines = ref([]); // Track visible lines for each bot message
 
-const flowData = ref(null);
-const chatInput = ref(null);
+    // Get source from URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const source =
+      urlParams.get("source") || urlParams.get("utm_source") || "direct";
 
-onMounted(async () => {
-  // Only set default if no program param
-  if (route.params.program) {
-    try {
-      flowData.value = await loadFirstSessionOfProgram(route.params.program);
-      console.log("Loaded program data:", flowData.value);
-    } catch (error) {
-      console.error("Error loading program session:", error);
-      flowData.value = getFlowData(DEFAULT_FLOW);
-    }
-  } else {
-    flowData.value = getFlowData(DEFAULT_FLOW);
-  }
+    // Get sessionName from route param
+    const route = useRoute();
+    const flowData = ref(null);
 
-  console.log("Route params:", route.params);
-  console.log("Program param:", route.params.program);
-});
+    onMounted(async () => {
+      const sessionName = route.params.program || "qcoachmaia";
+      try {
+        flowData.value = await loadFlowBySessionName(sessionName);
+      } catch (e) {
+        // fallback to QCoachMaia if not found
+        const { default: fallbackFlow } = await import(
+          "@/data/flows/QCoachMaia.json"
+        );
+        flowData.value = fallbackFlow;
+      }
+    });
 
-const { incrementInteraction, isLimitReached } = useInteractionLimiter();
-const sessionRunner = ref(null);
-const userInput = ref("");
-const chatMessages = ref([]);
-const messageTypes = ref([]);
-const showLinkButton = ref(false);
-const currentLink = ref("");
-const chatContentRef = ref(null); // Reference to chat content container
-const restoredIndexes = ref(new Set());
-const showSessionButton = ref(false);
-const sessionButtonType = ref(""); // e.g. "registration"
-const pendingSessionButtonType = ref("");
-const sessionRestored = ref(false);
-const justRestored = ref(false);
-
-// Get source from URL parameters
-const urlParams = new URLSearchParams(window.location.search);
-const source =
-  urlParams.get("source") || urlParams.get("utm_source") || "direct";
-
-// Handle restored session
-function handleSessionRestored(sessionData) {
-  try {
-    console.log("Session restored with lastStepId:", sessionData.lastStepId);
-
-    // 1. Safely restore message history
-    if (sessionData.history && Array.isArray(sessionData.history)) {
-      chatMessages.value = sessionData.history.map((msg) => {
-        try {
-          if (typeof msg === "object" && msg.role && msg.content) {
-            return msg;
-          }
-          return { role: "assistant", content: String(msg) };
-        } catch (error) {
-          console.error("[ChatView] Error processing message:", error);
-          return { role: "assistant", content: "Error processing message" };
+    // Handle restored session
+    function handleSessionRestored({ history }) {
+      chatMessages.value = history.map((msg) => msg.content);
+      messageTypes.value = history.map((msg) =>
+        msg.role === "assistant" ? "bot" : "user"
+      );
+      // Mark all current messages as restored
+      restoredIndexes.value = new Set(chatMessages.value.map((_, idx) => idx));
+      nextTick(() => {
+        if (chatContentRef.value) {
+          chatContentRef.value.scrollTop = chatContentRef.value.scrollHeight;
         }
       });
-    } else {
-      chatMessages.value = [];
     }
 
-    // 2. Safely set message types
-    messageTypes.value = chatMessages.value.map((msg) =>
-      msg.role === "assistant" ? "bot" : "user"
-    );
+    // Watch for new bot messages and animate their lines
+    watch(
+      [chatMessages, messageTypes],
+      async ([newMessages, newTypes], [oldMessages]) => {
+        // Find the index of the newly added bot message
+        if (
+          newMessages.length > oldMessages.length &&
+          newTypes[newTypes.length - 1] === "bot"
+        ) {
+          const idx = newMessages.length - 1;
+          const lines = getBotMessageLines(newMessages[idx]);
+          visibleBotLines.value[idx] = 0; // Start with 0 visible lines
 
-    // 3. Safely set restored indexes
-    restoredIndexes.value = new Set(chatMessages.value.map((_, idx) => idx));
-
-    // 4. Safely handle button state
-    if (sessionData.lastStepId && !route.query.justRegistered) {
-      const step = flowData.value?.steps?.find(
-        (s) => s.name === sessionData.lastStepId
-      );
-      if (step?.showButton) {
-        showSessionButton.value = true;
-        sessionButtonType.value = String(step.showButton).toLowerCase();
-      }
-    }
-
-    // 5. Safely handle API step
-    if (sessionData.nextStep?.callAPI) {
-      try {
-        const aiStep = {
-          history: sessionData.history || [],
-          name: sessionData.nextStep.name,
-          systemPrompt: sessionData.nextStep.instruction || "",
-          flowData: flowData.value,
-          sessionRunner: sessionRunner.value,
-        };
-
-        if (sessionRunner.value) {
-          sessionRunner.value.$emit("ai-step-trigger", {
-            step: sessionData.nextStep,
-            aiStep: aiStep,
-          });
-        } else {
-          console.error("[ChatView] sessionRunner is not available");
+          for (let i = 1; i <= lines.length; i++) {
+            visibleBotLines.value[idx] = i;
+            await new Promise((resolve) => setTimeout(resolve, 500)); // 500ms delay between lines
+          }
         }
+      },
+      { deep: true }
+    );
+
+    function getBotMessageLines(message) {
+      return message.split("\n").filter((line) => line.trim() !== "");
+    }
+
+    function getVisibleBotMessageLines(message, idx) {
+      const allLines = getBotMessageLines(message);
+      const visibleCount = visibleBotLines.value[idx] ?? allLines.length;
+      return allLines.slice(0, visibleCount);
+    }
+
+    async function handleAiResponse({ message, type }) {
+      chatMessages.value.push(message);
+      messageTypes.value.push(type);
+      restoredIndexes.value = new Set();
+
+      showLinkButton.value = false;
+
+      if (type === "bot") {
+        const idx = chatMessages.value.length - 1;
+        const lines = getBotMessageLines(message);
+        visibleBotLines.value[idx] = 0;
+        for (let i = 1; i <= lines.length; i++) {
+          visibleBotLines.value[idx] = i;
+          await new Promise((resolve) => setTimeout(resolve, 500));
+          // scrollToBottom(); // If you want to scroll, make sure it's defined in setup
+        }
+      }
+      // scrollToBottom();
+    }
+
+    return {
+      sessionRunner,
+      userInput,
+      chatMessages,
+      messageTypes,
+      flowData,
+      coachData,
+      incrementInteraction,
+      isLimitReached,
+      showLinkButton,
+      currentLink,
+      chatContentRef, // Add the ref to template
+      restoredIndexes,
+      handleSessionRestored,
+      source, // Add this
+      visibleBotLines,
+      getVisibleBotMessageLines,
+      handleAiResponse,
+    };
+  },
+  methods: {
+    // Scroll chat to bottom
+    scrollToBottom() {
+      nextTick(() => {
+        if (this.chatContentRef) {
+          const element = this.chatContentRef;
+          element.scrollTop = element.scrollHeight;
+        }
+      });
+    },
+
+    hideTypingIndicator() {
+      if (this.sessionRunner) {
+        this.sessionRunner.isAwaitingAi = false;
+      }
+    },
+
+    handleTypingComplete(data) {
+      // Only show the button after typing is complete and if there's a link
+      if (data && data.hasLink) {
+        this.currentLink = data.link;
+        this.showLinkButton = true;
+        console.log("Link detected, showing button:", this.currentLink);
+      } else {
+        this.showLinkButton = false;
+        this.currentLink = "";
+      }
+
+      // Scroll to bottom when typing completes
+      this.scrollToBottom();
+    },
+
+    sendMessage() {
+      if (!this.userInput.trim()) return;
+
+      // Check interaction limit
+      if (this.isLimitReached) {
+        console.log("Daily interaction limit reached");
+
+        // Add a simplified message without mentioning the specific number
+        this.chatMessages.push(
+          "You've reached your daily interaction limit with Bina. " +
+            "Please come back tomorrow to continue your coaching journey. " +
+            "This limit helps us provide quality coaching to all users."
+        );
+        this.messageTypes.push("bot");
+
+        // Scroll to show the limit message
+        this.scrollToBottom();
+        return;
+      }
+
+      // Attempt to increment the interaction counter
+      if (!this.incrementInteraction()) {
+        console.log(
+          "Daily interaction limit reached while attempting to increment"
+        );
+
+        // Add a simplified message without mentioning the specific number
+        this.chatMessages.push(
+          "You've reached your daily interaction limit with Bina. " +
+            "Please come back tomorrow to continue your coaching journey. " +
+            "This limit helps us provide quality coaching to all users."
+        );
+        this.messageTypes.push("bot");
+
+        // Scroll to show the limit message
+        this.scrollToBottom();
+        return;
+      }
+
+      // Hide link button when user sends a message
+      this.showLinkButton = false;
+
+      // Let SessionRunner handle the message
+      this.sessionRunner?.handleUserSubmit();
+
+      // Reset textarea height after sending
+      this.$nextTick(() => {
+        const textarea = this.$refs.chatInput;
+        if (textarea) {
+          textarea.style.height = "auto";
+        }
+      });
+
+      // Scroll to bottom immediately after sending
+      this.scrollToBottom();
+    },
+
+    handleMessageSent({ message, type }) {
+      console.log("Message sent:", type, message);
+      this.chatMessages.push(message);
+      this.messageTypes.push(type);
+      this.restoredIndexes.value = new Set(); // Clear restored indexes for new messages
+
+      // Scroll to bottom when user message is added
+      this.scrollToBottom();
+    },
+
+    handleSessionComplete(sessionData) {
+      console.log("Session completed:", sessionData);
+
+      // Submit the completed session to the database
+      try {
+        submitSession({
+          startedAt: new Date(Date.now() - 600000).toISOString(), // Default to 10 minutes ago
+          endedAt: new Date().toISOString(),
+          completed: true,
+          flowSteps: sessionData.history.map((msg, index) => ({
+            stepId: `step-${index}`,
+            startedAt: new Date(
+              Date.now() - (600000 - index * 30000)
+            ).toISOString(),
+            endedAt: new Date(
+              Date.now() - (600000 - (index + 1) * 30000)
+            ).toISOString(),
+            userText: msg.role === "user" ? msg.content : "",
+            systemText: msg.role === "assistant" ? msg.content : "",
+          })),
+          feedback: null, // Feedback will be submitted separately through the form
+        });
       } catch (error) {
-        console.error("[ChatView] Error setting up API step:", error);
+        console.error("Failed to submit session:", error);
       }
-    }
 
-    sessionRestored.value = true;
-    justRestored.value = true;
+      // Scroll to bottom at session completion
+      this.scrollToBottom();
+    },
 
-    // 6. Safely scroll to bottom
-    nextTick(() => {
-      if (chatContentRef.value) {
-        chatContentRef.value.scrollTop = chatContentRef.value.scrollHeight;
+    autoResize() {
+      this.$nextTick(() => {
+        const textarea = this.$refs.chatInput;
+        if (textarea) {
+          textarea.style.height = "auto";
+          textarea.style.height = textarea.scrollHeight + "px";
+        }
+      });
+    },
+
+    async addMessagesWithDelay(messages, type, delay = 600) {
+      for (let i = 0; i < messages.length; i++) {
+        this.chatMessages.push(messages[i]);
+        this.messageTypes.push(type);
+        this.restoredIndexes.value = new Set();
+        this.scrollToBottom();
+        if (i < messages.length - 1) {
+          await new Promise((resolve) => setTimeout(resolve, delay));
+        }
       }
-    });
-  } catch (error) {
-    console.error("[ChatView] Error in handleSessionRestored:", error);
-    // Reset to a safe state
-    chatMessages.value = [];
-    messageTypes.value = [];
-    restoredIndexes.value = new Set();
-    showSessionButton.value = false;
-    sessionButtonType.value = "";
-    sessionRestored.value = false;
-    justRestored.value = false;
-  }
-}
-
-const scrollToBottom = () => {
-  nextTick(() => {
-    if (chatContentRef.value) {
-      const element = chatContentRef.value;
-      element.scrollTop = element.scrollHeight;
-    }
-  });
-};
-
-const handleTypingComplete = (data) => {
-  console.log("Typing complete, data:", data);
-  console.log("Button state before typing complete:", {
-    showSessionButton: showSessionButton.value,
-    sessionButtonType: sessionButtonType.value,
-    pendingSessionButtonType: pendingSessionButtonType.value,
-  });
-
-  // Handle link button
-  if (data && data.hasLink) {
-    currentLink.value = data.link;
-    showLinkButton.value = true;
-    console.log("Link detected, showing button:", currentLink.value);
-  } else {
-    showLinkButton.value = false;
-    currentLink.value = "";
-  }
-
-  // Handle session button - only show after typing is complete
-  if (pendingSessionButtonType.value) {
-    showSessionButton.value = true;
-    sessionButtonType.value = pendingSessionButtonType.value;
-    pendingSessionButtonType.value = "";
-  }
-
-  console.log("Button state after typing complete:", {
-    showSessionButton: showSessionButton.value,
-    sessionButtonType: sessionButtonType.value,
-    pendingSessionButtonType: pendingSessionButtonType.value,
-  });
-
-  scrollToBottom();
-};
-
-const sendMessage = () => {
-  if (!userInput.value.trim()) return;
-
-  // Check interaction limit
-  if (isLimitReached.value) {
-    console.log("Daily interaction limit reached");
-
-    // Add a simplified message without mentioning the specific number
-    chatMessages.value.push(
-      "You've reached your daily interaction limit with Bina. " +
-        "Please come back tomorrow to continue your coaching journey. " +
-        "This limit helps us provide quality coaching to all users."
-    );
-    messageTypes.value.push("bot");
-
-    // Scroll to show the limit message
-    scrollToBottom();
-    return;
-  }
-
-  // Attempt to increment the interaction counter
-  if (!incrementInteraction()) {
-    console.log(
-      "Daily interaction limit reached while attempting to increment"
-    );
-
-    // Add a simplified message without mentioning the specific number
-    chatMessages.value.push(
-      "You've reached your daily interaction limit with Bina. " +
-        "Please come back tomorrow to continue your coaching journey. " +
-        "This limit helps us provide quality coaching to all users."
-    );
-    messageTypes.value.push("bot");
-
-    // Scroll to show the limit message
-    scrollToBottom();
-    return;
-  }
-
-  // Hide link button when user sends a message
-  showLinkButton.value = false;
-
-  // Let SessionRunner handle the message
-  sessionRunner.value?.handleUserSubmit();
-
-  // Reset textarea height after sending
-  nextTick(() => {
-    const textarea = chatInput.value;
-    if (textarea) {
-      textarea.style.height = "auto";
-    }
-  });
-
-  // Scroll to bottom immediately after sending
-  scrollToBottom();
-};
-
-const handleMessageSent = ({ message, type }) => {
-  console.log("Message sent:", type, message);
-  chatMessages.value.push(message);
-  messageTypes.value.push(type);
-  sessionRestored.value = false; // Reset after first user message
-
-  // Scroll to bottom when user message is added
-  scrollToBottom();
-};
-
-const handleAiResponse = async ({
-  message,
-  type,
-  showButton,
-  currentStep: stepFromEvent,
-}) => {
-  if (justRestored.value) {
-    justRestored.value = false;
-    return; // Ignore the first bot message after restore
-  }
-
-  console.log(
-    "[handleAiResponse] message:",
-    message,
-    "type:",
-    type,
-    "chatMessages:",
-    chatMessages.value
-  );
-
-  console.log("[ChatView] handleAiResponse called with:", {
-    message,
-    type,
-    showButton,
-    currentStep: stepFromEvent,
-  });
-
-  // Clear any pending button state
-  showSessionButton.value = false;
-  sessionButtonType.value = "";
-
-  // Store the button state to be shown after typing completes
-  if (showButton) {
-    console.log("[ChatView] Pending button state:", showButton);
-    pendingSessionButtonType.value = showButton;
-  }
-
-  // Add the message to the chat if it's not empty and not the same as the last message
-  if (
-    message &&
-    (chatMessages.value.length === 0 ||
-      chatMessages.value[chatMessages.value.length - 1] !== message)
-  ) {
-    chatMessages.value.push(message);
-    messageTypes.value.push(type);
-  }
-
-  // If this is a bot message and we have a current step, check if we need to make an API call
-  if (type === "bot" && stepFromEvent) {
-    console.log("[ChatView] Current step:", stepFromEvent);
-
-    if (stepFromEvent.callAPI) {
-      console.log("[ChatView] Making API call for step:", stepFromEvent.name);
-
-      // Instead of making the API call here, emit an event to SessionRunner
-      // which will handle it through AiStep
-      sessionRunner.value?.handleUserSubmit();
-    }
-  }
-
-  scrollToBottom();
-};
-
-const handleSessionComplete = (sessionData) => {
-  console.log("Session completed:", sessionData);
-
-  // Submit the completed session to the database
-  try {
-    submitSession({
-      startedAt: new Date(Date.now() - 600000).toISOString(), // Default to 10 minutes ago
-      endedAt: new Date().toISOString(),
-      completed: true,
-      flowSteps: sessionData.history.map((msg, index) => ({
-        stepId: `step-${index}`,
-        startedAt: new Date(
-          Date.now() - (600000 - index * 30000)
-        ).toISOString(),
-        endedAt: new Date(
-          Date.now() - (600000 - (index + 1) * 30000)
-        ).toISOString(),
-        userText: msg.role === "user" ? msg.content : "",
-        systemText: msg.role === "assistant" ? msg.content : "",
-      })),
-      feedback: null, // Feedback will be submitted separately through the form
-    });
-  } catch (error) {
-    console.error("Failed to submit session:", error);
-  }
-
-  // Scroll to bottom at session completion
-  scrollToBottom();
-};
-
-const autoResize = () => {
-  nextTick(() => {
-    const textarea = chatInput.value;
-    if (textarea) {
-      textarea.style.height = "auto";
-      textarea.style.height = textarea.scrollHeight + "px";
-    }
-  });
-};
-
-const goToRegistration = () => {
-  // Use router.push instead of window.location.href
-  router.push("/signup");
+    },
+  },
+  mounted() {
+    // Initial scroll to bottom when component mounts
+    this.scrollToBottom();
+  },
+  updated() {
+    // Scroll to bottom on any update to the component
+    this.scrollToBottom();
+  },
 };
 </script>
 
 <style scoped>
+@import "@/utils/variables.css"; /* Import your color variables */
+
 .user-message,
 .message {
   white-space: pre-line;
@@ -533,53 +489,77 @@ const goToRegistration = () => {
 }
 
 .chat-box {
-  padding: 0.75rem;
   display: flex;
-  gap: 0.5rem;
   align-items: center;
-  width: calc(100% - 2rem);
-  max-width: 700px;
-  margin: 0 auto;
-  outline: 1px solid rgba(255, 255, 255, 0.2); /* Subtle white debug */
-}
-
-.chat-box textarea {
-  flex: 1;
-  padding: 0.5rem 1rem;
-  border: none;
-  border-radius: 24px;
-  background: rgba(255, 255, 255, 0.1);
-  color: #f0f0f0;
-  font-size: 1rem;
-  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-    sans-serif;
-  min-height: 32px;
-  max-height: 200px;
+  gap: 0.6rem;
   width: 100%;
-  box-sizing: border-box;
+  max-width: 700px; /* Match your message bubble's max-width */
+  /*margin: 1rem auto 0 auto;*/
+  justify-content: flex-end; /* Aligns items to the right */
+  padding-right: 0; /* Remove if you had any */
+  margin-left: auto; /* This ensures right alignment */
+  margin-right: auto;
+  background: transparent;
+  border: none;
+  box-shadow: none;
 }
 
-.chat-box button {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
+.chat-input {
+  flex: 1;
+  padding: 0.4rem 1rem;
   border: none;
-  background: #ffffff; /* White background */
-  color: #12344d; /* Blue arrow (same as background) */
-  font-size: 1.2rem;
+  border-radius: 1.2rem;
+  background: #f7f7f7;
+  color: var(--chat-bot-text, #12344d);
+  font-size: 1rem;
+  font-family: inherit;
+  outline: none;
+  box-shadow: none;
+  min-height: 40px;
+  max-height: 120px; /* or whatever you prefer */
+  resize: none;
+  box-sizing: border-box;
+  line-height: 1.4;
+}
+
+.chat-input:disabled {
+  background: #eee;
+  color: #aaa;
+}
+
+.chat-input::placeholder {
+  color: #7a868f;
+  opacity: 1;
+  font-size: 1rem;
+}
+
+.send-btn {
+  background: var(--primary-color, #c8b28e);
+  color: var(--chat-bot-text, #12344d);
+  border: none;
+  border-radius: 1.2rem;
+  padding: 0 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
   cursor: pointer;
+  transition: background 0.2s;
+  margin-left: 0.6rem;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0;
-  margin: 0;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-  transition: all 0.2s ease;
+  box-sizing: border-box;
 }
 
-.chat-box button:hover {
-  background: #f0f0f0; /* Slight hover effect */
-  transform: translateY(-1px);
+.send-btn:disabled {
+  background: #ddd;
+  color: #aaa;
+  cursor: not-allowed;
+}
+
+.send-btn:hover:not(:disabled) {
+  background: #b89e7a;
 }
 
 @media (min-width: 769px) {
@@ -611,13 +591,39 @@ const goToRegistration = () => {
 
   .user-message,
   .message.bot {
-    max-width: 85%;
-    padding: 0.75rem 1rem;
+    max-width: 95%;
   }
 
   .chat-box {
     width: calc(100% - 1.5rem);
     padding: 0.75rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .chat-input {
+    font-size: 0.9rem;
+    padding-top: 0.6rem;
+    padding-bottom: 0.6rem;
+    line-height: 1.4;
+    height: auto;
+    min-height: 32px;
+  }
+  .send-btn {
+    font-size: 0.9rem;
+    padding: 0 1rem;
+  }
+  .maia-avatar {
+    margin-left: 0.5rem;
+    margin-right: 0.5rem;
+  }
+  .bot-message-container {
+    margin-left: 0;
+    padding-left: 0;
+  }
+  .chat-content {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
   }
 }
 
@@ -633,17 +639,45 @@ const goToRegistration = () => {
   justify-content: flex-end;
 }
 
-.user-message {
-  background: rgba(200, 178, 142, 0.1);
+.user-message-container {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  margin-bottom: 1.5rem;
+}
+
+.user-message-lines {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.user-message-bubble {
+  background: #fff;
+  color: var(
+    --chat-bot-text,
+    #12344d
+  ); /* Use same text color as bot for consistency */
   border-radius: 18px;
   padding: 1rem 1.5rem;
-  margin-left: auto;
   max-width: 80%;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  position: relative;
-  text-align: left;
   font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
     sans-serif;
+  font-size: var(--font-size-md);
+  text-align: left;
+  white-space: pre-line;
+  margin-right: 0.75rem;
+  line-height: 1.2;
+}
+
+.user-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--primary-color, #c8b28e);
+  background: var(--background-color, #12344d);
 }
 
 .message.bot {
@@ -655,13 +689,47 @@ const goToRegistration = () => {
 
 .bot-message-container {
   display: flex;
-  position: relative;
-  align-items: center;
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
+}
+
+.bot-message-lines {
+  display: flex;
+  flex-direction: column;
+}
+
+.bot-message-line + .bot-message-line {
+  margin-top: 0.5rem;
+}
+
+.maia-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-right: 0.75rem;
+  border: 2px solid var(--primary-color, #c8b28e); /* fallback if variable missing */
+  background: var(--background-color, #12344d);
+}
+
+.bot-message {
+  background: var(--chat-bot-bg, #f6e7db); /* Use your variable or fallback */
+  color: var(--chat-bot-text, #12344d); /* Use your variable or fallback */
+  border-radius: 18px;
+  padding: 0.5rem 1.2rem;
+  max-width: 80%;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    sans-serif;
+  font-size: var(--font-size-md);
+  text-align: left;
+  white-space: pre-line;
+  line-height: 1.2;
 }
 
 .button-container {
   text-align: center;
-  /*margin-top: 2rem;*/
+  margin-top: 2rem;
 }
 
 .google-form-button {

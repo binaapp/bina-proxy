@@ -23,6 +23,7 @@ export function getFlowData(flowName = DEFAULT_FLOW) {
       return quickCoachingFlow;
     case "qcoachmaia":
       return qCoachMaiaFlow;
+
     default:
       return qCoachMaiaFlow;
   }
@@ -62,5 +63,25 @@ export async function loadFirstSessionOfProgram(programName) {
     default:
       console.error("Unknown program:", programName);
       throw new Error("Unknown program: " + programName);
+  }
+}
+
+// Converts 'office-politics' to 'OfficePolitics'
+function toPascalCase(str) {
+  return str
+    .replace(/[-_]+/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase())
+    .replace(/\s+/g, "");
+}
+
+// Dynamically import a flow JSON by session name
+export async function loadFlowBySessionName(sessionName) {
+  const pascalName = toPascalCase(sessionName);
+  try {
+    const module = await import(`@/data/flows/${pascalName}.json`);
+    return module.default;
+  } catch (e) {
+    console.error(`Flow JSON not found for session: ${sessionName}`, e);
+    throw new Error(`Flow not found: ${sessionName}`);
   }
 }

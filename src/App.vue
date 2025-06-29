@@ -1,11 +1,12 @@
 <template>
   <router-view />
-  <AppFooter />
+  <AppFooter v-if="!route.path.startsWith('/chat')" />
 </template>
 
 <script setup>
 import { useHead } from "@vueuse/head";
 import AppFooter from "./components/UI/AppFooter.vue";
+import { useRoute } from "vue-router";
 
 useHead({
   title: "bina – Lead with Clarity and Confidence",
@@ -27,6 +28,8 @@ useHead({
   ],
 });
 //import LandingPage from "./components/LandingPage.vue";
+
+const route = useRoute();
 </script>
 
 <style>
