@@ -1,6 +1,6 @@
 <script setup>
 /* eslint-disable */
-import { ref, onMounted, watch } from "vue";
+import { ref, onMounted } from "vue";
 import { flowData } from '@/composables/useFlowData'
 import TypingIndicator from './TypingIndicator.vue'
 
@@ -227,16 +227,12 @@ const buildSystemMessage = () => {
 };
 
 onMounted(() => {
-  // Build system message once when component mounts
   systemMessage.value = buildSystemMessage();
   callClaude();
 });
 
 const callClaude = async () => {
   isLoading.value = true;
-  if (props.sessionRunner) {
-    props.sessionRunner.isAwaitingAi = true;  // Set when API call starts
-  }
   error.value = null;
 
   try {
@@ -381,11 +377,6 @@ const callClaude = async () => {
     error.value = err.message;
   } finally {
     isLoading.value = false;
-    if (props.sessionRunner) {
-      setTimeout(() => {
-        props.sessionRunner.isAwaitingAi = false;  // Delay hiding the indicator
-      }, 1000); // 1500 ms = 1.5 seconds, adjust as desired
-    }
   }
 };
 </script>

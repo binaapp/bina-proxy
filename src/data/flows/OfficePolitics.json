@@ -53,7 +53,7 @@
       {
         "name": "office-politics-q1",
         "callAPI": false,
-        "introText": "Nice to meet you, {name}. Now I'll ask three questions, then I'll reflect back what I see.",
+        "introText": "Nice to meet you, {name}. Now I'll ask three questions, then I'll reflect back what I see.\n",
         "question": "When you think about office politics, what's the hardest part for you right now? (You can choose more than one.)",
         "options": [
           "Feeling left out of important conversations",
@@ -93,7 +93,7 @@
       {
         "name": "reflection",
         "callAPI": true,
-        "instruction": "Based on the user's 3 answers, offer a short, emotionally grounded reflection. Link the reflection to the core needs implied in their answers, drawing from one or more personas. Do not name or label the user. Just describe what might be happening in a clear, grounded way that helps them feel seen and supported. Use 2–3 sentences max.",
+"instruction": "Based on the user's 3 answers, offer a short, emotionally grounded reflection. Link the reflection to the core needs implied in their answers, drawing from one or more personas. Do not name or label the user. Just describe what might be happening in a clear, grounded way that helps them feel seen and supported. Use 2–3 sentences max. Make sure to end with a gentle question or invitation to confirm if this reflection resonates with them or if anything feels off.",
         "phaseEvaluation": {
           "instructions": "Check if the user resonates with the reflection. If not, adjust. If yes, move to next phase.",
           "conditions": {
@@ -117,25 +117,23 @@
       },
       {
         "name": "coaching-flow",
-        "goal": "Guide the user to recognize one specific area they have influence over, then support them in choosing one small, meaningful action they feel capable of taking.",
+        "goal": "Create space for honest reflection with clarity and grounded presence.",
         "callAPI": true,
         "phaseEvaluation": {
-          "instructions": "This phase has two required parts before ending: (1) Help the user identify one pattern or behavior they want to shift or take responsibility for. (2) Then support them in naming one specific action they're willing to try. Do not end the session unless both are clearly stated by the user. Do not end your final message with a question.",
+          "instructions": "Let the conversation flow naturally. Guide with warmth and focus. End when the user reaches clarity, insight, or resolution.",
           "conditions": {
             "continue": {
-              "when": "The user has not yet named both (1) what they want to shift and (2) what they will do next",
+              "when": "The conversation is flowing and deeper reflection is possible",
               "actions": [
                 "Set 'status': 'continue'",
-                "Help the user reflect on a pattern or behavior they want to take responsibility for",
-                "Once that is named, help them commit to one specific and realistic action they can try this week"
+                "Reflect deeply, ask real questions"
               ]
             },
             "finish": {
-              "when": "The user has clearly named both (1) what they want to take responsibility for and (2) the specific action they'll take",
+              "when": "The user reaches clarity or resolution, or the energy feels complete",
               "actions": [
                 "Set 'status': 'finish'",
-                "Affirm their choice with warmth and confidence",
-                "Close with a statement of encouragement — do not end with a question"
+                "Move to session reflection immediately in the same response"
               ]
             }
           }

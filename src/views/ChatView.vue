@@ -30,17 +30,8 @@
               style="margin-top: 0.25rem"
             />
             <div class="bot-message-lines">
-              <div
-                v-for="(line, lineIdx) in getVisibleBotMessageLines(
-                  message,
-                  index
-                )"
-                :key="'botmsg-' + index + '-' + lineIdx"
-                class="bot-message-line"
-              >
-                <div class="bot-message">
-                  {{ line }}
-                </div>
+              <div class="bot-message">
+                {{ getVisibleBotMessage(message, index) }}
               </div>
             </div>
           </div>
@@ -204,13 +195,19 @@ export default {
     );
 
     function getBotMessageLines(message) {
-      return message.split("\n").filter((line) => line.trim() !== "");
+      return message.split("\n");
     }
 
     function getVisibleBotMessageLines(message, idx) {
       const allLines = getBotMessageLines(message);
       const visibleCount = visibleBotLines.value[idx] ?? allLines.length;
       return allLines.slice(0, visibleCount);
+    }
+
+    function getVisibleBotMessage(message, idx) {
+      const allLines = getBotMessageLines(message);
+      const visibleCount = visibleBotLines.value[idx] ?? allLines.length;
+      return allLines.slice(0, visibleCount).join("\n");
     }
 
     async function handleAiResponse({ message, type }) {
@@ -250,6 +247,7 @@ export default {
       source, // Add this
       visibleBotLines,
       getVisibleBotMessageLines,
+      getVisibleBotMessage,
       handleAiResponse,
     };
   },

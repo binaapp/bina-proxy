@@ -49,6 +49,7 @@ const sessionId = ref(null);
 const isSessionComplete = ref(false);
 const currentStepDbId = ref(null);
 const route = useRoute();
+const lastUserInput = ref("");
 
 // === SESSION RESTORE LOGIC WITH LOGS ===
 onMounted(async () => {
@@ -368,13 +369,14 @@ const handleStepResult = async (result) => {
   });
 
   // Reset waiting state
-  /*isAwaitingAi.value = false;*/
+  isAwaitingAi.value = false;
 };
 
 const handleUserSubmit = async () => {
   if (!userInput.value.trim()) return;
 
-  const currentInputText = userInput.value;
+  lastUserInput.value = userInput.value;
+
   emit("update:userInput", "");
   userInput.value = "";
 
@@ -386,7 +388,7 @@ const handleUserSubmit = async () => {
   // Add user message to history
   sessionHistory.value.push({
     role: "user",
-    content: currentInputText,
+    content: lastUserInput.value,
   });
 
   // Check if this is the first user message (start trial event)
@@ -426,16 +428,16 @@ const handleUserSubmit = async () => {
 
   // Notify ChatView of message sent
   emit("message-sent", {
-    message: currentInputText,
+    message: lastUserInput.value,
     type: "user",
   });
 
   // Always save both system and user message together for this step
-  await saveStepToDatabase(currentInputText, previousSystemMessage, true);
+  await saveStepToDatabase(lastUserInput.value, previousSystemMessage, true);
 
   const currentStep = props.flowData.steps[currentStepIndex.value];
   if (currentStep.collectsName) {
-    userName.value = currentInputText.trim();
+    userName.value = lastUserInput.value.trim();
   }
 
   // Only advance for non-AI steps
@@ -491,7 +493,6 @@ const handleUserSubmit = async () => {
       isSessionComplete.value = true;
     }
   } else {
-    // For AI steps, just set waiting state and let handleStepResult decide advancement
     isAwaitingAi.value = true;
   }
 };
@@ -512,9 +513,8 @@ defineExpose({
     v-if="
       isAwaitingAi && props.flowData.steps[currentStepIndex].callAPI !== false
     "
-    :isAwaitingAi="isAwaitingAi"
     :history="sessionHistory"
-    :answer="userInput"
+    :answer="lastUserInput"
     :conditionDescription="
       props.flowData.steps[currentStepIndex].condition || ''
     "
