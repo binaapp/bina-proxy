@@ -382,7 +382,9 @@ const callClaude = async () => {
   } finally {
     isLoading.value = false;
     if (props.sessionRunner) {
-      props.sessionRunner.isAwaitingAi = false;  // Clear when API call ends
+      setTimeout(() => {
+        props.sessionRunner.isAwaitingAi = false;  // Delay hiding the indicator
+      }, 1000); // 1500 ms = 1.5 seconds, adjust as desired
     }
   }
 };

@@ -76,16 +76,11 @@ onMounted(async () => {
             currentStepIndex.value = idx;
 
             // Safely set isAwaitingAi
-            try {
-              const currentStep = props.flowData.steps[idx];
-              isAwaitingAi.value = currentStep?.callAPI === true;
-            } catch (error) {
-              console.error(
-                "[SessionRunner] Error setting isAwaitingAi:",
-                error
-              );
-              isAwaitingAi.value = false;
-            }
+            const currentStep = props.flowData.steps[idx];
+            const lastMsg =
+              sessionHistory.value[sessionHistory.value.length - 1];
+            isAwaitingAi.value =
+              currentStep?.callAPI === true && lastMsg?.role === "user";
 
             // Safely emit session restored
             emit("session-restored", {
@@ -373,7 +368,7 @@ const handleStepResult = async (result) => {
   });
 
   // Reset waiting state
-  isAwaitingAi.value = false;
+  /*isAwaitingAi.value = false;*/
 };
 
 const handleUserSubmit = async () => {
@@ -517,6 +512,7 @@ defineExpose({
     v-if="
       isAwaitingAi && props.flowData.steps[currentStepIndex].callAPI !== false
     "
+    :isAwaitingAi="isAwaitingAi"
     :history="sessionHistory"
     :answer="userInput"
     :conditionDescription="

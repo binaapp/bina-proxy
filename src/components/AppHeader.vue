@@ -107,7 +107,6 @@ function scrollToSection(sectionId) {
   background: var(--color-primary);
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-  padding: 1rem;
 }
 
 .logo-link {

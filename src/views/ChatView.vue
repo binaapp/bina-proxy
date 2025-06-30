@@ -445,27 +445,6 @@ export default {
   outline: 1px solid rgba(255, 255, 255, 0.2); /* Subtle white debug */
 }
 
-.chat-header {
-  padding: 1rem;
-  background: transparent;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 72px;
-  outline: 1px solid rgba(255, 255, 255, 0.2); /* Subtle white debug */
-}
-
-.chat-header img {
-  height: 50px;
-  width: auto;
-  max-width: 250px;
-  object-fit: contain;
-}
-
 .quote-card {
   background: rgba(18, 52, 77, 0.7);
   border-radius: 12px;
@@ -625,7 +604,6 @@ export default {
     padding: 0 1rem;
   }
   .maia-avatar {
-    margin-left: 0.5rem;
     margin-right: 0.5rem;
   }
   .bot-message-container {
@@ -727,7 +705,6 @@ export default {
   color: var(--chat-bot-text, #12344d); /* Use your variable or fallback */
   border-radius: 18px;
   padding: 0.5rem 1rem;
-  max-width: 80%;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
     sans-serif;
