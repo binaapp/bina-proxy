@@ -19,12 +19,7 @@
                 {{ message }}
               </div>
             </div>
-            <img
-              src="/user.png"
-              alt="User"
-              class="user-avatar"
-              style="margin-top: 0.25rem"
-            />
+            <img src="/user.png" alt="User" class="user-avatar" />
           </div>
           <!-- Bot messages: show Maia's avatar and message bubble(s) -->
           <div v-else class="bot-message-container">
@@ -646,7 +641,6 @@ export default {
 .message {
   width: 100%;
   max-width: 700px;
-  margin-bottom: 1.5rem;
   text-align: left;
 }
 
@@ -675,7 +669,7 @@ export default {
     #12344d
   ); /* Use same text color as bot for consistency */
   border-radius: 18px;
-  padding: 1rem 1.5rem;
+  padding: 0.5rem 1rem;
   max-width: 80%;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
@@ -732,7 +726,7 @@ export default {
   background: var(--chat-bot-bg, #f6e7db); /* Use your variable or fallback */
   color: var(--chat-bot-text, #12344d); /* Use your variable or fallback */
   border-radius: 18px;
-  padding: 0.5rem 1.2rem;
+  padding: 0.5rem 1rem;
   max-width: 80%;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
