@@ -26,7 +26,22 @@
             <img src="/maia.jpg" alt="Maia" class="maia-avatar" />
             <div class="bot-message-lines">
               <div class="bot-message">
-                {{ getVisibleBotMessage(message, index) }}
+                <template
+                  v-for="(line, lineIdx) in getVisibleBotMessageLines(
+                    message,
+                    index
+                  )"
+                  :key="lineIdx"
+                >
+                  <div
+                    :class="{
+                      'bot-message-line': true,
+                      'indented-line': isBulletLine(line) && lineIdx > 0,
+                    }"
+                  >
+                    {{ line }}
+                  </div>
+                </template>
               </div>
             </div>
           </div>
@@ -206,11 +221,16 @@ export default {
     }
 
     async function handleAiResponse({ message, type }) {
+      showLinkButton.value = false;
+
+      if (type === "bot") {
+        // Wait before showing the bot's message (keep TypingIndicator visible)
+        await new Promise((resolve) => setTimeout(resolve, 3000)); // 3 seconds, adjust as needed
+      }
+
       chatMessages.value.push(message);
       messageTypes.value.push(type);
       restoredIndexes.value = new Set();
-
-      showLinkButton.value = false;
 
       if (type === "bot") {
         const idx = chatMessages.value.length - 1;
@@ -218,11 +238,14 @@ export default {
         visibleBotLines.value[idx] = 0;
         for (let i = 1; i <= lines.length; i++) {
           visibleBotLines.value[idx] = i;
-          await new Promise((resolve) => setTimeout(resolve, 500));
-          // scrollToBottom(); // If you want to scroll, make sure it's defined in setup
+          await new Promise((resolve) => setTimeout(resolve, 500)); // normal line animation
         }
       }
-      // scrollToBottom();
+    }
+
+    function isBulletLine(line) {
+      // Matches lines starting with a, b, c, ... or a. b. c. etc.
+      return /^[a-z]\./i.test(line.trim());
     }
 
     return {
@@ -244,6 +267,7 @@ export default {
       getVisibleBotMessageLines,
       getVisibleBotMessage,
       handleAiResponse,
+      isBulletLine,
     };
   },
   methods: {
@@ -641,7 +665,6 @@ export default {
   ); /* Use same text color as bot for consistency */
   border-radius: 18px;
   padding: 0.5rem 1rem;
-  max-width: 80%;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
     sans-serif;
@@ -728,5 +751,11 @@ export default {
 .google-form-button:hover {
   background-color: rgba(200, 178, 142, 0.3);
   transform: translateY(-2px);
+}
+
+.indented-line {
+  padding-left: 1.5em; /* Adjust as needed */
+  text-indent: -1.2em; /* Pull bullet back out */
+  display: block;
 }
 </style>
