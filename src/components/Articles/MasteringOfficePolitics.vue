@@ -2,8 +2,6 @@
   <ArticleLayout
     title="Mastering Office Politics with Integrity"
     :additionalArticles="otherArticles"
-    buttonUrl="/chat"
-    buttonText="START NOW"
   >
     <h2>Office Politics Are Unavoidable</h2>
     <p>
@@ -50,6 +48,15 @@
       priorities to advance goals and accomplish tasks. The key is choosing to
       engage in these dynamics ethically and constructively.
     </p>
+    <p>
+      <em>
+        👉Feeling unsure how to navigate office politics in your own role? Give
+        yourself 15 focused minutes to think it through.
+      </em>
+    </p>
+    <router-link to="/chat/office-politics">
+      <PrimaryButton>Start your free session</PrimaryButton>
+    </router-link>
 
     <h2>My Journey to Strategic Communication</h2>
     <p>
@@ -75,6 +82,12 @@
       presentation. The result? Project approval and a new appreciation for the
       power of strategic communication.
     </p>
+    <p>
+      <em> 👉Ready to build your confidence and find your voice at work? </em>
+    </p>
+    <router-link to="/chat/office-politics">
+      <PrimaryButton>Start your free session</PrimaryButton>
+    </router-link>
 
     <h2>My Tips for Implementing Positive Office Politics</h2>
     <p>
@@ -136,13 +149,22 @@
       challenge that keeps looping in your mind — Bina's here to help you move
       forward with clarity and confidence.
     </p>
-    <p>👉 Start your free coaching session</p>
+    <p>
+      <em>
+        👉You don't have to figure this out alone. Let's get you moving forward
+        with clarity and confidence.
+      </em>
+    </p>
+    <router-link to="/chat/office-politics">
+      <PrimaryButton>Start your free session</PrimaryButton>
+    </router-link>
   </ArticleLayout>
 </template>
 
 <script setup>
 import { ref } from "vue";
 import ArticleLayout from "../../components/ArticleLayout.vue";
+import PrimaryButton from "../UI/PrimaryButton.vue";
 
 const otherArticles = ref([
   {
@@ -160,3 +182,9 @@ const otherArticles = ref([
   },
 ]);
 </script>
+
+<style scoped>
+.start-button {
+  margin-top: var(--spacing-sm);
+}
+</style>

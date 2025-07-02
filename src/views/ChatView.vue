@@ -23,12 +23,7 @@
           </div>
           <!-- Bot messages: show Maia's avatar and message bubble(s) -->
           <div v-else class="bot-message-container">
-            <img
-              src="/maia.jpg"
-              alt="Maia"
-              class="maia-avatar"
-              style="margin-top: 0.25rem"
-            />
+            <img src="/maia.jpg" alt="Maia" class="maia-avatar" />
             <div class="bot-message-lines">
               <div class="bot-message">
                 {{ getVisibleBotMessage(message, index) }}
