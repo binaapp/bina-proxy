@@ -100,7 +100,6 @@
 <script>
 import { ref, nextTick, onMounted, watch } from "vue";
 import { loadFlowBySessionName } from "@/composables/useFlowData"; // <-- change import
-import coachData from "@/data/coaches/supportive-coach.json";
 import SessionRunner from "@/components/SessionRunner.vue";
 // import TypingMessage from "@/components/TypingMessage.vue"; // <-- commented out
 import TypingIndicator from "@/components/TypingIndicator.vue";
@@ -137,6 +136,7 @@ export default {
     // Get sessionName from route param
     const route = useRoute();
     const flowData = ref(null);
+    const coachData = ref(null);
 
     onMounted(async () => {
       console.log("route.params:", route.params); // Log the route params
@@ -149,6 +149,15 @@ export default {
           sessionName,
           flowData.value
         ); // Log loaded data
+
+        // Extract coach data from the loaded flow
+        if (flowData.value.coachProfile || flowData.value.coachSignature) {
+          coachData.value = {
+            coachProfile: flowData.value.coachProfile,
+            coachSignature: flowData.value.coachSignature,
+            systemInstructions: flowData.value.systemInstructions,
+          };
+        }
       } catch (e) {
         console.error("Failed to load flow for session:", sessionName, e);
         // fallback to QCoachMaia if not found

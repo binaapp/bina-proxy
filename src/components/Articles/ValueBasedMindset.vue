@@ -2,8 +2,6 @@
   <ArticleLayout
     title="You don't need to prove yourself. You just need space to show up as you are."
     :additionalArticles="otherArticles"
-    buttonUrl="https://www.binaapp.com/chat"
-    buttonText="START NOW"
   >
     <p>
       Have you ever felt that sinking feeling in your stomach when starting a
@@ -46,6 +44,15 @@
         leverage your unique strengths and skills.
       </li>
     </ul>
+    <p>
+      <em>
+        👉 Feeling the weight of proving yourself? Take 15 minutes to find a
+        calmer, clearer way forward.
+      </em>
+    </p>
+    <router-link to="/chat/value-based-mindset">
+      <PrimaryButton class="cta-btn">Start your free session</PrimaryButton>
+    </router-link>
 
     <h2>
       The better approach is focusing on the value you want to offer – a
@@ -117,6 +124,15 @@
         the bigger picture?
       </li>
     </ul>
+    <p>
+      <em>
+        👉 Ready to shift from proving yourself to offering your true value?
+        Let's take the first step together.
+      </em>
+    </p>
+    <router-link to="/chat/value-based-mindset">
+      <PrimaryButton class="cta-btn">Start your free session</PrimaryButton>
+    </router-link>
 
     <p>
       If you're stuck in the "prove myself" spiral, I want to invite you into
@@ -143,12 +159,22 @@
       You don't need to prove yourself. You just need space to show up as you
       are.
     </p>
+    <p>
+      <em>
+        👉 You don't have to figure this out alone. Let's take 15 minutes to
+        find your next step together.
+      </em>
+    </p>
+    <router-link to="/chat/value-based-mindset">
+      <PrimaryButton class="cta-btn">Start your free session</PrimaryButton>
+    </router-link>
   </ArticleLayout>
 </template>
 
 <script setup>
 import { ref } from "vue";
 import ArticleLayout from "../../components/ArticleLayout.vue";
+import PrimaryButton from "../UI/PrimaryButton.vue";
 
 const otherArticles = ref([
   {
@@ -166,3 +192,9 @@ const otherArticles = ref([
   },
 ]);
 </script>
+
+<style scoped>
+.cta-btn {
+  margin-top: var(--spacing-sm);
+}
+</style>

@@ -151,6 +151,79 @@ const buildSystemMessage = () => {
     sections.push(instructions.role);
   }
 
+  // Add tone cues if available
+  if (instructions.toneCues?.length) {
+    sections.push(`Tone Cues: ${instructions.toneCues.join('; ')}`);
+  }
+
+  // Add coach profile information if available (now from flow data)
+  if (props.flowData.coachProfile) {
+    const profile = props.flowData.coachProfile;
+    const profileSections = [];
+    
+    if (profile.background) {
+      profileSections.push(`Background: ${profile.background}`);
+    }
+    
+    if (profile.coachingSpecialties?.length) {
+      profileSections.push(`Coaching Specialties: ${profile.coachingSpecialties.join(', ')}`);
+    }
+    
+    if (profile.coachingStyle) {
+      profileSections.push(`Coaching Style: ${profile.coachingStyle}`);
+    }
+    
+    if (profile.signatureMethod) {
+      const method = profile.signatureMethod;
+      profileSections.push(`Signature Method - ${method.name}: ${method.description}`);
+      if (method.stages?.length) {
+        profileSections.push(`Method Stages: ${method.stages.join('; ')}`);
+      }
+    }
+    
+    if (profile.toolsUsed?.length) {
+      profileSections.push(`Tools Used: ${profile.toolsUsed.join(', ')}`);
+    }
+    
+    if (profile.personality?.length) {
+      profileSections.push(`Personality: ${profile.personality.join(', ')}`);
+    }
+    
+    if (profileSections.length > 0) {
+      sections.push(`Coach Profile:\n${profileSections.join('\n')}`);
+    }
+  }
+
+  // Add coach signature information if available (now from flow data)
+  if (props.flowData.coachSignature) {
+    const signature = props.flowData.coachSignature;
+    const signatureSections = [];
+    
+    if (signature.coreBelief) {
+      signatureSections.push(`Core Belief: ${signature.coreBelief}`);
+    }
+    
+    if (signature.typicalTools?.length) {
+      signatureSections.push(`Typical Tools: ${signature.typicalTools.join(', ')}`);
+    }
+    
+    if (signature.metaphors?.length) {
+      signatureSections.push(`Key Metaphors: ${signature.metaphors.join('; ')}`);
+    }
+    
+    if (signature.phrases?.length) {
+      signatureSections.push(`Signature Phrases: ${signature.phrases.join('; ')}`);
+    }
+    
+    if (signature.unique_qualities?.length) {
+      signatureSections.push(`Unique Qualities: ${signature.unique_qualities.join(', ')}`);
+    }
+    
+    if (signatureSections.length > 0) {
+      sections.push(`Coach Signature:\n${signatureSections.join('\n')}`);
+    }
+  }
+
   if (instructions.coachingStyle?.length) {
     sections.push(instructions.coachingStyle.join('. ') + '.');
   }

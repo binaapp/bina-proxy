@@ -4,6 +4,8 @@ import quickCoachingFlow from "@/data/flows/QuickCoaching.json";
 import geniusZoneFlow from "@/data/flows/GeniousZone.json";
 import qCoachMaiaFlow from "@/data/flows/QCoachMaia.json";
 import maiaProgram from "@/data/flows/Maia Flow/MaiaProgram.json";
+import { loadCoachData, mergeFlowWithCoach } from "@/utils/coachLoader";
+
 // We can add more flows here if needed in the future
 // import generalFlow from '@/data/flows/General.json'
 
@@ -74,12 +76,20 @@ function toPascalCase(str) {
     .replace(/\s+/g, "");
 }
 
-// Dynamically import a flow JSON by session name
+// Dynamically import a flow JSON by session name and merge with coach data
 export async function loadFlowBySessionName(sessionName) {
   const pascalName = toPascalCase(sessionName);
   try {
     const module = await import(`@/data/flows/${pascalName}.json`);
-    return module.default;
+    const flowData = module.default;
+
+    // If the flow has a coachId, load and merge coach data
+    if (flowData.coachId) {
+      const coachData = await loadCoachData(flowData.coachId);
+      return mergeFlowWithCoach(flowData, coachData);
+    }
+
+    return flowData;
   } catch (e) {
     console.error(`Flow JSON not found for session: ${sessionName}`, e);
     throw new Error(`Flow not found: ${sessionName}`);
