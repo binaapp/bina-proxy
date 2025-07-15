@@ -2,7 +2,7 @@
   <div class="chat-wrapper">
     <AppHeader />
 
-    <section class="chat-content" ref="chatContentRef">
+    <section class="chat-content" ref="chatContentRef" :class="{ rtl: isRtl }">
       <transition-group name="fade" tag="div">
         <div
           v-for="(message, index) in chatMessages"
@@ -98,7 +98,7 @@
 </template>
 
 <script>
-import { ref, nextTick, onMounted, watch } from "vue";
+import { ref, nextTick, onMounted, watch, computed } from "vue";
 import { loadFlowBySessionName } from "@/composables/useFlowData"; // <-- change import
 import SessionRunner from "@/components/SessionRunner.vue";
 // import TypingMessage from "@/components/TypingMessage.vue"; // <-- commented out
@@ -257,6 +257,8 @@ export default {
       return /^[a-z]\./i.test(line.trim());
     }
 
+    const isRtl = computed(() => flowData.value?.rtl === true);
+
     return {
       sessionRunner,
       userInput,
@@ -277,6 +279,7 @@ export default {
       getVisibleBotMessage,
       handleAiResponse,
       isBulletLine,
+      isRtl,
     };
   },
   methods: {
@@ -766,5 +769,11 @@ export default {
   padding-left: 1.5em; /* Adjust as needed */
   text-indent: -1.2em; /* Pull bullet back out */
   display: block;
+}
+
+.rtl .bot-message,
+.rtl .user-message-bubble {
+  direction: rtl !important;
+  text-align: right !important;
 }
 </style>
