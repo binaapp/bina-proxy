@@ -51,7 +51,7 @@ const currentStepDbId = ref(null);
 const route = useRoute();
 const lastUserInput = ref("");
 
-// === SESSION RESTORE LOGIC WITH LOGS ===
+// === SESSION RESTORE LOGIC WITH SESSION NAME VALIDATION ===
 onMounted(async () => {
   try {
     const savedSessionId = localStorage.getItem("binaSessionId");
@@ -61,6 +61,36 @@ onMounted(async () => {
       const res = await fetch(`${API_URL}/${savedSessionId}`);
       if (res.ok) {
         const data = await res.json();
+
+        // Get current session name from the loaded flow data
+        const currentSessionName = props.flowData?.name;
+
+        // Get session name from database
+        const dbSessionName = data.sessionName;
+
+        console.log("[SessionRunner] Session name comparison:", {
+          currentSessionName,
+          dbSessionName,
+          match: currentSessionName === dbSessionName,
+        });
+
+        // Check if session names match
+        if (currentSessionName !== dbSessionName) {
+          console.log(
+            "[SessionRunner] Session name mismatch - treating as new session"
+          );
+          // Clear localStorage and start fresh
+          localStorage.removeItem("binaSessionId");
+          sessionId.value = null;
+          userName.value = "";
+          sessionHistory.value = [];
+          currentStepIndex.value = 0;
+          isAwaitingAi.value = false;
+          return;
+        }
+
+        // Session names match - restore the session
+        console.log("[SessionRunner] Session names match - restoring session");
 
         // Safely set session data
         sessionId.value = data.sessionId || null;
@@ -152,6 +182,15 @@ const saveStepToDatabase = async (
     const isProduction =
       hostname === "binaapp.com" || hostname === "www.binaapp.com";
 
+    // Add debugging to see what flowData contains
+    console.log("[SessionRunner] Debug flowData:", {
+      flowData: props.flowData,
+      flowDataName: props.flowData?.name,
+      flowDataKeys: props.flowData
+        ? Object.keys(props.flowData)
+        : "no flowData",
+    });
+
     const params = {
       sessionId: sessionId.value,
       startedAt: sessionStartTime.value,
@@ -164,6 +203,7 @@ const saveStepToDatabase = async (
           : hostname.includes("staging.binaapp.com")
           ? "staging"
           : "",
+      sessionName: props.flowData?.name || null, // Add optional chaining
       flowSteps: [
         {
           stepId:

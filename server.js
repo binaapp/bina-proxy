@@ -242,6 +242,89 @@ app.post("/api/claude", async (req, res, next) => {
   }
 });
 
+// 1. Define GET /api/session/:id route at top-level (not inside any other handler)
+app.get("/api/session/:id", async (req, res) => {
+  try {
+    const sessionId = req.params.id;
+    console.log("[GET /api/session/:id] Requested sessionId:", sessionId);
+
+    const connection = await pool.getConnection();
+
+    // Get session info
+    const [sessionRows] = await connection.query(
+      "SELECT * FROM user_sessions WHERE id = ?",
+      [sessionId]
+    );
+    console.log(
+      "[GET /api/session/:id] user_sessions result:",
+      sessionRows
+    );
+
+    if (sessionRows.length === 0) {
+      console.log(
+        "[GET /api/session/:id] No session found in user_sessions for id:",
+        sessionId
+      );
+      connection.release();
+      return res.status(404).json({ error: "Session not found" });
+    }
+    const session = sessionRows[0];
+
+    // Get all steps for this session, ordered by started_at
+    const [steps] = await connection.query(
+      "SELECT * FROM session_steps WHERE session_id = ? ORDER BY started_at ASC",
+      [sessionId]
+    );
+    console.log("[GET /api/session/:id] session_steps result:", steps);
+
+    connection.release();
+
+    // Build a history array for the frontend
+    const history = steps
+      .map((step) => [
+        step.system_text && {
+          role: "assistant",
+          content: step.system_text,
+        },
+        step.user_text && { role: "user", content: step.user_text },
+      ])
+      .flat()
+      .filter(Boolean);
+
+    // Try to extract userName from device_info if present and parseable
+    let userName = "";
+    try {
+      if (session.device_info) {
+        const deviceInfo = JSON.parse(session.device_info);
+        if (deviceInfo && deviceInfo.name) {
+          userName = deviceInfo.name;
+        }
+      }
+    } catch (e) {
+      console.log("[GET /api/session/:id] Error parsing device_info:", e);
+    }
+
+    console.log("[GET /api/session/:id] Returning session:", {
+      sessionId: session.id,
+      userName,
+      historyLength: history.length,
+      stepsLength: steps.length,
+    });
+
+    res.json({
+      sessionId: session.id,
+      userName,
+      history,
+      sessionName: session.session_name, // Add this line to include session_name
+      session, // full session info if you want it
+      steps, // full steps if you want them
+    });
+  } catch (err) {
+    console.error("[GET /api/session/:id] Error fetching session:", err);
+    res.status(500).json({ error: "Failed to fetch session" });
+  }
+});
+
 function shouldSendEmails() {
   // Only send emails if in production
   console.log("NODE_ENV is:", process.env.NODE_ENV);
@@ -259,87 +342,15 @@ app.post("/api/session", async (req, res) => {
       feedback,
       deviceInfo,
       flowSteps,
+      sessionName, // Add this line to extract sessionName from request body
     } = req.body;
 
-    app.get("/api/session/:id", async (req, res) => {
-      try {
-        const sessionId = req.params.id;
-        console.log("[GET /api/session/:id] Requested sessionId:", sessionId);
-
-        const connection = await pool.getConnection();
-
-        // Get session info
-        const [sessionRows] = await connection.query(
-          "SELECT * FROM user_sessions WHERE id = ?",
-          [sessionId]
-        );
-        console.log(
-          "[GET /api/session/:id] user_sessions result:",
-          sessionRows
-        );
-
-        if (sessionRows.length === 0) {
-          console.log(
-            "[GET /api/session/:id] No session found in user_sessions for id:",
-            sessionId
-          );
-          connection.release();
-          return res.status(404).json({ error: "Session not found" });
-        }
-        const session = sessionRows[0];
-
-        // Get all steps for this session, ordered by started_at
-        const [steps] = await connection.query(
-          "SELECT * FROM session_steps WHERE session_id = ? ORDER BY started_at ASC",
-          [sessionId]
-        );
-        console.log("[GET /api/session/:id] session_steps result:", steps);
-
-        connection.release();
-
-        // Build a history array for the frontend
-        const history = steps
-          .map((step) => [
-            step.system_text && {
-              role: "assistant",
-              content: step.system_text,
-            },
-            step.user_text && { role: "user", content: step.user_text },
-          ])
-          .flat()
-          .filter(Boolean);
-
-        // Try to extract userName from device_info if present and parseable
-        let userName = "";
-        try {
-          if (session.device_info) {
-            const deviceInfo = JSON.parse(session.device_info);
-            if (deviceInfo && deviceInfo.name) {
-              userName = deviceInfo.name;
-            }
-          }
-        } catch (e) {
-          console.log("[GET /api/session/:id] Error parsing device_info:", e);
-        }
-
-        console.log("[GET /api/session/:id] Returning session:", {
-          sessionId: session.id,
-          userName,
-          historyLength: history.length,
-          stepsLength: steps.length,
-        });
-
-        res.json({
-          sessionId: session.id,
-          userName,
-          history,
-          session, // full session info if you want it
-          steps, // full steps if you want them
-        });
-      } catch (err) {
-        console.error("[GET /api/session/:id] Error fetching session:", err);
-        res.status(500).json({ error: "Failed to fetch session" });
-      }
+    // Add debugging to see what's being received
+    console.log("Session API request body:", {
+      sessionId: id,
+      sessionName: sessionName,
+      hasSessionName: !!sessionName,
+      allKeys: Object.keys(req.body)
     });
 
     console.log("Raw request body:", req.body);
@@ -375,8 +386,8 @@ app.post("/api/session", async (req, res) => {
 
       // 🔁 Save session data to user_sessions
       const [sessionResult] = await connection.query(
-        `INSERT INTO user_sessions (start_timestamp, end_timestamp, completed, referral_source, feedback, device_info)
-         VALUES (?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO user_sessions (start_timestamp, end_timestamp, completed, referral_source, feedback, device_info, session_name)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
         [
           startTimestamp,
           endTimestamp,
@@ -384,10 +395,11 @@ app.post("/api/session", async (req, res) => {
           referralSource,
           feedback,
           JSON.stringify(deviceInfo),
+          sessionName || null, // Add sessionName to the values array
         ]
       );
       resultId = sessionResult.insertId;
-      console.log("Created new session with ID:", resultId);
+      console.log("Created new session with ID:", resultId, "and sessionName:", sessionName);
 
       // Send email ONLY when a new session is created
       const userName = deviceInfo && deviceInfo.name ? deviceInfo.name : "Unknown";
@@ -704,8 +716,8 @@ app.use((err, req, res, next) => {
   });
 });
 
-const emailRoutes = require('./emailRoutes');
-app.use('/api', emailRoutes);
+/*const emailRoutes = require('./emailRoutes');
+app.use('/api', emailRoutes);*/
 
 const port = process.env.PORT || 3001;
 app.listen(port, "0.0.0.0", () => {

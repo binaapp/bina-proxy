@@ -410,12 +410,61 @@ const callClaude = async () => {
       // Try parsing the raw response first
       parsedResponse = JSON.parse(data.content[0].text);
     } catch (parseError) {
-      // If parsing fails, try to fix the JSON structure while preserving newlines
-      const fixedJson = data.content[0].text.replace(/("reply": ")([^"]*)(")/g, (match, p1, p2, p3) => {
-        // Only escape newlines within the reply string
-        return p1 + p2.replace(/\n/g, '\\n') + p3;
-      });
-      parsedResponse = JSON.parse(fixedJson);
+      console.log("Initial JSON parse failed:", parseError.message);
+      console.log("Raw response text:", data.content[0].text);
+      
+      // More robust JSON fixing approach
+      let fixedJson = data.content[0].text;
+      
+      // First, try to extract the JSON part if there's extra text
+      const jsonMatch = fixedJson.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        fixedJson = jsonMatch[0];
+      }
+      
+      // Fix common JSON issues
+      try {
+        // Try to fix unescaped quotes in the reply field
+        fixedJson = fixedJson.replace(/("reply":\s*")(.*?)(")/gs, (match, p1, p2, p3) => {
+          // Properly escape the content of the reply field
+          const escapedContent = p2
+            .replace(/\\/g, '\\\\')  // Escape backslashes first
+            .replace(/"/g, '\\"')    // Escape quotes
+            .replace(/\n/g, '\\n')   // Escape newlines
+            .replace(/\r/g, '\\r')   // Escape carriage returns
+            .replace(/\t/g, '\\t');  // Escape tabs
+          return p1 + escapedContent + p3;
+        });
+        
+        parsedResponse = JSON.parse(fixedJson);
+        console.log("JSON fixed and parsed successfully");
+      } catch (secondParseError) {
+        console.log("Second parse attempt failed:", secondParseError.message);
+        console.log("Fixed JSON attempt:", fixedJson);
+        
+        // Last resort: try to construct a minimal valid response
+        try {
+          // Extract status and reply using more flexible regex
+          const statusMatch = fixedJson.match(/"status":\s*"([^"]+)"/);
+          const replyMatch = fixedJson.match(/"reply":\s*"([^"]*)"|"reply":\s*"([^"]*?)(?<!\\)"|"reply":\s*"([^"]*?)(?<!\\)"/s);
+          
+          if (statusMatch && replyMatch) {
+            const status = statusMatch[1];
+            const reply = (replyMatch[1] || replyMatch[2] || replyMatch[3] || "").replace(/\\n/g, '\n');
+            
+            parsedResponse = {
+              status: status,
+              reply: reply
+            };
+            console.log("Constructed fallback response:", parsedResponse);
+          } else {
+            throw new Error("Could not extract status or reply from malformed JSON");
+          }
+        } catch (fallbackError) {
+          console.error("All parsing attempts failed:", fallbackError);
+          throw new Error(`JSON parsing failed: ${parseError.message}. Raw response: ${data.content[0].text.substring(0, 200)}...`);
+        }
+      }
     }
 
     console.log("\n=== PARSED RESPONSE ===\n", parsedResponse);

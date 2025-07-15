@@ -38,6 +38,7 @@ export async function submitSession(
     feedback: params.feedback || null,
     deviceInfo: getDeviceInfo(),
     flowSteps: params.flowSteps || [],
+    sessionName: params.sessionName || null, // Add this line to include sessionName
   };
 
   // Only include sessionId if it's provided and not null
