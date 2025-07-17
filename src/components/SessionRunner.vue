@@ -203,7 +203,7 @@ const saveStepToDatabase = async (
           : hostname.includes("staging.binaapp.com")
           ? "staging"
           : "",
-      sessionName: props.flowData?.name || null, // Add optional chaining
+      sessionName: props.flowData?.name || null,
       flowSteps: [
         {
           stepId:
@@ -218,6 +218,11 @@ const saveStepToDatabase = async (
         },
       ],
     };
+
+    const currentUser = auth.currentUser;
+    if (currentUser) {
+      params.uid = currentUser.uid;
+    }
 
     console.log("Submitting step to database:", params);
     const response = await submitSession(params);

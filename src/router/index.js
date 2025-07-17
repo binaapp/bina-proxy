@@ -4,6 +4,7 @@ import LandingPage from "../components/LandingPage.vue";
 import ContactUs from "../components/ContactUs.vue";
 import LoginUI from "../components/LoginUI.vue";
 import ArticleView from "../views/ArticleView.vue";
+import LoginPage from "../components/LoginPage.vue";
 
 const router = createRouter({
   history: createWebHistory("/"),
@@ -27,6 +28,11 @@ const router = createRouter({
       path: "/signup",
       name: "signup",
       component: LoginUI,
+    },
+    {
+      path: "/login",
+      name: "login",
+      component: LoginPage,
     },
     {
       path: "/articles/:slug",

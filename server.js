@@ -343,6 +343,7 @@ app.post("/api/session", async (req, res) => {
       deviceInfo,
       flowSteps,
       sessionName, // Add this line to extract sessionName from request body
+      uid // <-- add this line
     } = req.body;
 
     // Add debugging to see what's being received
@@ -386,8 +387,8 @@ app.post("/api/session", async (req, res) => {
 
       // 🔁 Save session data to user_sessions
       const [sessionResult] = await connection.query(
-        `INSERT INTO user_sessions (start_timestamp, end_timestamp, completed, referral_source, feedback, device_info, session_name)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO user_sessions (start_timestamp, end_timestamp, completed, referral_source, feedback, device_info, session_name, uid)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           startTimestamp,
           endTimestamp,
@@ -396,6 +397,7 @@ app.post("/api/session", async (req, res) => {
           feedback,
           JSON.stringify(deviceInfo),
           sessionName || null, // Add sessionName to the values array
+          uid || null
         ]
       );
       resultId = sessionResult.insertId;
