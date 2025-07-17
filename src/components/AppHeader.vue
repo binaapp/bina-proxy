@@ -27,7 +27,7 @@
       <div class="header-side right">
         <div class="auth-buttons">
           <template v-if="user">
-            <span class="login-link">Hi</span>
+            <span class="hi-user">{{ `Hi ${firstName || "there"}` }}</span>
           </template>
           <template v-else>
             <router-link
@@ -73,6 +73,11 @@
             >Contact Us</router-link
           >
         </li>
+        <li v-if="user">
+          <a href="#" class="menu-link" @click.prevent="handleSignOut"
+            >Sign Out</a
+          >
+        </li>
       </ul>
       <router-link to="/chat" class="menu-action" @click="menuOpen = false">
         <button class="menu-action-btn">Try it Free</button>
@@ -83,19 +88,29 @@
 
 <script setup>
 import { ref, onMounted } from "vue";
-import { useRoute } from "vue-router";
-import { auth } from "../firebase"; // <-- add this import
+import { useRoute, useRouter } from "vue-router";
+import { auth } from "../firebase";
 
 const menuOpen = ref(false);
 const route = useRoute();
+const router = useRouter();
 
 const user = ref(null);
+const firstName = ref("");
 
-// Listen for auth state changes
+// Listen for auth state changes and extract first name
 onMounted(() => {
   user.value = auth.currentUser;
+  if (user.value && user.value.displayName) {
+    firstName.value = user.value.displayName.split(" ")[0];
+  }
   auth.onAuthStateChanged((u) => {
     user.value = u;
+    if (u && u.displayName) {
+      firstName.value = u.displayName.split(" ")[0];
+    } else {
+      firstName.value = "";
+    }
   });
 });
 
@@ -123,6 +138,12 @@ function scrollToSection(sectionId) {
   if (el) {
     el.scrollIntoView({ behavior: "smooth" });
   }
+}
+
+async function handleSignOut() {
+  await auth.signOut();
+  menuOpen.value = false;
+  router.push("/");
 }
 </script>
 
@@ -319,6 +340,24 @@ function scrollToSection(sectionId) {
 .menu-list li:last-child {
   margin-bottom: 0;
   padding-bottom: 0;
+}
+
+.hi-user {
+  color: var(--color-text-on-primary, #fff);
+  font-family: var(--font-family-primary);
+  font-size: 1.2rem;
+  margin-right: 2.5rem; /* Increased right margin */
+  cursor: default;
+  transition: none;
+  text-decoration: none;
+  font-weight: 500;
+  /* Remove hover effect */
+}
+
+.hi-user:hover {
+  color: var(--color-text-on-primary, #fff); /* No hover effect */
+  text-decoration: none;
+  cursor: default;
 }
 
 @media (max-width: 600px) {

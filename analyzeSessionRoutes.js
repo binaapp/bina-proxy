@@ -130,7 +130,7 @@ intuition: Your own (AI) observations about strengths, values, or patterns that 
 tools_used: Coaching tools that worked well.
 Not_to_do: Tools, styles, or approaches that didn’t work well or the user disliked.
 user_history: Factual background (residence, job, family, etc.)
-user_stories: Personal stories shared.
+user_stories: Summarize the Personal stories that were shared in the session.
 user_language: Unique phrases, metaphors, or expressions used.
 current_mission: Action items the user committed to.
 learning_history: New insights, realizations, or lessons the user expressed.
