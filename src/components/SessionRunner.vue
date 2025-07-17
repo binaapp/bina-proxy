@@ -403,6 +403,7 @@ const handleStepResult = async (result) => {
   ) {
     isSessionComplete.value = true;
     await saveStepToDatabase("", result.reply, false);
+    await analyzeSessionAfterCompletion(); // <-- Add this line
   }
 
   // Send the complete response (may include both AI reply and closing message)
@@ -551,6 +552,27 @@ defineExpose({
   handleUserSubmit,
   currentStepIndex,
 });
+
+// Add this function in your <script setup> or methods
+async function analyzeSessionAfterCompletion() {
+  try {
+    const currentUser = auth.currentUser;
+    if (!currentUser) return;
+
+    const uid = currentUser.uid;
+    const sessionIdVal = sessionId.value; // sessionId is a ref in your component
+    const transcript = sessionHistory.value; // full conversation log
+
+    await fetch("/api/analyze-session", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sessionId: sessionIdVal, uid, transcript }),
+    });
+    // Optionally, handle response or show a notification
+  } catch (err) {
+    console.error("Failed to analyze session:", err);
+  }
+}
 </script>
 
 <template>

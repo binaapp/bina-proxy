@@ -718,8 +718,8 @@ app.use((err, req, res, next) => {
   });
 });
 
-/*const emailRoutes = require('./emailRoutes');
-app.use('/api', emailRoutes);*/
+const analyzeSessionRoutes = require('./analyzeSessionRoutes');
+app.use('/api', analyzeSessionRoutes);
 
 const port = process.env.PORT || 3001;
 app.listen(port, "0.0.0.0", () => {
