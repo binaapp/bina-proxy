@@ -1,6 +1,6 @@
 <script setup>
 /* eslint-disable */
-import { ref, onMounted } from "vue";
+import { ref, onMounted, watch } from "vue";
 import { flowData } from '@/composables/useFlowData'
 import TypingIndicator from './TypingIndicator.vue'
 
@@ -53,8 +53,18 @@ const props = defineProps({
   sessionRunner: {
     type: Object,
     default: null
+  },
+  userProfile: { // Add this prop
+    type: Object,
+    default: () => null
   }
 });
+
+watch(() => props.userProfile, (newProfile) => {
+  console.log("[AiStep] 🔍 Received userProfile prop:", newProfile);
+  console.log("[AiStep] UserProfile type:", typeof newProfile);
+  console.log("[AiStep] UserProfile keys:", newProfile ? Object.keys(newProfile) : "null");
+}, { immediate: true });
 
 const emit = defineEmits(["step-result"]);
 
@@ -309,6 +319,10 @@ const callClaude = async () => {
   error.value = null;
 
   try {
+    console.log("[AiStep] 🚀 callClaude started");
+    console.log("[AiStep] UserProfile available:", !!props.userProfile);
+    console.log("[AiStep] UserProfile content:", props.userProfile);
+
     // First check if the proxy server is running
     //const healthCheck = await fetch(`${API_URL}/health`);
     //if (!healthCheck.ok) {
@@ -342,18 +356,30 @@ const callClaude = async () => {
       content: `Current phase: ${props.name}\n${props.answer || ""}`,
     };
 
+    // Build the messages array - NO system role messages here
+    const messages = [...formattedHistory, currentMessage];
+    
+    // Build the system message - include user profile information here
+    let systemMessageContent = systemMessage.value;
+    
+    if (props.userProfile && Object.keys(props.userProfile).length > 0) {
+      systemMessageContent += `\n\nUser Profile Information:\n${JSON.stringify(props.userProfile, null, 2)}\n\nUse this information to provide more personalized and contextual responses.`;
+    }
+
     const requestBody = {
       model: "claude-3-5-sonnet-20241022",
       max_tokens: 1000,
       temperature: 0.7,
-      messages: [...formattedHistory, currentMessage],
-      system: systemMessage.value,
+      messages: messages, // Only user and assistant messages
+      system: systemMessageContent, // User profile info goes in system parameter
     };
 
-    // Add this log right here, before the API call:
-    console.log("[AiStep] Sending to AI:", {
+    // Add this log to see if user profile is being sent
+    console.log("[AiStep] Sending to AI with user profile:", {
+      hasUserProfile: !!props.userProfile,
+      userProfile: props.userProfile,
       messages: requestBody.messages,
-      system: requestBody.system,
+      systemLength: requestBody.system.length,
       currentMessage: currentMessage
     });
 

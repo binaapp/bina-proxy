@@ -1,10 +1,16 @@
 <script setup>
 /* eslint-disable no-unused-vars */
-import { ref, reactive, computed, onMounted } from "vue";
+import { ref, reactive, computed, onMounted, onUnmounted } from "vue";
 import AiStep from "./AiStep.vue";
-import { submitSession, API_URL, handleAction } from "@/utils/sessionApi";
+import {
+  submitSession,
+  API_URL,
+  handleAction,
+  getApiBase,
+} from "@/utils/sessionApi";
 import { useRoute } from "vue-router";
 import { auth } from "../firebase";
+import { onAuthStateChanged } from "firebase/auth";
 
 const props = defineProps({
   flowData: {
@@ -50,10 +56,122 @@ const isSessionComplete = ref(false);
 const currentStepDbId = ref(null);
 const route = useRoute();
 const lastUserInput = ref("");
+const userProfile = ref(null); // Add this line
+
+// Add this reactive user state
+const currentUser = ref(null);
+
+// Add this computed property to log when userProfile changes
+const userProfileForLogging = computed(() => {
+  console.log(
+    "[SessionRunner] 🔍 userProfile value changed:",
+    userProfile.value
+  );
+  return userProfile.value;
+});
+
+// Add this function to load user profile
+const loadUserProfile = async (uid) => {
+  try {
+    console.log("[SessionRunner] Loading user profile for UID:", uid);
+    const response = await fetch(`${getApiBase()}/api/user-profile/${uid}`);
+
+    console.log("[SessionRunner] API response status:", response.status);
+    console.log("[SessionRunner] API response ok:", response.ok);
+
+    if (response.ok) {
+      const profileData = await response.json();
+      userProfile.value = profileData;
+      console.log(
+        "[SessionRunner] ✅ User profile loaded successfully:",
+        profileData
+      );
+      console.log(
+        "[SessionRunner] User profile keys:",
+        Object.keys(profileData)
+      );
+      console.log(
+        "[SessionRunner] User profile strengths:",
+        profileData.strengths
+      );
+      console.log("[SessionRunner] User profile goals:", profileData.goals);
+    } else {
+      console.log(
+        "[SessionRunner] ❌ No existing user profile found, starting fresh"
+      );
+      const errorText = await response.text();
+      console.log("[SessionRunner] Error response:", errorText);
+
+      userProfile.value = {
+        strengths: [],
+        weaknesses: [],
+        paradigms: [],
+        user_values: [],
+        goals: [],
+        intuition: [],
+        tools_used: [],
+        Not_to_do: [],
+        user_history: null,
+        user_stories: [],
+        user_language: [],
+        current_mission: [],
+        learning_history: [],
+        notes: null,
+      };
+    }
+  } catch (error) {
+    console.error("[SessionRunner] ❌ Failed to load user profile:", error);
+    // Initialize with empty profile on error
+    userProfile.value = {
+      strengths: [],
+      weaknesses: [],
+      paradigms: [],
+      user_values: [],
+      goals: [],
+      intuition: [],
+      tools_used: [],
+      Not_to_do: [],
+      user_history: null,
+      user_stories: [],
+      user_language: [],
+      current_mission: [],
+      learning_history: [],
+      notes: null,
+    };
+  }
+};
 
 // === SESSION RESTORE LOGIC WITH SESSION NAME VALIDATION ===
 onMounted(async () => {
   try {
+    console.log("[SessionRunner] 🚀 onMounted started");
+
+    // Set up auth state listener
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      console.log(
+        "[SessionRunner]  Auth state changed:",
+        user ? user.uid : "No user"
+      );
+      currentUser.value = user;
+
+      if (user) {
+        console.log(
+          "[SessionRunner] 🔄 Loading user profile for authenticated user"
+        );
+        await loadUserProfile(user.uid);
+        console.log("[SessionRunner] ✅ User profile loading completed");
+      } else {
+        console.log(
+          "[SessionRunner] ⚠️ No authenticated user found, skipping profile load"
+        );
+      }
+    });
+
+    // Clean up listener when component unmounts
+    onUnmounted(() => {
+      unsubscribe();
+    });
+
     const savedSessionId = localStorage.getItem("binaSessionId");
     console.log("[SessionRunner] onMounted: savedSessionId =", savedSessionId);
 
@@ -219,7 +337,17 @@ const saveStepToDatabase = async (
       ],
     };
 
-    const currentUser = auth.currentUser;
+    // Get current user using the same approach
+    const getCurrentUser = () => {
+      return new Promise((resolve) => {
+        const unsubscribe = onAuthStateChanged(auth, (user) => {
+          unsubscribe();
+          resolve(user);
+        });
+      });
+    };
+
+    const currentUser = await getCurrentUser();
     if (currentUser) {
       params.uid = currentUser.uid;
     }
@@ -556,19 +684,47 @@ defineExpose({
 // Add this function in your <script setup> or methods
 async function analyzeSessionAfterCompletion() {
   try {
-    const currentUser = auth.currentUser;
-    if (!currentUser) return;
+    // Use a promise-based approach to get the current user
+    const getCurrentUser = () => {
+      return new Promise((resolve) => {
+        const unsubscribe = onAuthStateChanged(auth, (user) => {
+          unsubscribe(); // Unsubscribe after first call
+          resolve(user);
+        });
+      });
+    };
+
+    const currentUser = await getCurrentUser();
+    if (!currentUser) {
+      console.log("[SessionRunner] No authenticated user for session analysis");
+      return;
+    }
 
     const uid = currentUser.uid;
     const sessionIdVal = sessionId.value; // sessionId is a ref in your component
     const transcript = sessionHistory.value; // full conversation log
 
-    await fetch("/api/analyze-session", {
+    // Include the current user profile in the request
+    const requestBody = {
+      sessionId: sessionIdVal,
+      uid,
+      transcript,
+      userProfile: userProfile.value, // Add this line
+    };
+
+    console.log(
+      "[SessionRunner] Sending analysis request with user profile:",
+      requestBody
+    );
+
+    await fetch(`${getApiBase()}/api/analyze-session`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ sessionId: sessionIdVal, uid, transcript }),
+      body: JSON.stringify(requestBody),
     });
-    // Optionally, handle response or show a notification
+
+    // Optionally, reload the user profile after analysis to get updated data
+    await loadUserProfile(uid);
   } catch (err) {
     console.error("Failed to analyze session:", err);
   }
@@ -594,6 +750,12 @@ async function analyzeSessionAfterCompletion() {
     :flow-data="props.flowData"
     :coach-data="coachData"
     :name="props.flowData.steps[currentStepIndex].name"
+    :userProfile="userProfile"
     @step-result="handleStepResult"
   />
+
+  <!-- Add this debug element to see the user profile in the DOM -->
+  <div v-if="userProfile" style="display: none">
+    Debug - User Profile: {{ JSON.stringify(userProfile) }}
+  </div>
 </template>

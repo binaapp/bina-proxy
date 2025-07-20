@@ -38,9 +38,8 @@
                       'bot-message-line': true,
                       'indented-line': isBulletLine(line) && lineIdx > 0,
                     }"
-                  >
-                    {{ line }}
-                  </div>
+                    v-html="line"
+                  ></div>
                 </template>
               </div>
             </div>
@@ -732,7 +731,7 @@ export default {
   background: var(--chat-bot-bg, #f6e7db); /* Use your variable or fallback */
   color: var(--chat-bot-text, #12344d); /* Use your variable or fallback */
   border-radius: 18px;
-  padding: 0.5rem 1rem;
+  padding: 0.5rem 1.5rem; /* Increased left/right padding from 1rem to 1.5rem */
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
     sans-serif;
@@ -740,6 +739,13 @@ export default {
   text-align: left;
   white-space: pre-line;
   line-height: 1.2;
+}
+
+/* Add specific RTL padding for Hebrew text */
+.rtl .bot-message {
+  padding: 0.5rem 1.5rem 0.5rem 2rem; /* Extra left padding for RTL */
+  direction: rtl !important;
+  text-align: right !important;
 }
 
 .button-container {

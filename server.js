@@ -709,6 +709,108 @@ app.post('/api/firebase-login', async (req, res) => {
   }
 });
 
+// Add this helper function at the top of the file
+function safeJsonParse(value) {
+  if (!value) return null; // Return null for empty values
+  if (typeof value === 'object') return value; // Already parsed by MySQL JSON type
+  if (typeof value === 'string') {
+    try {
+      const parsed = JSON.parse(value);
+      return parsed && (Array.isArray(parsed) ? parsed.length > 0 : Object.keys(parsed).length > 0) ? parsed : null;
+    } catch (e) {
+      console.log("Failed to parse JSON string:", value, e);
+      return null;
+    }
+  }
+  return null;
+}
+
+// Add this endpoint to get user profile
+app.get('/api/user-profile/:uid', async (req, res) => {
+  try {
+    const { uid } = req.params;
+    console.log("[GET /api/user-profile/:uid] Requested UID:", uid);
+
+    const connection = await pool.getConnection();
+
+    // Get user profile info
+    const [userRows] = await connection.query(
+      `SELECT strengths, weaknesses, paradigms, user_values, goals, intuition, 
+              tools_used, Not_to_do, user_history, user_stories, user_language, 
+              current_mission, learning_history, notes
+       FROM users WHERE uid = ?`,
+      [uid]
+    );
+    
+    connection.release();
+
+    if (userRows.length === 0) {
+      console.log("[GET /api/user-profile/:uid] No user found for UID:", uid);
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const userProfile = userRows[0];
+    
+    // Build profile object, only including fields with actual data
+    const parsedProfile = {};
+    
+    // Only add fields that have meaningful data
+    const strengths = safeJsonParse(userProfile.strengths);
+    if (strengths) parsedProfile.strengths = strengths;
+    
+    const weaknesses = safeJsonParse(userProfile.weaknesses);
+    if (weaknesses) parsedProfile.weaknesses = weaknesses;
+    
+    const paradigms = safeJsonParse(userProfile.paradigms);
+    if (paradigms) parsedProfile.paradigms = paradigms;
+    
+    const user_values = safeJsonParse(userProfile.user_values);
+    if (user_values) parsedProfile.user_values = user_values;
+    
+    const goals = safeJsonParse(userProfile.goals);
+    if (goals) parsedProfile.goals = goals;
+    
+    const intuition = safeJsonParse(userProfile.intuition);
+    if (intuition) parsedProfile.intuition = intuition;
+    
+    const tools_used = safeJsonParse(userProfile.tools_used);
+    if (tools_used) parsedProfile.tools_used = tools_used;
+    
+    const Not_to_do = safeJsonParse(userProfile.Not_to_do);
+    if (Not_to_do) parsedProfile.Not_to_do = Not_to_do;
+    
+    const user_stories = safeJsonParse(userProfile.user_stories);
+    if (user_stories) parsedProfile.user_stories = user_stories;
+    
+    const user_language = safeJsonParse(userProfile.user_language);
+    if (user_language) parsedProfile.user_language = user_language;
+    
+    const current_mission = safeJsonParse(userProfile.current_mission);
+    if (current_mission) parsedProfile.current_mission = current_mission;
+    
+    const learning_history = safeJsonParse(userProfile.learning_history);
+    if (learning_history) parsedProfile.learning_history = learning_history;
+    
+    // For text fields, only include if they have content
+    if (userProfile.user_history && userProfile.user_history.trim()) {
+      parsedProfile.user_history = userProfile.user_history;
+    }
+    
+    if (userProfile.notes && userProfile.notes.trim()) {
+      parsedProfile.notes = userProfile.notes;
+    }
+
+    console.log("[GET /api/user-profile/:uid] Returning user profile for UID:", uid);
+    console.log("[GET /api/user-profile/:uid] Profile data:", parsedProfile);
+    console.log("[GET /api/user-profile/:uid] Profile keys:", Object.keys(parsedProfile));
+    
+    res.json(parsedProfile);
+  } catch (err) {
+    console.error("[GET /api/user-profile/:uid] Error fetching user profile:", err);
+    res.status(500).json({ error: "Failed to fetch user profile" });
+  }
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error("Global error handler:", err);
