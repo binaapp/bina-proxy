@@ -157,8 +157,14 @@ const buildSystemMessage = () => {
     sections.push(props.coachData.coachPresenceNote);
   }
 
+  // Add coach's role (from coach data)
   if (instructions.role) {
     sections.push(instructions.role);
+  }
+
+  // Add session-specific role/goal (from flow data)
+  if (instructions.sessionRole) {
+    sections.push(`Session Goal: ${instructions.sessionRole}`);
   }
 
   // Add tone cues if available
@@ -363,7 +369,7 @@ const callClaude = async () => {
     let systemMessageContent = systemMessage.value;
     
     if (props.userProfile && Object.keys(props.userProfile).length > 0) {
-      systemMessageContent += `\n\nUser Profile Information:\n${JSON.stringify(props.userProfile, null, 2)}\n\nUse this information to provide more personalized and contextual responses.`;
+      systemMessageContent += `\n\nUser Profile Information:\n${JSON.stringify(props.userProfile, null, 2)}\n\nUse this information to provide more personalized and contextual responses. Pay attention to the user's gender information and use appropriate gendered language (he/him/his for male users, she/her/hers for female users) when referring to the user in your responses.`;
     }
 
     const requestBody = {

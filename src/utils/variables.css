@@ -231,3 +231,12 @@
     box-sizing: border-box !important;
   }
 }
+
+.option-indent {
+  padding-inline-start: 2em;
+  text-indent: -1em;
+  white-space: normal;
+  direction: inherit;
+  word-break: break-word;
+  margin-bottom: 0.5em; /* Add spacing between options */
+}

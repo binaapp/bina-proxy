@@ -33,6 +33,12 @@ const route = useRoute();
 </script>
 
 <style>
+html,
+body,
+#app {
+  background: var(--color-primary) !important;
+}
+
 html {
   scroll-behavior: smooth;
   scroll-padding-top: 80px;

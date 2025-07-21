@@ -30,12 +30,66 @@
             <span class="hi-user">{{ `Hi ${firstName || "there"}` }}</span>
           </template>
           <template v-else>
-            <router-link
-              :to="{ path: '/login', query: { redirect: $route.fullPath } }"
-              class="login-link"
-              >Log in</router-link
-            >
-            <router-link to="/signup" class="signup-btn">Sign up</router-link>
+            <!-- Desktop: show buttons, Mobile: show icon -->
+            <span class="desktop-auth">
+              <router-link
+                :to="{ path: '/login', query: { redirect: $route.fullPath } }"
+                class="login-link"
+                >Log in</router-link
+              >
+              <router-link to="/signup" class="signup-btn">Sign up</router-link>
+            </span>
+            <span class="mobile-auth">
+              <button
+                class="user-icon-btn"
+                @click="userMenuOpen = !userMenuOpen"
+              >
+                <!-- Simple user icon SVG -->
+                <svg width="32" height="32" viewBox="0 0 32 32">
+                  <circle cx="16" cy="12" r="6" fill="#fff" />
+                  <rect x="8" y="22" width="16" height="8" rx="3" fill="#fff" />
+                  <rect
+                    x="2"
+                    y="2"
+                    width="28"
+                    height="28"
+                    rx="6"
+                    fill="none"
+                    stroke="#fff"
+                    stroke-width="0"
+                  />
+                </svg>
+                <svg
+                  width="16"
+                  height="32"
+                  viewBox="0 0 16 16"
+                  style="margin-left: 2px"
+                >
+                  <polygon points="4,6 8,10 12,6" fill="#fff" />
+                </svg>
+              </button>
+              <div v-if="userMenuOpen" class="user-menu-modal">
+                <button
+                  class="close-user-menu"
+                  @click="closeUserMenu"
+                  aria-label="Close menu"
+                >
+                  &times;
+                </button>
+                <router-link
+                  :to="{ path: '/login', query: { redirect: $route.fullPath } }"
+                  class="user-menu-link"
+                  @click="closeUserMenu"
+                  >Log in</router-link
+                >
+                <router-link
+                  to="/signup"
+                  class="user-menu-link"
+                  @click="closeUserMenu"
+                  >Sign in</router-link
+                >
+              </div>
+            </span>
           </template>
         </div>
       </div>
@@ -92,6 +146,7 @@ import { useRoute, useRouter } from "vue-router";
 import { auth } from "../firebase";
 
 const menuOpen = ref(false);
+const userMenuOpen = ref(false); // <-- for mobile user icon menu
 const route = useRoute();
 const router = useRouter();
 
@@ -144,6 +199,10 @@ async function handleSignOut() {
   await auth.signOut();
   menuOpen.value = false;
   router.push("/");
+}
+
+function closeUserMenu() {
+  userMenuOpen.value = false;
 }
 </script>
 
@@ -253,7 +312,6 @@ async function handleSignOut() {
   top: 70px;
   left: 23%;
   transform: translateX(-50%);
-  width: 20vw;
   max-width: 340px;
   background: #fff;
   border-radius: 16px;
@@ -360,6 +418,16 @@ async function handleSignOut() {
   cursor: default;
 }
 
+.desktop-auth {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.mobile-auth {
+  display: none;
+}
+
+/* Mobile styles */
 @media (max-width: 600px) {
   .header-side.left,
   .header-side.right {
@@ -380,6 +448,62 @@ async function handleSignOut() {
   .signup-btn {
     font-size: 1rem;
     padding: 0.4rem 1rem;
+  }
+  .desktop-auth {
+    display: none;
+  }
+  .mobile-auth {
+    display: inline-block;
+    position: relative;
+  }
+  .user-icon-btn {
+    background: none;
+    border: 2px solid #fff;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    margin-right: 0.5rem; /* Add this line for extra space from the edge */
+  }
+  .user-menu-modal {
+    position: absolute;
+    top: 40px;
+    right: 0;
+    background: #fff;
+    color: var(--color-primary);
+    border-radius: 8px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12);
+    padding: 2rem 2.5rem 1.5rem 2.5rem;
+    z-index: 1001;
+    min-width: 120px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .user-menu-link {
+    color: var(--color-primary);
+    font-size: 2rem;
+    margin-bottom: 1.5rem;
+    text-decoration: none;
+    font-family: var(--font-family-primary);
+    font-weight: 400;
+  }
+  .user-menu-link:last-child {
+    margin-bottom: 0;
+  }
+  .close-user-menu {
+    position: absolute;
+    top: 1rem;
+    right: 1.2rem;
+    background: none;
+    border: none;
+    color: var(--color-primary);
+    font-size: 2.5rem;
+    cursor: pointer;
+    z-index: 1002;
+  }
+  .header-side.right {
+    padding-right: 1rem; /* Increase as needed */
   }
 }
 </style>

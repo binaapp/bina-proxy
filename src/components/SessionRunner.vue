@@ -266,8 +266,14 @@ onMounted(() => {
       firstStep.introText.replace(/\\n/g, "\n"),
       firstStep.question,
       firstStep.options
-        ?.map((opt, i) => `${String.fromCharCode(97 + i)}. ${opt}`)
-        .join("\n"),
+        ?.map(
+          (opt, i) =>
+            `<div class="option-indent">${i + 1}. ${opt.replace(
+              /\n/g,
+              "<br>"
+            )}</div>`
+        )
+        .join(""),
     ]
       .filter(Boolean)
       .join("\n\n");
@@ -491,8 +497,14 @@ const handleStepResult = async (result) => {
           nextStep.introText?.replace(/\\n/g, "\n"),
           nextStep.question,
           nextStep.options
-            ?.map((opt, i) => `${String.fromCharCode(97 + i)}. ${opt}`)
-            .join("\n"),
+            ?.map(
+              (opt, i) =>
+                `<div class="option-indent">${i + 1}. ${opt.replace(
+                  /\n/g,
+                  "<br>"
+                )}</div>`
+            )
+            .join(""),
         ]
           .filter(Boolean)
           .join("\n\n");
@@ -630,8 +642,14 @@ const handleUserSubmit = async () => {
         introText.replace(/\\n/g, "\n"),
         nextStep.question,
         nextStep.options
-          ?.map((opt, i) => `${String.fromCharCode(97 + i)}. ${opt}`)
-          .join("\n"),
+          ?.map(
+            (opt, i) =>
+              `<div class="option-indent">${i + 1}. ${opt.replace(
+                /\n/g,
+                "<br>"
+              )}</div>`
+          )
+          .join(""),
       ]
         .filter(Boolean)
         .join("\n\n");
