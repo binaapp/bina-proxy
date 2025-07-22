@@ -69,64 +69,42 @@ router.post('/analyze-session', async (req, res) => {
     const userProfile = await getUserProfile(uid);
 
     const strictPrompt = `
-Based on the full coaching conversation in this session, and on the existing user profile data provided below, do the following:
+Based on the full coaching conversation in this session and the existing user profile data below, return a single JSON object with:
 
-1. Update the user profile:
-Review the existing profile and return the COMPLETE updated values for each of the following fields. This means:
-- Keep existing values that are still relevant
-- Add new values discovered in this session
-- Update/refine existing values if new insights emerged
-- Remove values that are no longer relevant (if any)
+"session_overview": A 2–4 sentence summary of the session’s main themes, mood, and key moments.
 
-strengths: Complete updated list of strengths (existing + new ones from this session).
-weaknesses: Complete updated list of areas for improvement.
-paradigms: Complete updated list of limiting beliefs or repeating patterns.
-user_values: Complete updated list of personal values.
-goals: Complete updated list of current goals.
-intuition: Complete updated list of AI observations about strengths, values, or patterns.
-tools_used: Complete updated list of coaching tools that worked well.
-Not_to_do: Complete updated list of tools/styles that didn't work well.
-user_history: Complete updated factual background.
-user_stories: Complete updated list of personal stories shared.
-user_language: Complete updated list of unique phrases/metaphors.
-current_mission: Complete updated list of action items.
-learning_history: Complete updated list of insights/realizations.
-notes: Complete updated notes.
+"user_profile_updates": An object with the COMPLETE, up-to-date values for each of the following fields:
 
-2. Write a JSON summary for the session:
-"session_overview": A 2–4 sentence description of the main themes, energy, and moments in the session.
-"user_profile_updates": An object that includes the COMPLETE updated values for all user profile fields above.
+strengths, weaknesses, paradigms, user_values, goals, intuition, tools_used, Not_to_do, user_history, user_stories, user_language, current_mission, learning_history, notes.
 
- Output Format:
+Guidelines:
+
+For each field, preserve all relevant existing data, update/refine if needed, add new insights from this session, and remove anything no longer accurate.
+
+Output only a single valid JSON object in the format below.
 {
-  "session_overview": "A short narrative description of the session...",
+  "session_overview": "Short summary...",
   "user_profile_updates": {
-    "strengths": ["existing_strength_1", "existing_strength_2", "new_strength_from_session"],
-    "weaknesses": ["existing_weakness_1", "new_weakness_from_session"],
+    "strengths": [...],
+    "weaknesses": [...],
     "paradigms": [...],
     "user_values": [...],
     "goals": [...],
     "intuition": [...],
     "tools_used": [...],
     "Not_to_do": [...],
-    "user_history": "Updated background info...",
+    "user_history": "...",
     "user_stories": [...],
     "user_language": [...],
     "current_mission": [...],
     "learning_history": [...],
-    "notes": "Updated notes..."
+    "notes": "..."
   }
 }
-
-IMPORTANT: 
-- Return the COMPLETE updated data, not just additions
-- Preserve existing relevant information
-- Add new insights from this session
-- Your entire response MUST be a single valid JSON object
 `;
 
     const claudeRequest = {
-      model: "claude-3-opus-20240229",
+      model: "claude-3-5-sonnet-20241022",
       max_tokens: 1500, // Increased for complete profiles
       temperature: 0.7,
       system: strictPrompt,

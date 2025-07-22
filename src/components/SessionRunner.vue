@@ -543,7 +543,7 @@ const handleStepResult = async (result) => {
   ) {
     isSessionComplete.value = true;
     await saveStepToDatabase("", result.reply, false);
-    await analyzeSessionAfterCompletion(); // <-- Add this line
+    analyzeSessionAfterCompletion(); // <-- Add this line
   }
 
   // Send the complete response (may include both AI reply and closing message)
