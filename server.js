@@ -8,6 +8,7 @@ const jwt = require('jsonwebtoken');
 const axios = require('axios');
 
 const mysql = require("mysql2/promise");
+const { callClaudeWithRetryAndFallback } = require('./claudeApiHelper');
 
 const FIREBASE_PROJECT_ID = process.env.FIREBASE_PROJECT_ID;
 
@@ -148,81 +149,61 @@ app.post("/api/claude", async (req, res, next) => {
       });
     }
 
+    const preferredModel = req.body.model || "claude-3-5-sonnet-20241022";
+    const fallbackModel = "claude-3-opus-20240229";
     let response;
-    const controller = new AbortController();
-    const timeoutMs = 30000; // 15 seconds
-    const timeout = setTimeout(() => {
-      console.error("Claude API request timed out after", timeoutMs, "ms");
-      controller.abort();
-    }, timeoutMs);
 
-    try {
-      console.log("Sending request to Claude API...");
-      response = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": CLAUDE_API_KEY,
-          "anthropic-version": "2023-06-01",
-        },
-        body: JSON.stringify(claudeRequest),
-        signal: controller.signal,
-      });
-      clearTimeout(timeout);
-      console.log("Received response from Claude API");
+    // Initial call (unchanged)
+    response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": CLAUDE_API_KEY,
+        "anthropic-version": "2023-06-01",
+      },
+      body: JSON.stringify({ ...claudeRequest, model: preferredModel }),
+    });
 
-      console.log("Claude API response headers:", {
+    // If 529, use helper for retry/fallback
+    if (response.status === 529) {
+      response = await callClaudeWithRetryAndFallback(
+        { ...claudeRequest }, // model will be set by helper
+        CLAUDE_API_KEY,
+        preferredModel,
+        fallbackModel
+      );
+      if (!response) {
+        return res.status(529).json({
+          error: "Claude API Overloaded",
+          message: "Our AI partner is experiencing high demand. Please try again in a few minutes. Your session is safe and you can continue once the service is available.",
+        });
+      }
+    }
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => null);
+      console.error("Claude API error response:", {
         status: response.status,
         statusText: response.statusText,
-        headers: Object.fromEntries(response.headers.entries()),
+        error: errorData,
+        request: {
+          model: claudeRequest.model,
+          messageCount: claudeRequest.messages.length,
+        },
       });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => null);
-        console.error("Claude API error response:", {
-          status: response.status,
-          statusText: response.statusText,
-          error: errorData,
-          request: {
-            model: claudeRequest.model,
-            messageCount: claudeRequest.messages.length,
-          },
-        });
-
-        return res.status(response.status).json({
-          error: "Claude API Error",
-          message: errorData?.error?.message || response.statusText,
-          status: response.status,
-          details: errorData,
-        });
-      }
-
-      const data = await response.json();
-      console.log("Successfully received response from Claude API");
-      //data.content = data.content?.replace(/[\x00-\x1F\x7F-\x9F]/g, '');
-      res.json(data);
-    } catch (fetchError) {
-      clearTimeout(timeout);
-      if (fetchError.name === 'AbortError') {
-        console.error("Claude API request aborted due to timeout");
-        return res.status(504).json({
-          error: "Timeout",
-          message: "Claude API did not respond in time",
-        });
-      }
-      console.error("Fetch error:", {
-        message: fetchError.message,
-        name: fetchError.name,
-        stack: fetchError.stack,
-        code: fetchError.code,
-      });
-
-      return res.status(500).json({
-        error: "Network Error",
-        message: "Failed to connect to Claude API",
-        details: fetchError.message,
+      return res.status(response.status).json({
+        error: "Claude API Error",
+        message: errorData?.error?.message || response.statusText,
+        status: response.status,
+        details: errorData,
       });
     }
+
+    const data = await response.json();
+    console.log("Successfully received response from Claude API");
+    //data.content = data.content?.replace(/[\x00-\x1F\x7F-\x9F]/g, '');
+    res.json(data);
   } catch (error) {
     console.error("Unhandled error in /api/claude:", {
       message: error.message,

@@ -152,6 +152,11 @@ export default {
         // Extract coach data from the loaded flow
         if (flowData.value.coachProfile || flowData.value.coachSignature) {
           coachData.value = {
+            name:
+              flowData.value.coachProfile?.name ||
+              flowData.value.coachSignature?.name ||
+              flowData.value.name ||
+              "מאיה", // Try to get the name from the merged data
             coachProfile: flowData.value.coachProfile,
             coachSignature: flowData.value.coachSignature,
             systemInstructions: flowData.value.systemInstructions,

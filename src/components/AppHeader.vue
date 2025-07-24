@@ -37,7 +37,7 @@
                 class="login-link"
                 >Log in</router-link
               >
-              <router-link to="/signup" class="signup-btn">Sign up</router-link>
+              <router-link to="/signup" class="signup-btn">Sign in</router-link>
             </span>
             <span class="mobile-auth">
               <button
@@ -482,11 +482,11 @@ function closeUserMenu() {
   }
   .user-menu-link {
     color: var(--color-primary);
-    font-size: 2rem;
+    font-size: 1.15rem;
     margin-bottom: 1.5rem;
     text-decoration: none;
     font-family: var(--font-family-primary);
-    font-weight: 400;
+    font-weight: 500;
   }
   .user-menu-link:last-child {
     margin-bottom: 0;

@@ -5,6 +5,8 @@ import ContactUs from "../components/ContactUs.vue";
 import LoginUI from "../components/LoginUI.vue";
 import ArticleView from "../views/ArticleView.vue";
 import LoginPage from "../components/LoginPage.vue";
+import { auth } from "../firebase";
+import { onAuthStateChanged } from "firebase/auth";
 
 const router = createRouter({
   history: createWebHistory("/"),
@@ -45,6 +47,33 @@ const router = createRouter({
       component: () => import("@/views/BlogView.vue"),
     },
   ],
+});
+
+// --- Wait for Firebase Auth to initialize ---
+let isAuthResolved = false;
+let authUser = null;
+
+const waitForAuth = new Promise((resolve) => {
+  onAuthStateChanged(auth, (user) => {
+    isAuthResolved = true;
+    authUser = user;
+    resolve();
+  });
+});
+
+router.beforeEach(async (to, from, next) => {
+  if (!isAuthResolved) {
+    await waitForAuth;
+  }
+  const isAuthenticated = !!authUser;
+  if (to.name === "chat" && !isAuthenticated) {
+    next({
+      path: "/login",
+      query: { redirect: to.fullPath },
+    });
+  } else {
+    next();
+  }
 });
 
 export default router;

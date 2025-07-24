@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const mysql = require('mysql2/promise');
 const fetch = require('node-fetch'); // Use fetch as in server.js
+const { callClaudeWithRetryAndFallback } = require('./claudeApiHelper');
+const { sendEmail } = require('./sesEmailService'); // <-- Add this import
 
 // You may want to import your pool from server.js if it's exported
 const pool = require('./server').pool || mysql.createPool({
@@ -61,51 +63,49 @@ function extractJsonFromText(text) {
 
 router.post('/analyze-session', async (req, res) => {
   try {
-    const { sessionId, uid, transcript } = req.body;
+    const { sessionId, uid, transcript, userEmail, userName, coachName } = req.body;
+
     if (!sessionId || !uid || !Array.isArray(transcript)) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
     const userProfile = await getUserProfile(uid);
 
+    // === UPDATED PROMPT ===
     const strictPrompt = `
 Based on the full coaching conversation in this session and the existing user profile data below, return a single JSON object with:
 
-"session_overview": A 2–4 sentence summary of the session’s main themes, mood, and key moments.
+1. "session_overview": A 2–4 sentence summary of the session’s main themes, mood, and key moments.
 
-"user_profile_updates": An object with the COMPLETE, up-to-date values for each of the following fields:
+2. "user_profile_updates": An object with the COMPLETE, up-to-date values for each of the following fields:
+strengths, weaknesses, paradigms, user_values, goals, intuition, tools_used, Not_to_do, user_history, user_stories, user_language, current_mission, learning_history, notes. 
 
-strengths, weaknesses, paradigms, user_values, goals, intuition, tools_used, Not_to_do, user_history, user_stories, user_language, current_mission, learning_history, notes.
+‼️ Important:
+- For all fields: preserve all relevant existing data, update/refine if needed, add new insights from this session, and remove anything no longer accurate.
+- For "current_mission": replace any previous assignment with the most recent one from this session only.
 
-Guidelines:
+3. "summary_email_text": An object with:
+{
+The coach's name for this session is: ${coachName || 'מאיה'}. Please sign the email with this name.
+  "subject_line": "Your email subject line here",
+  "body": "A short, friendly email to the user, written as if from their coach. The email should summarize only the current session (do not use information from previous sessions or the profile). Include key insights and, if an assignment was given in this session, describe it clearly. If no assignment was given, end with a brief inspirational comment or encouragement."
+For both fields use the same language (Hebrew/English) as the user used in this session
+  }
 
-For each field, preserve all relevant existing data, update/refine if needed, add new insights from this session, and remove anything no longer accurate.
-
-Output only a single valid JSON object in the format below.
+Output only a single valid JSON object in this format:
 {
   "session_overview": "Short summary...",
-  "user_profile_updates": {
-    "strengths": [...],
-    "weaknesses": [...],
-    "paradigms": [...],
-    "user_values": [...],
-    "goals": [...],
-    "intuition": [...],
-    "tools_used": [...],
-    "Not_to_do": [...],
-    "user_history": "...",
-    "user_stories": [...],
-    "user_language": [...],
-    "current_mission": [...],
-    "learning_history": [...],
-    "notes": "..."
+  "user_profile_updates": { ... },
+  "summary_email_text": {
+    "subject_line": "Your subject line",
+    "body": "Your email content..."
   }
 }
 `;
 
     const claudeRequest = {
       model: "claude-3-5-sonnet-20241022",
-      max_tokens: 1500, // Increased for complete profiles
+      max_tokens: 2500, // Increased for complete profiles
       temperature: 0.7,
       system: strictPrompt,
       messages: [
@@ -121,45 +121,44 @@ Output only a single valid JSON object in the format below.
       return res.status(500).json({ error: "Claude API key not configured" });
     }
 
-    const controller = new AbortController();
-    const timeoutMs = 30000;
-    const timeout = setTimeout(() => controller.abort(), timeoutMs);
-
+    const preferredModel = "claude-3-opus-20240229";
+    const fallbackModel = "claude-3-haiku-20240307"; // or another fallback
     let aiResponse;
-    try {
-      aiResponse = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": CLAUDE_API_KEY,
-          "anthropic-version": "2023-06-01",
-        },
-        body: JSON.stringify(claudeRequest),
-        signal: controller.signal,
-      });
-      clearTimeout(timeout);
 
-      if (!aiResponse.ok) {
-        const errorData = await aiResponse.json().catch(() => null);
-        return res.status(aiResponse.status).json({
-          error: "Claude API Error",
-          message: errorData?.error?.message || aiResponse.statusText,
-          status: aiResponse.status,
-          details: errorData,
+    // Initial call (unchanged)
+    aiResponse = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": CLAUDE_API_KEY,
+        "anthropic-version": "2023-06-01",
+      },
+      body: JSON.stringify({ ...claudeRequest, model: preferredModel }),
+    });
+
+    // If 529, use helper for retry/fallback
+    if (aiResponse.status === 529) {
+      aiResponse = await callClaudeWithRetryAndFallback(
+        { ...claudeRequest }, // model will be set by helper
+        CLAUDE_API_KEY,
+        preferredModel,
+        fallbackModel
+      );
+      if (!aiResponse) {
+        return res.status(529).json({
+          error: "Claude API Overloaded",
+          message: "Our AI partner is experiencing high demand. Please try again in a few minutes. Your session is safe and you can continue once the service is available.",
         });
       }
-    } catch (fetchError) {
-      clearTimeout(timeout);
-      if (fetchError.name === 'AbortError') {
-        return res.status(504).json({
-          error: "Timeout",
-          message: "Claude API did not respond in time",
-        });
-      }
-      return res.status(500).json({
-        error: "Network Error",
-        message: "Failed to connect to Claude API",
-        details: fetchError.message,
+    }
+
+    if (!aiResponse.ok) {
+      const errorData = await aiResponse.json().catch(() => null);
+      return res.status(aiResponse.status).json({
+        error: "Claude API Error",
+        message: errorData?.error?.message || aiResponse.statusText,
+        status: aiResponse.status,
+        details: errorData,
       });
     }
 
@@ -189,8 +188,8 @@ Output only a single valid JSON object in the format below.
     console.log("Extracted JSON:", JSON.stringify(summaryJson, null, 2));
     console.log("=== END EXTRACTED JSON DEBUG ===");
 
-    const { user_profile_updates, session_overview } = summaryJson;
-    if (!user_profile_updates || !session_overview) {
+    const { user_profile_updates, session_overview, summary_email_text } = summaryJson;
+    if (!user_profile_updates || !session_overview || !summary_email_text) {
       console.error("Claude response missing required fields:", summaryJson);
       return res.status(500).json({ error: "Claude response missing required fields" });
     }
@@ -204,6 +203,59 @@ Output only a single valid JSON object in the format below.
     console.log("Updating session summary with:", summaryJson);
     await updateSessionSummary(sessionId, summaryJson);
     console.log("Session summary updated.");
+
+    // 7. SEND EMAILS
+    // --- 1. To the user ---
+    if (userEmail) {
+      const userMailSubject = summary_email_text.subject_line || "Your Bina Session Summary";
+      const personalizedEmail = summary_email_text.body.replace('[Name]', userName || 'there');
+
+      // Detect if the email is in Hebrew
+      function isHebrew(text) {
+        return /[\u0590-\u05FF]/.test(text);
+      }
+
+      // Prepare HTML body with RTL if needed
+      let emailHtml;
+      if (isHebrew(personalizedEmail)) {
+        emailHtml = `<div dir="rtl" style="font-family: Arial, sans-serif; white-space: pre-line;">${personalizedEmail}</div>`;
+      } else {
+        emailHtml = `<div style="font-family: Arial, sans-serif; white-space: pre-line;">${personalizedEmail}</div>`;
+      }
+
+      const signature = `\n\nבברכה,\n${coachName || 'מאיה'}`;
+      const emailBodyWithSignature = personalizedEmail + signature;
+
+      console.log("[analyze-session] Attempting to send summary email to user:", userEmail);
+      console.log("[analyze-session] Email subject:", userMailSubject);
+      console.log("[analyze-session] Email body (first 200 chars):", personalizedEmail.substring(0, 200));
+      try {
+        await sendEmail(userEmail, userMailSubject, emailBodyWithSignature, emailHtml);
+        console.log("[analyze-session] Summary email sent to user:", userEmail);
+      } catch (emailErr) {
+        console.error("[analyze-session] Failed to send summary email to user:", userEmail, emailErr);
+      }
+    } else {
+      console.warn("[analyze-session] User email not provided, skipping user summary email.");
+    }
+
+    // --- 2. To Bina admins ---
+    const adminMailSubject = `Session Summary for User ${uid} (Session ${sessionId})`;
+    const adminMailBody = `
+Session Overview:
+${session_overview}
+
+User Profile Updates:
+${JSON.stringify(user_profile_updates, null, 2)}
+
+Full Session Transcript:
+${JSON.stringify(transcript, null, 2)}
+
+DB Summary JSON:
+${JSON.stringify(summaryJson, null, 2)}
+    `;
+    await sendEmail("bina@binaapp.com", adminMailSubject, adminMailBody);
+    console.log("Admin summary email sent.");
 
     res.json({ success: true, user_profile_updates, session_overview });
   } catch (err) {

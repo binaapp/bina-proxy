@@ -53,5 +53,9 @@ export function mergeFlowWithCoach(flowData, coachData) {
     merged.coachSignature = coachData.coachSignature;
   }
 
+  if (coachData.name) {
+    merged.coachName = coachData.name;
+  }
+
   return merged;
 }

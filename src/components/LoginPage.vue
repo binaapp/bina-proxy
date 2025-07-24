@@ -161,9 +161,13 @@ async function onGoogleSignIn() {
     const data = await response.json();
 
     if (response.ok && data.success) {
-      // --- REDIRECT LOGIC ---
+      if (data.sessionId) {
+        localStorage.setItem("binaSessionId", data.sessionId);
+      }
       const redirectPath = route.query.redirect || "/chat";
-      router.push(redirectPath);
+      console.log("route.query.redirect", route.query.redirect);
+      console.log("Redirecting to", redirectPath);
+      router.replace(redirectPath);
     } else {
       alert(data.error || "Google login failed");
     }
@@ -196,9 +200,13 @@ async function onEmailLogin() {
     const data = await response.json();
 
     if (response.ok && data.success) {
-      // --- REDIRECT LOGIC ---
+      if (data.sessionId) {
+        localStorage.setItem("binaSessionId", data.sessionId);
+      }
       const redirectPath = route.query.redirect || "/chat";
-      router.push(redirectPath);
+      console.log("route.query.redirect", route.query.redirect);
+      console.log("Redirecting to", redirectPath);
+      router.replace(redirectPath);
     } else {
       alert(data.error || "Login failed. Please try again.");
     }
