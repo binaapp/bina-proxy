@@ -1,5 +1,5 @@
 import burnoutFlow from "@/data/flows/Burnout.json";
-import generalFlow from "@/data/flows/General.json";
+import generalFlow from "@/data/flows/MaiaGenericH.json";
 import quickCoachingFlow from "@/data/flows/QuickCoaching.json";
 import geniusZoneFlow from "@/data/flows/GeniousZone.json";
 import qCoachMaiaFlow from "@/data/flows/QCoachMaia.json";
@@ -10,7 +10,7 @@ import { loadCoachData, mergeFlowWithCoach } from "@/utils/coachLoader";
 // import generalFlow from '@/data/flows/General.json'
 
 // Define the default flow name as a constant
-export const DEFAULT_FLOW = "qcoachmaia";
+export const DEFAULT_FLOW = "generalFlow";
 
 // Returns the flow data based on the flowName parameter
 export function getFlowData(flowName = DEFAULT_FLOW) {
@@ -27,7 +27,7 @@ export function getFlowData(flowName = DEFAULT_FLOW) {
       return qCoachMaiaFlow;
 
     default:
-      return qCoachMaiaFlow;
+      return MaiaGenericH;
   }
 }
 

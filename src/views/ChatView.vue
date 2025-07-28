@@ -139,7 +139,7 @@ export default {
 
     onMounted(async () => {
       console.log("route.params:", route.params); // Log the route params
-      const sessionName = route.params.program || "GeneralShort";
+      const sessionName = route.params.program || "MaiaGenericH";
       console.log("Resolved sessionName:", sessionName); // Log the resolved session name
       try {
         flowData.value = await loadFlowBySessionName(sessionName);
@@ -164,16 +164,16 @@ export default {
         }
       } catch (e) {
         console.error("Failed to load flow for session:", sessionName, e);
-        // fallback to QCoachMaia if not found
+        // fallback to MaiaGenericH if not found
         try {
           const { default: fallbackFlow } = await import(
-            "@/data/flows/GeneralShort.json"
+            "@/data/flows/MaiaGenericH.json"
           );
           flowData.value = fallbackFlow;
-          console.log("Loaded fallback flow QCoachMaia.json");
+          console.log("Loaded fallback flow MaiaGenericH.json");
         } catch (fallbackError) {
           console.error(
-            "Failed to load fallback QCoachMaia.json",
+            "Failed to load fallback MaiaGenericH.json",
             fallbackError
           );
         }

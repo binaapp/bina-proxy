@@ -26,7 +26,13 @@ async function getUserProfile(uid) {
 async function updateUserProfile(uid, updates) {
   if (!updates || Object.keys(updates).length === 0) return;
   
-  const fields = Object.keys(updates);
+  const validColumns = [
+    "strengths", "weaknesses", "paradigms", "user_values", "goals", "intuition",
+    "tools_used", "Not_to_do", "user_history", "user_stories", "user_language",
+    "current_mission", "learning_history", "notes", "assignments"
+  ];
+  const fields = Object.keys(updates).filter(f => validColumns.includes(f));
+  
   const values = fields.map(f => {
     const value = updates[f];
     // Convert arrays to JSON strings, leave other types as-is
@@ -35,6 +41,8 @@ async function updateUserProfile(uid, updates) {
   
   const setClause = fields.map(f => `\`${f}\` = ?`).join(', ');
   
+  console.log("updateUserProfile updates object:", updates);
+  console.log("updateUserProfile fields:", fields);
   console.log(`Updating user ${uid} with complete data for fields:`, fields);
   console.log("Update values:", values);
   
@@ -82,11 +90,13 @@ strengths, weaknesses, paradigms, user_values, goals, intuition, tools_used, Not
 
 ‼️ Important:
 - For all fields: preserve all relevant existing data, update/refine if needed, add new insights from this session, and remove anything no longer accurate.
+- Return these fields and only these fields.Don't add any other fields.
 - For "current_mission": replace any previous assignment with the most recent one from this session only.
+- For "user_language": return an array with the specific phrases or words in their language.
 
 3. "summary_email_text": An object with:
 {
-The coach's name for this session is: ${coachName || 'מאיה'}. Please sign the email with this name.
+The coach's name for this session is: ${coachName || 'מיה'}. Please sign the email with this name.
   "subject_line": "Your email subject line here",
   "body": "A short, friendly email to the user, written as if from their coach. The email should summarize only the current session (do not use information from previous sessions or the profile). Include key insights and, if an assignment was given in this session, describe it clearly. If no assignment was given, end with a brief inspirational comment or encouragement."
 For both fields use the same language (Hebrew/English) as the user used in this session
@@ -95,7 +105,22 @@ For both fields use the same language (Hebrew/English) as the user used in this 
 Output only a single valid JSON object in this format:
 {
   "session_overview": "Short summary...",
-  "user_profile_updates": { ... },
+  "user_profile_updates": {
+    "strengths": [...],
+    "weaknesses": [...],
+    "paradigms": [...],
+    "user_values": [...],
+    "goals": [...],
+    "intuition": [...],
+    "tools_used": [...],
+    "Not_to_do": [...],
+    "user_history": [...],
+    "user_stories": [...],
+    "user_language": [...],
+    "current_mission": [...],
+    "learning_history": [...],
+    "notes": [...]
+  },
   "summary_email_text": {
     "subject_line": "Your subject line",
     "body": "Your email content..."

@@ -772,14 +772,12 @@ app.get('/api/user-profile/:uid', async (req, res) => {
     const learning_history = safeJsonParse(userProfile.learning_history);
     if (learning_history) parsedProfile.learning_history = learning_history;
     
-    // For text fields, only include if they have content
-    if (userProfile.user_history && userProfile.user_history.trim()) {
-      parsedProfile.user_history = userProfile.user_history;
-    }
+    // Handle user_history and notes as JSON fields, not text fields
+    const user_history = safeJsonParse(userProfile.user_history);
+    if (user_history) parsedProfile.user_history = user_history;
     
-    if (userProfile.notes && userProfile.notes.trim()) {
-      parsedProfile.notes = userProfile.notes;
-    }
+    const notes = safeJsonParse(userProfile.notes);
+    if (notes) parsedProfile.notes = notes;
 
     console.log("[GET /api/user-profile/:uid] Returning user profile for UID:", uid);
     console.log("[GET /api/user-profile/:uid] Profile data:", parsedProfile);

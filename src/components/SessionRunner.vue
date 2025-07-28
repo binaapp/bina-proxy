@@ -722,7 +722,7 @@ async function analyzeSessionAfterCompletion() {
     const sessionIdVal = sessionId.value; // sessionId is a ref in your component
     const transcript = sessionHistory.value; // full conversation log
 
-    console.log("[SessionRunner] coachData.name:", props.coachData?.name);
+    console.log("[SessionRunner] coachData.name:", props.flowData?.coachName);
     // === FIX: Add userEmail and userName ===
     const requestBody = {
       sessionId: sessionIdVal,
