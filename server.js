@@ -714,11 +714,11 @@ app.get('/api/user-profile/:uid', async (req, res) => {
 
     const connection = await pool.getConnection();
 
-    // Get user profile info
+    // Get user profile info - ADD nickname and gender fields
     const [userRows] = await connection.query(
       `SELECT strengths, weaknesses, paradigms, user_values, goals, intuition, 
               tools_used, Not_to_do, user_history, user_stories, user_language, 
-              current_mission, learning_history, notes
+              current_mission, learning_history, notes, nickname, gender
        FROM users WHERE uid = ?`,
       [uid]
     );
@@ -778,6 +778,10 @@ app.get('/api/user-profile/:uid', async (req, res) => {
     
     const notes = safeJsonParse(userProfile.notes);
     if (notes) parsedProfile.notes = notes;
+
+    // Add nickname and gender fields
+    if (userProfile.nickname) parsedProfile.nickname = userProfile.nickname;
+    if (userProfile.gender) parsedProfile.gender = userProfile.gender;
 
     console.log("[GET /api/user-profile/:uid] Returning user profile for UID:", uid);
     console.log("[GET /api/user-profile/:uid] Profile data:", parsedProfile);

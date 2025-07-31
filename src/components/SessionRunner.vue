@@ -117,6 +117,8 @@ const loadUserProfile = async (uid) => {
         current_mission: [],
         learning_history: [],
         notes: null,
+        nickname: null, // Add this
+        gender: null, // Add this
       };
     }
   } catch (error) {
@@ -137,6 +139,8 @@ const loadUserProfile = async (uid) => {
       current_mission: [],
       learning_history: [],
       notes: null,
+      nickname: null, // Add this
+      gender: null, // Add this
     };
   }
 };

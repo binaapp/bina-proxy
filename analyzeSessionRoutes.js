@@ -29,7 +29,7 @@ async function updateUserProfile(uid, updates) {
   const validColumns = [
     "strengths", "weaknesses", "paradigms", "user_values", "goals", "intuition",
     "tools_used", "Not_to_do", "user_history", "user_stories", "user_language",
-    "current_mission", "learning_history", "notes", "assignments"
+    "current_mission", "learning_history", "notes", "assignments", "nickname", "gender"
   ];
   const fields = Object.keys(updates).filter(f => validColumns.includes(f));
   
@@ -117,6 +117,10 @@ Based on the full coaching conversation in this session and the existing user pr
 
 2. "user_profile_updates": An object with the COMPLETE, up-to-date values for each of the following fields:
 strengths, weaknesses, paradigms, user_values, goals, intuition, tools_used, Not_to_do, user_history, user_stories, user_language, current_mission, learning_history, notes. 
+
+Also include:
+- nickname: The name the user prefers to be called, if they used one in this session (e.g., "call me Dana"). Only include it if it was newly mentioned or updated. It should be a simple string (not a JSON array). CRITICAL: Preserve the nickname exactly as the user wrote it in their original language - do not translate, transliterate, or anglicize it. If they wrote "חן", save it as "חן", not "Chen". If they wrote "דנה", save it as "דנה", not "Dana".
+- gender: If the session clearly revealed the user's preferred gender for language use (e.g., feminine or masculine), return a string value such as "female" or "male". Only include it if it was made clear in this session and it's not already saved.
 
 ‼️ Important:
 - For all fields: preserve all relevant existing data, update/refine if needed, add new insights from this session, and remove anything no longer accurate.
