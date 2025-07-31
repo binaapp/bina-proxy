@@ -58,15 +58,45 @@ async function updateSessionSummary(sessionId, summaryJson) {
 }
 
 function extractJsonFromText(text) {
+  console.log("=== EXTRACT JSON DEBUG ===");
+  console.log("Input text type:", typeof text);
+  console.log("Input text length:", text.length);
+  console.log("Input text starts with:", text.substring(0, 50));
+  console.log("Input text ends with:", text.substring(text.length - 50));
+  
   const firstBrace = text.indexOf('{');
   const lastBrace = text.lastIndexOf('}');
-  if (firstBrace === -1 || lastBrace === -1) return null;
-  const jsonString = text.substring(firstBrace, lastBrace + 1);
-  try {
-    return JSON.parse(jsonString);
-  } catch (e) {
+  console.log("First brace at:", firstBrace);
+  console.log("Last brace at:", lastBrace);
+  
+  if (firstBrace === -1 || lastBrace === -1) {
+    console.log("No braces found, returning null");
     return null;
   }
+  
+  let jsonString = text.substring(firstBrace, lastBrace + 1);
+  console.log("Extracted JSON string length:", jsonString.length);
+  console.log("Extracted JSON starts with:", jsonString.substring(0, 100));
+  
+  // Repair JSON: replace newlines inside string values with \\n
+  jsonString = repairJsonString(jsonString);
+
+  try {
+    const parsed = JSON.parse(jsonString);
+    console.log("JSON parsing successful!");
+    return parsed;
+  } catch (e) {
+    console.log("JSON parsing failed with error:", e.message);
+    console.log("Error details:", e);
+    return null;
+  }
+}
+
+function repairJsonString(jsonString) {
+  // Replace newlines inside string values with \\n
+  return jsonString.replace(/"([^"\\]*(\\.[^"\\]*)*)"/g, (match) =>
+    match.replace(/\n/g, '\\n')
+  );
 }
 
 router.post('/analyze-session', async (req, res) => {
@@ -91,14 +121,14 @@ strengths, weaknesses, paradigms, user_values, goals, intuition, tools_used, Not
 ‼️ Important:
 - For all fields: preserve all relevant existing data, update/refine if needed, add new insights from this session, and remove anything no longer accurate.
 - Return these fields and only these fields.Don't add any other fields.
-- For "current_mission": replace any previous assignment with the most recent one from this session only.
+- For "current_mission": replace any previous assignment with the most recent one from this session only. Don't invent an assignment but use the one from the end of the session.
 - For "user_language": return an array with the specific phrases or words in their language.
 
 3. "summary_email_text": An object with:
 {
 The coach's name for this session is: ${coachName || 'מיה'}. Please sign the email with this name.
   "subject_line": "Your email subject line here",
-  "body": "A short, friendly email to the user, written as if from their coach. The email should summarize only the current session (do not use information from previous sessions or the profile). Include key insights and, if an assignment was given in this session, describe it clearly. If no assignment was given, end with a brief inspirational comment or encouragement."
+"body": "Write a short, warm email to the user, as if from their personal coach. This is not a summary — it’s a personal message that helps the user feel seen, valued, and inspired.\n\nTo do this well, you must:\n\n1. Use the **current session transcript** to reflect the main theme and mood.\n2. Include any assignment or task, written clearly and simply.\n3. Look beyond the current session: **use all available information about the user**, including their profile, stories, strengths, values, challenges, and language. This is essential.\n\n<b>Create a moment of deep insight or resonance.</b> Don’t just reflect what the user said — offer them a gift: a new way to understand themselves. This could be a surprising connection, a shift in perspective, or something meaningful hiding in plain sight. Be emotionally intelligent and precise.\n\nAvoid clichés and vague praise. Be specific, thoughtful, and personal.\n\n📓 If an assignment was given, include a gentle suggestion to write their answer or reflection in their coaching notebook.\n\nClose with warmth and a reminder that they can return to the chat with Bina anytime at: <b>www.binaapp.com/chat</b>."
 For both fields use the same language (Hebrew/English) as the user used in this session
   }
 
@@ -130,7 +160,7 @@ Output only a single valid JSON object in this format:
 
     const claudeRequest = {
       model: "claude-3-5-sonnet-20241022",
-      max_tokens: 2500, // Increased for complete profiles
+      max_tokens: 8000, // Increased for complete profiles
       temperature: 0.7,
       system: strictPrompt,
       messages: [
@@ -146,8 +176,8 @@ Output only a single valid JSON object in this format:
       return res.status(500).json({ error: "Claude API key not configured" });
     }
 
-    const preferredModel = "claude-3-opus-20240229";
-    const fallbackModel = "claude-3-haiku-20240307"; // or another fallback
+    const preferredModel = "claude-3-5-sonnet-20241022"; // Change this to Sonnet
+    const fallbackModel = "claude-3-haiku-20240307"; // Keep Haiku as fallback
     let aiResponse;
 
     // Initial call (unchanged)
@@ -201,7 +231,9 @@ Output only a single valid JSON object in this format:
     
     // === END: Claude API call ===
 
-    const summaryJson = extractJsonFromText(text);
+    // Fix: Convert text to string if it's not already
+    const textString = typeof text === 'string' ? text : JSON.stringify(text);
+    const summaryJson = extractJsonFromText(textString);
 
     if (!summaryJson) {
       console.error("Failed to extract/parse JSON from Claude response:", text);
