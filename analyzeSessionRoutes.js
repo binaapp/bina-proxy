@@ -29,7 +29,8 @@ async function updateUserProfile(uid, updates) {
   const validColumns = [
     "strengths", "weaknesses", "paradigms", "user_values", "goals", "intuition",
     "tools_used", "Not_to_do", "user_history", "user_stories", "user_language",
-    "current_mission", "learning_history", "notes", "assignments", "nickname", "gender"
+    "current_mission", "learning_history", "notes", "assignments", "nickname", "gender",
+    "coaching_goal" // <-- Add this line
   ];
   const fields = Object.keys(updates).filter(f => validColumns.includes(f));
   
