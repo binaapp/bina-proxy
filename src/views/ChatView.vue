@@ -9,9 +9,19 @@
           :key="index"
           :class="['message', messageTypes[index]]"
         >
-          <!-- User messages: always use the same markup -->
+          <!-- Decorative line -->
           <div
-            v-if="messageTypes[index] === 'user'"
+            v-if="messageTypes[index] === 'decorative-line'"
+            class="decorative-line-container"
+          >
+            <div class="decorative-line">
+              <div class="starburst"></div>
+            </div>
+          </div>
+
+          <!-- Regular messages -->
+          <div
+            v-else-if="messageTypes[index] === 'user'"
             class="user-message-container"
           >
             <div class="user-message-lines">
@@ -21,8 +31,12 @@
             </div>
             <img src="/user.png" alt="User" class="user-avatar" />
           </div>
-          <!-- Bot messages: show Maia's avatar and message bubble(s) -->
-          <div v-else class="bot-message-container">
+
+          <!-- Bot messages -->
+          <div
+            v-else-if="messageTypes[index] === 'bot'"
+            class="bot-message-container"
+          >
             <img src="/maia.jpg" alt="Maia" class="maia-avatar" />
             <div class="bot-message-lines">
               <div class="bot-message">
@@ -42,11 +56,42 @@
                   ></div>
                 </template>
               </div>
+              <!-- Add button if message has button data -->
+              <div
+                v-if="messageButtons[index]"
+                class="message-button-container"
+              >
+                <a
+                  :href="messageButtons[index].url"
+                  target="_blank"
+                  class="message-button"
+                >
+                  {{ messageButtons[index].text }}
+                </a>
+              </div>
+              <!-- Show button only for the session end message -->
+              <div
+                v-if="
+                  sessionEndConfig &&
+                  message === sessionEndConfig.message &&
+                  !messageButtons[index]
+                "
+                class="message-button-container"
+              >
+                <a
+                  :href="sessionEndConfig.buttonUrl"
+                  target="_blank"
+                  class="message-button"
+                >
+                  {{ sessionEndConfig.buttonText }}
+                </a>
+              </div>
             </div>
           </div>
         </div>
       </transition-group>
 
+      <!-- Session End UI -->
       <transition name="fade">
         <TypingIndicator v-if="sessionRunner?.isAwaitingAi" />
       </transition>
@@ -61,7 +106,8 @@
       </transition>
     </section>
 
-    <div class="chat-box">
+    <!-- Hide chat box when session is completed -->
+    <div class="chat-box" v-if="showChatBox">
       <textarea
         v-model="userInput"
         placeholder="Type anything, I'm listening"
@@ -90,6 +136,9 @@
       @message-sent="handleMessageSent"
       @ai-response="handleAiResponse"
       @session-complete="handleSessionComplete"
+      @session-completed="handleSessionCompleted"
+      @hide-chat-ui="hideChatUI"
+      @session-end-ready="handleSessionEndReady"
       @debug-message="(msg) => console.log('SessionRunner:', msg)"
       @session-restored="handleSessionRestored"
     />
@@ -106,6 +155,7 @@ import { useInteractionLimiter } from "../composables/useInteractionLimiter.js";
 import { submitSession } from "@/utils/sessionApi";
 import AppHeader from "@/components/AppHeader.vue";
 import { useRoute } from "vue-router"; // <-- add this
+import { FEATURE_FLAGS } from "@/utils/config.js";
 
 export default {
   name: "ChatView",
@@ -126,6 +176,12 @@ export default {
     const chatContentRef = ref(null); // Reference to chat content container
     const restoredIndexes = ref(new Set());
     const visibleBotLines = ref([]); // Track visible lines for each bot message
+    const isSessionCompleted = ref(false); // Add this new property
+    const showChatBox = ref(true); // Add this to control chat box visibility
+    const pendingSessionEnd = ref(false); // Make sure this is defined as ref(false)
+
+    // Add reactive array to store button data for each message
+    const messageButtons = ref([]);
 
     // Get source from URL parameters
     const urlParams = new URLSearchParams(window.location.search);
@@ -186,8 +242,55 @@ export default {
       messageTypes.value = history.map((msg) =>
         msg.role === "assistant" ? "bot" : "user"
       );
+
+      // Initialize messageButtons array for restored messages
+      messageButtons.value = history.map(() => null); // No buttons for restored messages initially
+
       // Mark all current messages as restored
       restoredIndexes.value = new Set(chatMessages.value.map((_, idx) => idx));
+
+      // If chat box is hidden (meaning session was completed), add session end message
+      if (!showChatBox.value && FEATURE_FLAGS.ENABLE_SESSION_END_LOGIC) {
+        const sessionEndConfig = flowData.value?.sessionEnd;
+        // === FIX: Only add if not already present ===
+        if (
+          sessionEndConfig &&
+          !chatMessages.value.includes(sessionEndConfig.message)
+        ) {
+          // Add decorative line
+          chatMessages.value.push("DECORATIVE_LINE");
+          messageTypes.value.push("decorative-line");
+          messageButtons.value.push(null);
+
+          // Add session end message
+          chatMessages.value.push(sessionEndConfig.message);
+          messageTypes.value.push("bot");
+
+          // Add button data for the session end message
+          if (sessionEndConfig.buttonText && sessionEndConfig.buttonUrl) {
+            messageButtons.value.push({
+              text: sessionEndConfig.buttonText,
+              url: sessionEndConfig.buttonUrl,
+            });
+          } else {
+            messageButtons.value.push(null);
+          }
+        }
+      }
+
+      // After restoring chatMessages and messageTypes
+      const sessionEndConfig = flowData.value?.sessionEnd;
+      if (sessionEndConfig) {
+        chatMessages.value.forEach((msg, idx) => {
+          if (msg === sessionEndConfig.message) {
+            messageButtons.value[idx] = {
+              text: sessionEndConfig.buttonText,
+              url: sessionEndConfig.buttonUrl,
+            };
+          }
+        });
+      }
+
       nextTick(() => {
         if (chatContentRef.value) {
           chatContentRef.value.scrollTop = chatContentRef.value.scrollHeight;
@@ -254,6 +357,26 @@ export default {
           await new Promise((resolve) => setTimeout(resolve, 500)); // normal line animation
         }
       }
+
+      // Add button data if provided
+      if (message.buttonText && message.buttonUrl) {
+        messageButtons.value.push({
+          text: message.buttonText,
+          url: message.buttonUrl,
+        });
+      } else {
+        messageButtons.value.push(null);
+      }
+
+      // After AI response is complete, check if we need to show session end
+      if (pendingSessionEnd.value) {
+        pendingSessionEnd.value = false; // Reset the flag
+
+        // === Add delay before showing session end UI ===
+        await new Promise((resolve) => setTimeout(resolve, 3000)); // 2 seconds
+
+        showSessionEndUI();
+      }
     }
 
     function isBulletLine(line) {
@@ -262,6 +385,76 @@ export default {
     }
 
     const isRtl = computed(() => flowData.value?.rtl === true);
+    const sessionEndConfig = computed(() => flowData.value?.sessionEnd);
+
+    function handleSessionEndReady() {
+      console.log("Session end ready, will show after AI response");
+
+      // Just check the variable directly
+      if (FEATURE_FLAGS.ENABLE_SESSION_END_LOGIC) {
+        pendingSessionEnd.value = true; // Now this should work
+      }
+    }
+
+    function showSessionEndUI() {
+      const sessionEndConfig = flowData.value?.sessionEnd;
+      if (sessionEndConfig) {
+        // === BEGIN FIX: Prevent duplicate session end message/button ===
+        // Check if the session end message already exists in chatMessages
+        const alreadyExists = chatMessages.value.includes(
+          sessionEndConfig.message
+        );
+        if (alreadyExists) {
+          return; // Do not add again
+        }
+        // === END FIX ===
+
+        // Add decorative line
+        chatMessages.value.push("DECORATIVE_LINE");
+        messageTypes.value.push("decorative-line");
+        messageButtons.value.push(null);
+
+        // Add session end message
+        chatMessages.value.push(sessionEndConfig.message);
+        messageTypes.value.push("bot");
+
+        // Add button data for this message
+        messageButtons.value.push({
+          text: sessionEndConfig.buttonText,
+          url: sessionEndConfig.buttonUrl,
+        });
+
+        // Hide the chat box only if feature flag is enabled
+        if (FEATURE_FLAGS.ENABLE_SESSION_END_LOGIC) {
+          showChatBox.value = false;
+        }
+      }
+    }
+
+    function handleSessionCompleted() {
+      console.log("=== handleSessionCompleted called ===");
+      console.log("Current flowData:", flowData.value);
+      console.log("Current sessionEnd config:", flowData.value?.sessionEnd);
+
+      isSessionCompleted.value = true;
+
+      // Only hide chat box if feature flag is enabled
+      if (FEATURE_FLAGS.ENABLE_SESSION_END_LOGIC) {
+        showChatBox.value = false;
+      }
+
+      // Check if there's a sessionEnd configuration in the flow
+      const sessionEndConfig = flowData.value?.sessionEnd;
+
+      if (sessionEndConfig && FEATURE_FLAGS.ENABLE_SESSION_END_LOGIC) {
+        console.log("Session end config found, calling showSessionEndUI");
+        showSessionEndUI();
+      } else {
+        console.log(
+          "No session end config found in flow or feature flag disabled"
+        );
+      }
+    }
 
     return {
       sessionRunner,
@@ -282,8 +475,15 @@ export default {
       getVisibleBotMessageLines,
       getVisibleBotMessage,
       handleAiResponse,
+      handleSessionEndReady, // Add this
       isBulletLine,
       isRtl,
+      isSessionCompleted, // Add this to template
+      showChatBox, // Add this to template
+      pendingSessionEnd, // Add this to template
+      messageButtons, // Add this to template
+      handleSessionCompleted,
+      sessionEndConfig, // Add this to template
     };
   },
   methods: {
@@ -388,10 +588,13 @@ export default {
     handleSessionComplete(sessionData) {
       console.log("Session completed:", sessionData);
 
+      // Hide chat interface
+      this.isSessionCompleted = true;
+
       // Submit the completed session to the database
       try {
         submitSession({
-          startedAt: new Date(Date.now() - 600000).toISOString(), // Default to 10 minutes ago
+          startedAt: new Date(Date.now() - 600000).toISOString(),
           endedAt: new Date().toISOString(),
           completed: true,
           flowSteps: sessionData.history.map((msg, index) => ({
@@ -405,7 +608,7 @@ export default {
             userText: msg.role === "user" ? msg.content : "",
             systemText: msg.role === "assistant" ? msg.content : "",
           })),
-          feedback: null, // Feedback will be submitted separately through the form
+          feedback: null,
         });
       } catch (error) {
         console.error("Failed to submit session:", error);
@@ -435,6 +638,22 @@ export default {
           await new Promise((resolve) => setTimeout(resolve, delay));
         }
       }
+    },
+
+    handleSessionEndMessage(data) {
+      console.log("Session end message received:", data);
+      // this.sessionEndData = data; // This line is removed
+
+      // Scroll to show the session end UI
+      this.$nextTick(() => {
+        this.scrollToBottom();
+      });
+    },
+
+    hideChatUI() {
+      console.log("Hiding chat UI");
+      this.showChatBox = false;
+      // Don't clear sessionEndData here - let it show the session end UI
     },
   },
   mounted() {
@@ -786,5 +1005,270 @@ export default {
 .rtl .user-message-bubble {
   direction: rtl !important;
   text-align: right !important;
+}
+
+/* Session End UI Styles */
+.session-end-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: var(--content-width);
+  margin: var(--spacing-lg) auto;
+  padding: 0 var(--spacing-sm);
+}
+
+.decorative-line {
+  position: relative;
+  width: 100%;
+  max-width: 700px; /* Match the chat bubble max-width */
+  height: 2px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    var(--color-secondary),
+    transparent
+  );
+  margin-bottom: var(--spacing-lg);
+}
+
+.starburst {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 12px;
+  height: 12px;
+  background: var(--color-secondary);
+  clip-path: polygon(
+    50% 0%,
+    61% 35%,
+    98% 35%,
+    68% 57%,
+    79% 91%,
+    50% 70%,
+    21% 91%,
+    32% 57%,
+    2% 35%,
+    39% 35%
+  );
+}
+
+.session-end-card {
+  position: relative;
+  background: var(--color-background-alt);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-xl);
+  width: 100%;
+  box-shadow: 0 4px 20px var(--color-shadow);
+  display: flex;
+  gap: var(--spacing-lg);
+}
+
+.bina-logo {
+  position: absolute;
+  left: -60px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.logo-circle {
+  width: 50px;
+  height: 50px;
+  border: 2px solid var(--color-secondary);
+  border-radius: var(--border-radius-circular);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(196, 162, 126, 0.1);
+}
+
+.logo-pattern {
+  width: 30px;
+  height: 30px;
+  background: radial-gradient(
+      ellipse at 30% 30%,
+      var(--color-secondary) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      ellipse at 70% 70%,
+      var(--color-secondary) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      ellipse at 50% 50%,
+      var(--color-secondary) 0%,
+      transparent 60%
+    );
+  border-radius: var(--border-radius-circular);
+}
+
+.session-end-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.session-end-message {
+  color: var(--color-primary);
+  font-size: var(--font-size-lg);
+  line-height: 1.6;
+  white-space: pre-line;
+  text-align: right;
+  font-family: var(--font-family-primary);
+}
+
+.session-end-button-container {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--spacing-sm);
+}
+
+.session-end-button {
+  background: var(--color-secondary);
+  color: var(--color-primary);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--border-radius-md);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: var(--font-size-md);
+  font-family: var(--font-family-primary);
+  transition: var(--transition-normal);
+  border: none;
+  cursor: pointer;
+  display: inline-block;
+}
+
+.session-end-button:hover {
+  background: var(--color-secondary-light);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(196, 162, 126, 0.3);
+}
+
+.session-end-button:active {
+  transform: translateY(0);
+}
+
+/* Responsive adjustments */
+@media (max-width: var(--breakpoint-tablet)) {
+  .session-end-card {
+    padding: var(--spacing-lg);
+    flex-direction: column;
+  }
+
+  .bina-logo {
+    position: static;
+    transform: none;
+    align-self: center;
+    margin-bottom: var(--spacing-sm);
+  }
+
+  .session-end-message {
+    text-align: center;
+  }
+
+  .session-end-button-container {
+    justify-content: center;
+  }
+}
+
+/* Fade transition for session end UI */
+.fade-enter-active,
+.fade-leave-active {
+  transition: var(--transition-normal);
+}
+
+.fade-enter-from {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.fade-enter-to {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Decorative line styles */
+.decorative-line-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  margin: 1rem 0;
+  padding: 0 1rem; /* Add padding to match chat content */
+}
+
+.decorative-line {
+  position: relative;
+  width: 100%;
+  max-width: 700px; /* Match the chat bubble max-width */
+  height: 2px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    var(--color-secondary),
+    transparent
+  );
+}
+
+.starburst {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 12px;
+  height: 12px;
+  background: var(--color-secondary);
+  clip-path: polygon(
+    50% 0%,
+    61% 35%,
+    98% 35%,
+    68% 57%,
+    79% 91%,
+    50% 70%,
+    21% 91%,
+    32% 57%,
+    2% 35%,
+    39% 35%
+  );
+  box-shadow: 0 0 8px rgba(196, 162, 126, 0.6);
+}
+
+.message-button-container {
+  margin-top: 0.75rem;
+  display: flex;
+  justify-content: flex-start;
+}
+
+/* Add RTL support for message button alignment */
+.rtl .message-button-container {
+  justify-content: flex-end;
+}
+
+.message-button {
+  background: var(--color-secondary);
+  color: var(--color-primary);
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.9rem;
+  font-family: inherit;
+  transition: all 0.2s ease;
+  border: none;
+  cursor: pointer;
+  display: inline-block;
+}
+
+.message-button:hover {
+  background: var(--color-secondary-light);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(196, 162, 126, 0.3);
+}
+
+.message-button:active {
+  transform: translateY(0);
 }
 </style>

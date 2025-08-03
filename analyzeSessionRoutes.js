@@ -116,7 +116,7 @@ Based on the full coaching conversation in this session and the existing user pr
 1. "session_overview": A 2–4 sentence summary of the session’s main themes, mood, and key moments.
 
 2. "user_profile_updates": An object with the COMPLETE, up-to-date values for each of the following fields:
-strengths, weaknesses, paradigms, user_values, goals, intuition, tools_used, Not_to_do, user_history, user_stories, user_language, current_mission, learning_history, notes. 
+strengths, weaknesses, paradigms, user_values, goals, intuition, tools_used, Not_to_do, user_history, user_stories, user_language, current_mission, learning_history, notes, coaching_goal. 
 
 Also include:
 - nickname: The name the user prefers to be called, if they used one in this session (e.g., "call me Dana"). Only include it if it was newly mentioned or updated. It should be a simple string (not a JSON array). CRITICAL: Preserve the nickname exactly as the user wrote it in their original language - do not translate, transliterate, or anglicize it. If they wrote "חן", save it as "חן", not "Chen". If they wrote "דנה", save it as "דנה", not "Dana".
@@ -125,7 +125,10 @@ Also include:
 ‼️ Important:
 - For all fields: preserve all relevant existing data, update/refine if needed, add new insights from this session, and remove anything no longer accurate.
 - Return these fields and only these fields.Don't add any other fields.
-- For "current_mission": replace any previous assignment with the most recent one from this session only. Don't invent an assignment but use the one from the end of the session.
+- For "coaching_goal": Only include this field if the purpose of the session was to define the user's coaching goal for the overall process.
+This is not the session assignment (current_mission), but the broader intention or desired outcome the user wants to achieve through coaching.
+Return as array. 
+- For "current_mission": replace any previous assignment with the most recent one from this session only. Don't invent an assignment but use the one from the end of the session. return an array
 - For "user_language": return an array with the specific phrases or words in their language.
 
 3. "summary_email_text": An object with:
@@ -144,6 +147,7 @@ Output only a single valid JSON object in this format:
     "weaknesses": [...],
     "paradigms": [...],
     "user_values": [...],
+    "coaching_goal": [...],
     "goals": [...],
     "intuition": [...],
     "tools_used": [...],

@@ -1,6 +1,6 @@
 <script setup>
 /* eslint-disable no-unused-vars */
-import { ref, reactive, computed, onMounted, onUnmounted } from "vue";
+import { ref, reactive, computed, onMounted, onUnmounted, nextTick } from "vue";
 import AiStep from "./AiStep.vue";
 import {
   submitSession,
@@ -11,6 +11,7 @@ import {
 import { useRoute } from "vue-router";
 import { auth } from "../firebase";
 import { onAuthStateChanged } from "firebase/auth";
+import { isFeatureEnabled } from "@/utils/config.js";
 
 const props = defineProps({
   flowData: {
@@ -39,6 +40,9 @@ const emit = defineEmits([
   "debug-message",
   "session-restored",
   "ai-step-trigger",
+  "hide-chat-ui",
+  "session-end-ready", // Add this new event
+  "session-completed", // Add this new event
 ]);
 
 const userInput = computed({
@@ -218,6 +222,17 @@ onMounted(async () => {
         sessionId.value = data.sessionId || null;
         userName.value = data.userName || "";
         sessionHistory.value = Array.isArray(data.history) ? data.history : [];
+
+        // Check if session was completed
+        if (data.session?.completed) {
+          console.log(
+            "[SessionRunner] Session was completed, setting completion state"
+          );
+          isSessionComplete.value = true;
+
+          // Emit session completion to ChatView
+          emit("session-completed");
+        }
 
         if (data.steps?.length > 0) {
           const lastStep = data.steps[data.steps.length - 1];
@@ -541,21 +556,34 @@ const handleStepResult = async (result) => {
   }
 
   // Also, after the very last step (if not already handled), ensure session is marked complete
-  if (
-    currentStepIndex.value === props.flowData.steps.length - 1 &&
-    props.flowData.steps[currentStepIndex.value].name === "closing"
-  ) {
+  if (props.flowData.steps[currentStepIndex.value].name === "closing") {
     isSessionComplete.value = true;
     await saveStepToDatabase("", result.reply, false);
-    analyzeSessionAfterCompletion(); // <-- Add this line
+
+    // Add your new logic AFTER sending the AI response
+    if (isFeatureEnabled("ENABLE_SESSION_END_LOGIC")) {
+      emit("session-end-ready");
+    }
+
+    analyzeSessionAfterCompletion();
   }
 
   // Send the complete response (may include both AI reply and closing message)
   const currentStep = props.flowData.steps[currentStepIndex.value];
+
+  // If session is complete, pass a callback to run after AI response
+  const onComplete =
+    isSessionComplete.value && isFeatureEnabled("ENABLE_SESSION_END_LOGIC")
+      ? async () => {
+          // This onComplete is now handled by ChatView
+        }
+      : undefined;
+
   emit("ai-response", {
     message: responseMessage,
     type: "bot",
     showButton: currentStep?.showButton || null,
+    onComplete: onComplete,
   });
 
   // Reset waiting state
@@ -703,7 +731,6 @@ defineExpose({
   currentStepIndex,
 });
 
-// Add this function in your <script setup> or methods
 async function analyzeSessionAfterCompletion() {
   try {
     // Use a promise-based approach to get the current user
@@ -753,6 +780,31 @@ async function analyzeSessionAfterCompletion() {
     await loadUserProfile(uid);
   } catch (err) {
     console.error("Failed to analyze session:", err);
+  }
+}
+
+// Add this function right before analyzeSessionAfterCompletion()
+async function yourNewSessionEndLogic() {
+  try {
+    console.log("[SessionRunner] Running new session end logic");
+
+    // Get session end configuration from flow data
+    const sessionEndConfig = props.flowData.sessionEnd;
+
+    if (sessionEndConfig) {
+      // Emit session end data with the configuration
+      emit("session-end-message", {
+        message: sessionEndConfig.message,
+        buttonText: sessionEndConfig.buttonText,
+        buttonUrl: sessionEndConfig.buttonUrl,
+        showBinaLogo: sessionEndConfig.showBinaLogo,
+      });
+    }
+
+    // Emit the event to hide the chat UI
+    emit("hide-chat-ui");
+  } catch (err) {
+    console.error("Failed to run new session end logic:", err);
   }
 }
 </script>
