@@ -717,7 +717,7 @@ app.get('/api/user-profile/:uid', async (req, res) => {
     // Get user profile info - ADD nickname and gender fields
     const [userRows] = await connection.query(
       `SELECT strengths, weaknesses, paradigms, user_values, goals, intuition, 
-              tools_used, Not_to_do, user_history, user_stories, user_language, 
+              tools_used, User_Style, user_history, user_stories, user_language, 
               current_mission, learning_history, notes, nickname, gender
        FROM users WHERE uid = ?`,
       [uid]
@@ -757,22 +757,9 @@ app.get('/api/user-profile/:uid', async (req, res) => {
     const tools_used = safeJsonParse(userProfile.tools_used);
     if (tools_used) parsedProfile.tools_used = tools_used;
     
-    const Not_to_do = safeJsonParse(userProfile.Not_to_do);
-    if (Not_to_do) parsedProfile.Not_to_do = Not_to_do;
+    const User_Style = safeJsonParse(userProfile.User_Style);
+    if (User_Style) parsedProfile.User_Style = User_Style;
     
-    const user_stories = safeJsonParse(userProfile.user_stories);
-    if (user_stories) parsedProfile.user_stories = user_stories;
-    
-    const user_language = safeJsonParse(userProfile.user_language);
-    if (user_language) parsedProfile.user_language = user_language;
-    
-    const current_mission = safeJsonParse(userProfile.current_mission);
-    if (current_mission) parsedProfile.current_mission = current_mission;
-    
-    const learning_history = safeJsonParse(userProfile.learning_history);
-    if (learning_history) parsedProfile.learning_history = learning_history;
-    
-    // Handle user_history and notes as JSON fields, not text fields
     const user_history = safeJsonParse(userProfile.user_history);
     if (user_history) parsedProfile.user_history = user_history;
     

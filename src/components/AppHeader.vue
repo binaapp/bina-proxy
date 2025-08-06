@@ -114,12 +114,6 @@
           >
         </li>
         <li>
-          <a href="#" @click.prevent="goToSection('why')">Why It Works</a>
-        </li>
-        <li>
-          <a href="#" @click.prevent="goToSection('faq')">FAQ's</a>
-        </li>
-        <li>
           <a href="#" @click.prevent="goToSection('vision')">Our Vision</a>
         </li>
         <li>
@@ -134,7 +128,7 @@
         </li>
       </ul>
       <router-link to="/chat" class="menu-action" @click="menuOpen = false">
-        <button class="menu-action-btn">Try it Free</button>
+        <button class="menu-action-btn">Chat with Maia</button>
       </router-link>
     </nav>
   </header>
@@ -310,7 +304,7 @@ function closeUserMenu() {
 .hamburger-menu-modal {
   position: absolute;
   top: 70px;
-  left: 23%;
+  left: 13%;
   transform: translateX(-50%);
   max-width: 340px;
   background: #fff;

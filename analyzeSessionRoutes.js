@@ -16,7 +16,7 @@ const pool = require('./server').pool || mysql.createPool({
 // Helper: get user profile as an object
 async function getUserProfile(uid) {
   const [rows] = await pool.query(
-    `SELECT strengths, weaknesses, paradigms, user_values, goals, intuition, tools_used, Not_to_do, user_history, user_stories, user_language, current_mission, learning_history, notes
+    `SELECT strengths, weaknesses, paradigms, user_values, goals, intuition, tools_used, User_Style, user_history, user_stories, user_language, current_mission, learning_history, notes
      FROM users WHERE uid = ? LIMIT 1`, [uid]
   );
   return rows[0] || {};
@@ -28,7 +28,7 @@ async function updateUserProfile(uid, updates) {
   
   const validColumns = [
     "strengths", "weaknesses", "paradigms", "user_values", "goals", "intuition",
-    "tools_used", "Not_to_do", "user_history", "user_stories", "user_language",
+    "tools_used", "User_Style", "user_history", "user_stories", "user_language",
     "current_mission", "learning_history", "notes", "assignments", "nickname", "gender",
     "coaching_goal" // <-- Add this line
   ];
@@ -117,11 +117,11 @@ Based on the full coaching conversation in this session and the existing user pr
 1. "session_overview": A 2–4 sentence summary of the session’s main themes, mood, and key moments.
 
 2. "user_profile_updates": An object with the COMPLETE, up-to-date values for each of the following fields:
-strengths, weaknesses, paradigms, user_values, goals, intuition, tools_used, Not_to_do, user_history, user_stories, user_language, current_mission, learning_history, notes, coaching_goal. 
+strengths, weaknesses, paradigms, user_values, goals, intuition, tools_used, User_Style, user_history, user_stories, user_language, current_mission, learning_history, notes, coaching_goal. 
 
 Also include:
-- nickname: The name the user prefers to be called, if they used one in this session (e.g., "call me Dana"). Only include it if it was newly mentioned or updated. It should be a simple string (not a JSON array). CRITICAL: Preserve the nickname exactly as the user wrote it in their original language - do not translate, transliterate, or anglicize it. If they wrote "חן", save it as "חן", not "Chen". If they wrote "דנה", save it as "דנה", not "Dana".
-- gender: If the session clearly revealed the user's preferred gender for language use (e.g., feminine or masculine), return a string value such as "female" or "male". Only include it if it was made clear in this session and it's not already saved.
+- nickname: if the user's name (nickname) is not already saved in the database, you must save it now. Use the exact name the user used to refer to themselves during the session — exactly as they said or wrote it, in their original language.Do not translate, transliterate, or anglicize the name.  It should be a simple string (not a JSON array).
+- gender: If the user's gender is not already saved, and they clearly referred to themselves using gendered language (e.g., feminine or masculine Hebrew grammar), you must save: "female" if they used feminine forms, "male" if they used masculine forms
 
 ‼️ Important:
 - For all fields: preserve all relevant existing data, update/refine if needed, add new insights from this session, and remove anything no longer accurate.
@@ -136,7 +136,7 @@ Return as array.
 {
 The coach's name for this session is: ${coachName || 'מיה'}. Please sign the email with this name.
   "subject_line": "Your email subject line here",
-"body": "Write a short, warm email to the user, as if from their personal coach. This is not a summary — it’s a personal message that helps the user feel seen, valued, and inspired.\n\nTo do this well, you must:\n\n1. Use the **current session transcript** to reflect the main theme and mood.\n2. Include any assignment or task, written clearly and simply.\n3. Look beyond the current session: **use all available information about the user**, including their profile, stories, strengths, values, challenges, and language. This is essential.\n\n<b>Create a moment of deep insight or resonance.</b> Don’t just reflect what the user said — offer them a gift: a new way to understand themselves. This could be a surprising connection, a shift in perspective, or something meaningful hiding in plain sight. Be emotionally intelligent and precise.\n\nAvoid clichés and vague praise. Be specific, thoughtful, and personal.\n\n📓 If an assignment was given, include a gentle suggestion to write their answer or reflection in their coaching notebook.\n\nClose with warmth and a reminder that they can return to the chat with Bina anytime at: <b>www.binaapp.com/chat</b>."
+"body": "Write a short, warm email to the user, as if from their personal coach. This is not a summary — it’s a personal message that helps the user feel seen, valued, and inspired.\n\nTo do this well, you must:\n\n1. Use the **current session transcript** to reflect the main theme and mood.\n2. Include any assignment or task, written clearly and simply.\n3. Look beyond the current session: **use all available information about the user**, including their profile, stories, strengths, values, challenges, and language. This is essential.\n\nUse the user's name if it was shared. Be grounded, professional, and emotionally intelligent. Avoid exaggerated praise or clichés — instead, offer one clear, thoughtful reflection that helps the user see something meaningful in themselves or their journey. This could be a new perspective, a deeper insight, or a subtle connection.\n\nIf an assignment was given, include a gentle suggestion to write their answer or reflection in their coaching notebook.\n\nClose with warmth and a reminder that they can return to the chat with Bina anytime at: <b>www.binaapp.com/chat</b> — whether to continue practicing between sessions, or to open a free-flow coaching conversation about anything on their mind."
 For both fields use the same language (Hebrew/English) as the user used in this session
   }
 
@@ -152,7 +152,7 @@ Output only a single valid JSON object in this format:
     "goals": [...],
     "intuition": [...],
     "tools_used": [...],
-    "Not_to_do": [...],
+    "User_Style": [...],
     "user_history": [...],
     "user_stories": [...],
     "user_language": [...],
