@@ -92,9 +92,10 @@
       </transition-group>
 
       <!-- Session End UI -->
-      <transition name="fade">
-        <TypingIndicator v-if="sessionRunner?.isAwaitingAi" />
-      </transition>
+      <TypingIndicator
+        v-if="sessionRunner?.isAwaitingAi"
+        :isVisible="sessionRunner?.isAwaitingAi"
+      />
 
       <!-- Link button container -->
       <transition name="fade">
@@ -336,13 +337,8 @@ export default {
       return allLines.slice(0, visibleCount).join("\n");
     }
 
-    async function handleAiResponse({ message, type }) {
+    async function handleAiResponse({ message, type, onDisplayed }) {
       showLinkButton.value = false;
-
-      if (type === "bot") {
-        // Wait before showing the bot's message (keep TypingIndicator visible)
-        await new Promise((resolve) => setTimeout(resolve, 3000)); // 3 seconds, adjust as needed
-      }
 
       chatMessages.value.push(message);
       messageTypes.value.push(type);
@@ -356,6 +352,11 @@ export default {
           visibleBotLines.value[idx] = i;
           await new Promise((resolve) => setTimeout(resolve, 500)); // normal line animation
         }
+      }
+
+      // Call onDisplayed callback AFTER the line animation is complete
+      if (onDisplayed) {
+        onDisplayed();
       }
 
       // Add button data if provided

@@ -584,10 +584,11 @@ const handleStepResult = async (result) => {
     type: "bot",
     showButton: currentStep?.showButton || null,
     onComplete: onComplete,
+    onDisplayed: () => {
+      // Reset waiting state after the response is displayed
+      isAwaitingAi.value = false;
+    },
   });
-
-  // Reset waiting state
-  isAwaitingAi.value = false;
 };
 
 const handleUserSubmit = async () => {
