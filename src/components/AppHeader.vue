@@ -109,16 +109,19 @@
           >
         </li>
         <li>
-          <router-link to="/blog" class="menu-link" @click="menuOpen = false"
-            >Blog</router-link
+          <a href="#" class="menu-link" @click.prevent="openInNewTab('/blog')"
+            >Blog</a
           >
         </li>
         <li>
           <a href="#" @click.prevent="goToSection('vision')">Our Vision</a>
         </li>
         <li>
-          <router-link to="/contact" class="menu-link" @click="menuOpen = false"
-            >Contact Us</router-link
+          <a
+            href="#"
+            class="menu-link"
+            @click.prevent="openInNewTab('/contact')"
+            >Contact Us</a
           >
         </li>
         <li v-if="user">
@@ -127,9 +130,9 @@
           >
         </li>
       </ul>
-      <router-link to="/chat" class="menu-action" @click="menuOpen = false">
+      <a href="#" class="menu-action" @click.prevent="openInNewTab('/chat')">
         <button class="menu-action-btn">Chat with Maia</button>
-      </router-link>
+      </a>
     </nav>
   </header>
 </template>
@@ -197,6 +200,14 @@ async function handleSignOut() {
 
 function closeUserMenu() {
   userMenuOpen.value = false;
+}
+
+function openInNewTab(route) {
+  menuOpen.value = false;
+  const newWindow = window.open("", "_blank");
+  if (newWindow) {
+    newWindow.location.href = window.location.origin + route;
+  }
 }
 </script>
 
@@ -498,6 +509,29 @@ function closeUserMenu() {
   }
   .header-side.right {
     padding-right: 1rem; /* Increase as needed */
+  }
+
+  /* Mobile hamburger menu - small dropdown under hamburger */
+  .hamburger-menu-modal {
+    position: absolute;
+    top: 56px; /* Height of mobile header */
+    left: 6.5rem; /* Align with hamburger button */
+    max-width: calc(100vw - 1rem);
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+    z-index: 1000;
+    padding: 1rem;
+  }
+
+  .menu-list a {
+    padding: 0.8rem 0;
+    font-size: 1rem;
+  }
+
+  .menu-action-btn {
+    padding: 0.6rem 1rem;
+    font-size: 1rem;
   }
 }
 </style>
