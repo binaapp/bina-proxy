@@ -111,7 +111,7 @@
       <textarea
         v-model="userInput"
         placeholder="Type anything, I'm listening"
-        @keyup.enter="sendMessage"
+        @keydown="handleKeydown"
         @input="autoResize"
         class="chat-input"
         ref="chatInput"
@@ -387,6 +387,62 @@ export default {
     const isRtl = computed(() => flowData.value?.rtl === true);
     const sessionEndConfig = computed(() => flowData.value?.sessionEnd);
 
+    // Add sendMessage function here, inside setup()
+    function sendMessage() {
+      if (!userInput.value.trim()) return;
+
+      // Check interaction limit
+      if (isLimitReached.value) {
+        console.log("Daily interaction limit reached");
+        return;
+      }
+
+      // Attempt to increment the interaction counter
+      if (!incrementInteraction()) {
+        console.log(
+          "Daily interaction limit reached while attempting to increment"
+        );
+        return;
+      }
+
+      // Let SessionRunner handle the message
+      sessionRunner.value?.handleUserSubmit();
+
+      // Reset textarea height after sending
+      nextTick(() => {
+        const textarea = document.querySelector(".chat-input");
+        if (textarea) {
+          textarea.style.height = "auto";
+        }
+      });
+    }
+
+    // Add handleKeydown function here, inside setup()
+    function handleKeydown(event) {
+      // If Shift+Enter is pressed, insert a new line
+      if (event.shiftKey && event.key === "Enter") {
+        event.preventDefault();
+        const textarea = event.target;
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const value = textarea.value;
+
+        // Insert newline at cursor position
+        userInput.value =
+          value.substring(0, start) + "\n" + value.substring(end);
+
+        // Set cursor position after the newline
+        nextTick(() => {
+          textarea.selectionStart = textarea.selectionEnd = start + 1;
+        });
+      }
+      // If Enter is pressed without Shift, send the message
+      else if (event.key === "Enter" && !event.shiftKey) {
+        event.preventDefault();
+        sendMessage();
+      }
+    }
+
     function handleSessionEndReady() {
       console.log("Session end ready, will show after AI response");
 
@@ -484,6 +540,8 @@ export default {
       messageButtons, // Add this to template
       handleSessionCompleted,
       sessionEndConfig, // Add this to template
+      handleKeydown, // Add this line
+      sendMessage, // Add this line
     };
   },
   methods: {
@@ -515,63 +573,6 @@ export default {
       }
 
       // Scroll to bottom when typing completes
-      this.scrollToBottom();
-    },
-
-    sendMessage() {
-      if (!this.userInput.trim()) return;
-
-      // Check interaction limit
-      if (this.isLimitReached) {
-        console.log("Daily interaction limit reached");
-
-        // Add a simplified message without mentioning the specific number
-        this.chatMessages.push(
-          "You've reached your daily interaction limit with Bina. " +
-            "Please come back tomorrow to continue your coaching journey. " +
-            "This limit helps us provide quality coaching to all users."
-        );
-        this.messageTypes.push("bot");
-
-        // Scroll to show the limit message
-        this.scrollToBottom();
-        return;
-      }
-
-      // Attempt to increment the interaction counter
-      if (!this.incrementInteraction()) {
-        console.log(
-          "Daily interaction limit reached while attempting to increment"
-        );
-
-        // Add a simplified message without mentioning the specific number
-        this.chatMessages.push(
-          "You've reached your daily interaction limit with Bina. " +
-            "Please come back tomorrow to continue your coaching journey. " +
-            "This limit helps us provide quality coaching to all users."
-        );
-        this.messageTypes.push("bot");
-
-        // Scroll to show the limit message
-        this.scrollToBottom();
-        return;
-      }
-
-      // Hide link button when user sends a message
-      this.showLinkButton = false;
-
-      // Let SessionRunner handle the message
-      this.sessionRunner?.handleUserSubmit();
-
-      // Reset textarea height after sending
-      this.$nextTick(() => {
-        const textarea = this.$refs.chatInput;
-        if (textarea) {
-          textarea.style.height = "auto";
-        }
-      });
-
-      // Scroll to bottom immediately after sending
       this.scrollToBottom();
     },
 
