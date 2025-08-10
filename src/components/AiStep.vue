@@ -454,7 +454,7 @@ const callClaude = async () => {
         fixedJson = jsonMatch[0];
       }
       
-      // Fix common JSON issues
+      // Fix common JSON issues FIRST (before my fix)
       try {
         // Try to fix unescaped quotes in the reply field
         fixedJson = fixedJson.replace(/("reply":\s*")(.*?)(")/gs, (match, p1, p2, p3) => {
@@ -467,6 +467,9 @@ const callClaude = async () => {
             .replace(/\t/g, '\\t');  // Escape tabs
           return p1 + escapedContent + p3;
         });
+        
+        // NOW apply my fix AFTER the existing code
+        fixedJson = fixedJson.replace(/\\"/g, '"');
         
         parsedResponse = JSON.parse(fixedJson);
         console.log("JSON fixed and parsed successfully");

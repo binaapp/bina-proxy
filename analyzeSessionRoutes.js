@@ -16,7 +16,7 @@ const pool = require('./server').pool || mysql.createPool({
 // Helper: get user profile as an object
 async function getUserProfile(uid) {
   const [rows] = await pool.query(
-    `SELECT strengths, weaknesses, paradigms, user_values, goals, intuition, tools_used, User_Style, user_history, user_stories, user_language, current_mission, learning_history, notes
+    `SELECT strengths, weaknesses, paradigms, user_values, goals, intuition, tools_used, User_Style, user_history, user_stories, user_language, current_mission, learning_history, notes, coaching_goal, nickname, gender
      FROM users WHERE uid = ? LIMIT 1`, [uid]
   );
   return rows[0] || {};
@@ -136,7 +136,7 @@ Return as array.
 {
 The coach's name for this session is: ${coachName || 'מיה'}. Please sign the email with this name.
   "subject_line": "Your email subject line here",
-"body": "Write a short, warm email to the user, as if from their personal coach. This is not a summary — it’s a personal message that helps the user feel seen, valued, and inspired.\n\nTo do this well, you must:\n\n1. Use the **current session transcript** to reflect the main theme and mood.\n2. Include any assignment or task, written clearly and simply.\n3. Look beyond the current session: **use all available information about the user**, including their profile, stories, strengths, values, challenges, and language. This is essential.\n\nUse the user's name if it was shared. Be grounded, professional, and emotionally intelligent. Avoid exaggerated praise or clichés — instead, offer one clear, thoughtful reflection that helps the user see something meaningful in themselves or their journey. This could be a new perspective, a deeper insight, or a subtle connection.\n\nIf an assignment was given, include a gentle suggestion to write their answer or reflection in their coaching notebook.\n\nClose with warmth and a reminder that they can return to the chat with Bina anytime at: <b>www.binaapp.com/chat</b> — whether to continue practicing between sessions, or to open a free-flow coaching conversation about anything on their mind."
+"body": "Write a short, warm email to the user, as if from their personal coach. This is not a summary — it’s a personal message that helps the user feel seen, valued, and inspired.\n\nTo do this well, you must:\n\n1. Use the **current session transcript** to reflect the main theme and mood.\n2. Include any assignment or task, written clearly and simply.\n3. Look beyond the current session: **use all available information about the user**, including their profile, stories, strengths, values, challenges, and language. This is essential.\n\nUse the user's name if it was shared. Be grounded, professional, and emotionally intelligent. Avoid exaggerated praise or clichés — instead, offer one clear, thoughtful reflection that helps the user see something meaningful in themselves or their journey. This could be a new perspective, a deeper insight, or a subtle connection.\n\nIf an assignment was given, include a gentle suggestion to write their answer or reflection in their coaching notebook.\n\nClose with warmth and a reminder that they can return to the chat with Bina anytime at: <b>www.binaapp.com/chat</b> — whether to continue practicing between sessions, or to open a free-flow coaching conversation about anything on their mind (don't forget to add the instructions to what this link is for!).\n\nAt the end of the email, add: 'We’d love to hear your feedback on today’s session — please take a moment to fill out our short questionnaire here: <a href=\"https://forms.gle/NVpqMGcwKucKJjCp8\">Click here</a>.'"
 For both fields use the same language (Hebrew/English) as the user used in this session
   }
 
@@ -306,10 +306,16 @@ Output only a single valid JSON object in this format:
     }
 
     // --- 2. To Bina admins ---
-    const adminMailSubject = `Session Summary for User ${uid} (Session ${sessionId})`;
+    const adminMailSubject = `Session Summary for User ${userName || 'Unknown'} (${userEmail || 'No email'}) - Session ${sessionId}`;
     const adminMailBody = `
 Session Overview:
 ${session_overview}
+
+User Information:
+- Name: ${userName || 'Not provided'}
+- Nickname: ${user_profile_updates?.nickname || 'Not provided'}
+- Email: ${userEmail || 'Not provided'}
+- UID: ${uid}
 
 User Profile Updates:
 ${JSON.stringify(user_profile_updates, null, 2)}
