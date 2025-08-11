@@ -461,6 +461,10 @@ function openInNewTab(route) {
     display: inline-block;
     position: relative;
   }
+  .hi-user {
+    margin-right: 0;
+    font-size: 1rem; /* Slightly smaller font for mobile */
+  }
   .user-icon-btn {
     background: none;
     border: 2px solid #fff;

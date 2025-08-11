@@ -822,7 +822,7 @@ export default {
   .chat-content {
     overflow-y: auto;
     min-height: 0;
-    padding: 1rem;
+    /* padding: 1rem; */
   }
 
   .chat-header {
@@ -832,15 +832,16 @@ export default {
   .message.bot {
     justify-content: flex-start;
   }
-
+  /*
   .user-message,
   .message.bot {
     max-width: 95%;
-  }
+  }*/
 
   .chat-box {
     width: calc(100% - 1.5rem);
     padding: 0.75rem;
+    box-sizing: border-box; /* Add this to fix mobile layout issues */
   }
 }
 
@@ -856,17 +857,46 @@ export default {
   .send-btn {
     font-size: 0.9rem;
     padding: 0 1rem;
+    flex-shrink: 0; /* Add this to prevent button shrinking on mobile */
   }
   .maia-avatar {
     margin-right: 0.5rem;
   }
   .bot-message-container {
-    margin-left: 0;
+    margin-left: -0.25rem;
     padding-left: 0;
+    margin-right: 0;
+    padding-right: 0;
   }
   .chat-content {
     padding-left: 0.5rem;
     padding-right: 0.5rem;
+  }
+
+  /* Fix mobile chat box layout without affecting desktop */
+  .chat-box {
+    width: calc(100% - 1rem); /* Adjust width for mobile */
+    padding: 0.75rem 0.5rem;
+    gap: 0.5rem; /* Reduce gap between input and button on mobile */
+  }
+}
+
+/* Add specific mobile keyboard handling */
+@media (max-height: 600px) and (max-width: 768px) {
+  /* When keyboard is visible (reduced height) */
+  .chat-box {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #12344d;
+    padding: 0.5rem;
+    z-index: 100;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+  }
+
+  .chat-content {
+    padding-bottom: 80px; /* Add bottom padding to prevent content from being hidden behind fixed chat box */
   }
 }
 
@@ -969,7 +999,7 @@ export default {
 
 /* Add specific RTL padding for Hebrew text */
 .rtl .bot-message {
-  padding: 0.5rem 1.5rem 0.5rem 2rem; /* Extra left padding for RTL */
+  padding: 0.5rem 1rem;
   direction: rtl !important;
   text-align: right !important;
 }
