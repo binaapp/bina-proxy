@@ -883,12 +883,13 @@ export default {
 
 /* Add specific mobile keyboard handling */
 @media (max-height: 600px) and (max-width: 768px) {
-  /* When keyboard is visible (reduced height) */
   .chat-box {
     position: fixed;
     bottom: 0;
     left: 0;
     right: 0;
+    width: 100%;
+    box-sizing: border-box; /* Add this */
     background: #12344d;
     padding: 0.5rem;
     z-index: 100;
@@ -896,7 +897,11 @@ export default {
   }
 
   .chat-content {
-    padding-bottom: 80px; /* Add bottom padding to prevent content from being hidden behind fixed chat box */
+    padding-bottom: 70px; /* Add bottom padding to prevent content from being hidden behind fixed chat box */
+  }
+
+  .send-btn {
+    padding: 0 0.75rem; /* Reduce from 1.5rem to 0.75rem */
   }
 }
 

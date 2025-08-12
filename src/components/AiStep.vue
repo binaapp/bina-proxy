@@ -438,23 +438,22 @@ const callClaude = async () => {
     console.log("\n=== RAW RESPONSE TEXT ===\n", data.content[0].text);
 
     let parsedResponse;
+    let fixedJson = data.content[0].text;
+
+    // First, try to extract the JSON part if there's extra text
+    const jsonMatch = fixedJson.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      fixedJson = jsonMatch[0];
+    }
+    
+    // Try to parse the JSON first without any "fixing"
     try {
-      // Try parsing the raw response first
-      parsedResponse = JSON.parse(data.content[0].text);
-    } catch (parseError) {
-      console.log("Initial JSON parse failed:", parseError.message);
-      console.log("Raw response text:", data.content[0].text);
+      parsedResponse = JSON.parse(fixedJson);
+      console.log("JSON parsed successfully without any fixes needed");
+    } catch (initialParseError) {
+      console.log("Initial parse failed, trying to fix JSON...");
       
-      // More robust JSON fixing approach
-      let fixedJson = data.content[0].text;
-      
-      // First, try to extract the JSON part if there's extra text
-      const jsonMatch = fixedJson.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        fixedJson = jsonMatch[0];
-      }
-      
-      // Fix common JSON issues FIRST (before my fix)
+      // Fix common JSON issues ONLY if needed
       try {
         // Try to fix unescaped quotes in the reply field
         fixedJson = fixedJson.replace(/("reply":\s*")(.*?)(")/gs, (match, p1, p2, p3) => {
