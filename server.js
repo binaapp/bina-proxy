@@ -9,6 +9,7 @@ const axios = require('axios');
 
 const mysql = require("mysql2/promise");
 const { callClaudeWithRetryAndFallback } = require('./claudeApiHelper');
+const { CLAUDE_MODELS } = require('./src/utils/config.js');
 
 const FIREBASE_PROJECT_ID = process.env.FIREBASE_PROJECT_ID;
 
@@ -125,7 +126,7 @@ app.post("/api/claude", async (req, res, next) => {
     }
 
     const claudeRequest = {
-      model: req.body.model || "claude-3-opus-20240229",
+      model: req.body.model || CLAUDE_MODELS.PRIMARY,
       max_tokens: req.body.max_tokens || 1000,
       temperature: req.body.temperature || 0.7,
       messages: req.body.messages,
@@ -149,8 +150,8 @@ app.post("/api/claude", async (req, res, next) => {
       });
     }
 
-    const preferredModel = req.body.model || "claude-3-5-sonnet-20241022";
-    const fallbackModel = "claude-3-opus-20240229";
+    const preferredModel = req.body.model || CLAUDE_MODELS.PRIMARY;
+    const fallbackModel = CLAUDE_MODELS.FALLBACK;
     let response;
 
     // Initial call (unchanged)
@@ -310,6 +311,35 @@ function shouldSendEmails() {
   // Only send emails if in production
   console.log("NODE_ENV is:", process.env.NODE_ENV);
   return process.env.NODE_ENV === 'production';
+}
+
+// Add minimal error notification function
+async function sendErrorNotificationEmail(operation, error, userInfo, sessionInfo) {
+  try {
+    const subject = `🚨 Session Operation Failed: ${operation}`;
+    const emailBody = `
+Session operation failed: ${operation}
+
+User Information:
+- Name: ${userInfo.name || 'Not provided'}
+- Email: ${userInfo.email || 'Not provided'}
+- Nickname: ${userInfo.nickname || 'Not provided'}
+- UID: ${userInfo.uid || 'Not provided'}
+
+Session Information:
+- Session Name: ${sessionInfo.sessionName || 'Not provided'}
+- Session ID: ${sessionInfo.sessionId || 'Not provided'}
+- Session Number: ${sessionInfo.sessionId || 'Not provided'}
+
+Error: ${error.message || 'Unknown error'}
+Time: ${new Date().toISOString()}
+`;
+
+    await sendEmail('bina@binaapp.com', subject, emailBody);
+    console.log(`Error notification sent to bina@binaapp.com for: ${operation}`);
+  } catch (emailErr) {
+    console.error(`Failed to send error notification for: ${operation}`, emailErr);
+  }
 }
 
 app.post("/api/session", async (req, res) => {
@@ -475,6 +505,25 @@ Session ID: ${resultId}`,
   } catch (err) {
     console.error("Error saving session:", err);
     console.error("Error details:", err.message);
+    
+    // Send error notification email
+    if (shouldSendEmails()) {
+      const userInfo = {
+        name: req.body.deviceInfo?.name || 'Unknown',
+        email: req.body.uid ? 'User authenticated' : 'Not authenticated',
+        nickname: req.body.deviceInfo?.name || 'Not provided',
+        uid: req.body.uid || 'Not provided'
+      };
+      
+      const sessionInfo = {
+        sessionName: req.body.sessionName || 'Not provided',
+        sessionId: req.body.sessionId || 'Not provided',
+        sessionNumber: req.body.sessionId || 'Not provided'
+      };
+      
+      await sendErrorNotificationEmail('Session Save/Update', err, userInfo, sessionInfo);
+    }
+    
     res.status(500).json({ error: "Failed to save session" });
   }
 });

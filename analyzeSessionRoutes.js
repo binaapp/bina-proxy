@@ -3,6 +3,7 @@ const router = express.Router();
 const mysql = require('mysql2/promise');
 const fetch = require('node-fetch'); // Use fetch as in server.js
 const { callClaudeWithRetryAndFallback } = require('./claudeApiHelper');
+const { CLAUDE_MODELS } = require('./src/utils/config.js');
 const { sendEmail } = require('./sesEmailService'); // <-- Add this import
 
 // You may want to import your pool from server.js if it's exported
@@ -168,7 +169,7 @@ Output only a single valid JSON object in this format:
 `;
 
     const claudeRequest = {
-      model: "claude-3-5-sonnet-20241022",
+      model: CLAUDE_MODELS.PRIMARY,
       max_tokens: 8000, // Increased for complete profiles
       temperature: 0.7,
       system: strictPrompt,
@@ -185,8 +186,8 @@ Output only a single valid JSON object in this format:
       return res.status(500).json({ error: "Claude API key not configured" });
     }
 
-    const preferredModel = "claude-3-5-sonnet-20241022"; // Change this to Sonnet
-    const fallbackModel = "claude-3-haiku-20240307"; // Keep Haiku as fallback
+    const preferredModel = CLAUDE_MODELS.PRIMARY; // Change this to Sonnet
+    const fallbackModel = CLAUDE_MODELS.TERTIARY; // Keep Haiku as fallback
     let aiResponse;
 
     // Initial call (unchanged)

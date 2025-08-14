@@ -3,6 +3,7 @@ const express = require('express');
 const router = express.Router();
 const { sendEmail } = require('./sesEmailService');
 const axios = require('axios');
+const { CLAUDE_MODELS } = require('./src/utils/config.js');
 
 // Get the API base URL based on environment
 function getApiBase() {
@@ -50,7 +51,7 @@ router.post('/send-reflection-email', async (req, res) => {
     console.log("[emailRoutes] Using API base:", apiBase);
     
     const claudeRequestBody = {
-      model: "claude-3-5-sonnet-20241022",
+      model: CLAUDE_MODELS.PRIMARY,
       max_tokens: 1000,
       temperature: 0.7,
       messages: [

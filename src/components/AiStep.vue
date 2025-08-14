@@ -3,6 +3,7 @@
 import { ref, onMounted, watch } from "vue";
 import { flowData } from '@/composables/useFlowData'
 import TypingIndicator from './TypingIndicator.vue'
+import { CLAUDE_MODELS } from '@/utils/config.js';
 
 const props = defineProps({
   history: Array,
@@ -373,7 +374,7 @@ const callClaude = async () => {
     }
 
     const requestBody = {
-      model: "claude-3-5-sonnet-20241022",
+      model: CLAUDE_MODELS.PRIMARY,
       max_tokens: 1000,
       temperature: 0.7,
       messages: messages, // Only user and assistant messages

@@ -114,6 +114,7 @@
         placeholder="Type anything, I'm listening"
         @keydown="handleKeydown"
         @input="autoResize"
+        @focus="scrollToBottom"
         class="chat-input"
         ref="chatInput"
         :disabled="isLimitReached"
@@ -680,7 +681,7 @@ export default {
 .chat-wrapper {
   display: flex;
   flex-direction: column;
-  height: 97dvh; /* Fixes mobile browser UI overlap issue */
+  height: 100vh; /* Change from 97dvh to 100vh for better mobile compatibility */
   background-color: #12344d;
   position: relative;
   overflow: hidden;
@@ -692,11 +693,15 @@ export default {
 .chat-content {
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden; /* Prevent horizontal scroll */
   padding: 1rem;
   display: flex;
   flex-direction: column;
   align-items: center;
-  outline: 1px solid rgba(255, 255, 255, 0.2); /* Subtle white debug */
+  outline: 1px solid rgba(255, 255, 255, 0.2);
+  /* Remove any potential width issues */
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .quote-card {
@@ -746,6 +751,7 @@ export default {
   background: transparent;
   border: none;
   box-shadow: none;
+  /* Remove position: sticky - this was causing the issue */
 }
 
 .chat-input {
@@ -814,15 +820,15 @@ export default {
 
 @media (max-width: 768px) {
   .chat-wrapper {
-    display: grid;
-    grid-template-rows: auto 1fr auto;
+    display: flex; /* Change from grid to flex */
+    flex-direction: column; /* Add this */
     height: 100dvh;
   }
 
   .chat-content {
     overflow-y: auto;
     min-height: 0;
-    /* padding: 1rem; */
+    flex: 1; /* Add this to make content area flexible */
   }
 
   .chat-header {
@@ -832,78 +838,77 @@ export default {
   .message.bot {
     justify-content: flex-start;
   }
-  /*
-  .user-message,
-  .message.bot {
-    max-width: 95%;
-  }*/
 
   .chat-box {
     width: calc(100% - 1.5rem);
     padding: 0.75rem;
-    box-sizing: border-box; /* Add this to fix mobile layout issues */
+    box-sizing: border-box;
   }
 }
 
 @media (max-width: 600px) {
-  .chat-input {
-    font-size: 0.9rem;
-    padding-top: 0.6rem;
-    padding-bottom: 0.6rem;
-    line-height: 1.4;
-    height: auto;
-    min-height: 32px;
+  .chat-wrapper {
+    /* Better mobile viewport handling */
+    height: 100dvh;
+    /*grid-template-rows: auto 1fr auto;*/
+
+    min-height: 0; /* -webkit-fill-available;*/
   }
-  .send-btn {
-    font-size: 0.9rem;
-    padding: 0 1rem;
-    flex-shrink: 0; /* Add this to prevent button shrinking on mobile */
-  }
-  .maia-avatar {
-    margin-right: 0.5rem;
-  }
-  .bot-message-container {
-    margin-left: -0.25rem;
-    padding-left: 0;
-    margin-right: 0;
-    padding-right: 0;
-  }
+
   .chat-content {
-    padding-left: 0.5rem;
-    padding-right: 0.5rem;
-  }
-
-  /* Fix mobile chat box layout without affecting desktop */
-  .chat-box {
-    width: calc(100% - 1rem); /* Adjust width for mobile */
-    padding: 0.75rem 0.5rem;
-    gap: 0.5rem; /* Reduce gap between input and button on mobile */
-  }
-}
-
-/* Add specific mobile keyboard handling */
-@media (max-height: 600px) and (max-width: 768px) {
-  .chat-box {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
+    /* Ensure content doesn't overflow */
+    padding-left: 0.25rem;
+    padding-right: 0.25rem;
     width: 100%;
-    box-sizing: border-box; /* Add this */
-    background: #12344d;
-    padding: 0.5rem;
-    z-index: 100;
-    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+    box-sizing: border-box;
   }
 
-  .chat-content {
-    padding-bottom: 70px; /* Add bottom padding to prevent content from being hidden behind fixed chat box */
+  .chat-box {
+    width: 100%;
+    padding: 0.75rem 0.5rem;
+    gap: 0.5rem;
+    /* Ensure proper bottom positioning */
+    margin: 0;
+    border-radius: 0; /* Remove border radius on mobile for full width */
+    /* Ensure it stays at bottom */
   }
 
-  .send-btn {
-    padding: 0 0.75rem; /* Reduce from 1.5rem to 0.75rem */
+  /* Prevent any horizontal overflow in messages */
+  .message {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+
+  .user-message-bubble,
+  .bot-message {
+    max-width: 100%;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    box-sizing: border-box;
   }
 }
+
+/* Remove the problematic mobile keyboard handling that was hiding the chat box */
+/* @media (max-height: 600px) and (max-width: 768px) {
+  .chat-wrapper {
+    height: 100vh;
+  }
+  
+  .chat-content {
+    /* Reduce padding when keyboard is visible */
+/*padding: 0.25rem;
+  }
+  
+  .chat-box {
+    /* Ensure chat box stays visible */
+/*position: sticky;
+    bottom: 0;
+    z-index: 10;
+  }
+} */
 
 .message {
   width: 100%;
