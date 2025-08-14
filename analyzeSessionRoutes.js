@@ -3,7 +3,7 @@ const router = express.Router();
 const mysql = require('mysql2/promise');
 const fetch = require('node-fetch'); // Use fetch as in server.js
 const { callClaudeWithRetryAndFallback } = require('./claudeApiHelper');
-const { CLAUDE_MODELS } = require('./src/utils/config.js');
+const { CLAUDE_MODELS } = require('./serverConfig.js');
 const { sendEmail } = require('./sesEmailService'); // <-- Add this import
 
 // You may want to import your pool from server.js if it's exported

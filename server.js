@@ -9,7 +9,7 @@ const axios = require('axios');
 
 const mysql = require("mysql2/promise");
 const { callClaudeWithRetryAndFallback } = require('./claudeApiHelper');
-const { CLAUDE_MODELS } = require('./src/utils/config.js');
+const { CLAUDE_MODELS } = require('./serverConfig.js');
 
 const FIREBASE_PROJECT_ID = process.env.FIREBASE_PROJECT_ID;
 

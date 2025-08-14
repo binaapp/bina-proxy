@@ -3,7 +3,7 @@ const express = require('express');
 const router = express.Router();
 const { sendEmail } = require('./sesEmailService');
 const axios = require('axios');
-const { CLAUDE_MODELS } = require('./src/utils/config.js');
+const { CLAUDE_MODELS } = require('./serverConfig.js');
 
 // Get the API base URL based on environment
 function getApiBase() {
