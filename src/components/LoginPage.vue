@@ -117,7 +117,10 @@
       <button class="signup-btn" type="submit">Login</button>
     </form>
     <p class="login-link">
-      Dont have an account? <router-link to="/signup">Sign up now</router-link>
+      Dont have an account?
+      <router-link :to="{ path: '/signup', query: $route.query }"
+        >Sign up now</router-link
+      >
     </p>
   </div>
 </template>
@@ -169,10 +172,16 @@ async function onGoogleSignIn() {
       console.log("Redirecting to", redirectPath);
       router.replace(redirectPath);
     } else {
-      alert(data.error || "Google login failed");
+      console.error("[LoginUI] Google login failed:", data.error);
+      alert(data.error || "Google sign-in failed. Please try again.");
     }
   } catch (error) {
-    alert("Google sign-in failed");
+    console.error("[LoginUI] Google sign-in error:", {
+      name: error.name,
+      message: error.message,
+      stack: error.stack,
+    });
+    alert(error.message || "Google sign-in failed. Please try again.");
   }
 }
 
@@ -211,7 +220,7 @@ async function onEmailLogin() {
       alert(data.error || "Login failed. Please try again.");
     }
   } catch (error) {
-    alert(error.message);
+    alert(error.message || "Login failed. Please try again.");
   }
 }
 </script>

@@ -68,7 +68,7 @@ router.beforeEach(async (to, from, next) => {
   const isAuthenticated = !!authUser;
   if (to.name === "chat" && !isAuthenticated) {
     next({
-      path: "/login",
+      path: "/signup",
       query: { redirect: to.fullPath },
     });
   } else {

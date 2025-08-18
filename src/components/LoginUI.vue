@@ -109,7 +109,12 @@
       <a href="#">Terms of Service</a>, <a href="#">Privacy Policy</a>, and our
       default <a href="#">Notification Settings</a>.
     </p>
-    <p class="login-link">Have an account? <a href="/login">Log in</a></p>
+    <p class="login-link">
+      Have an account?
+      <router-link :to="{ path: '/login', query: $route.query }"
+        >Log in</router-link
+      >
+    </p>
   </div>
 </template>
 
@@ -121,13 +126,14 @@ import {
   signInWithPopup,
   createUserWithEmailAndPassword,
 } from "firebase/auth";
-import { useRouter } from "vue-router";
+import { useRouter, useRoute } from "vue-router";
 import { getApiBase } from "@/utils/sessionApi";
 
 const email = ref("");
 const password = ref("");
 const showPassword = ref(false);
 const router = useRouter();
+const route = useRoute();
 
 async function onGoogleSignIn() {
   const provider = new GoogleAuthProvider();
@@ -175,14 +181,16 @@ async function onGoogleSignIn() {
     if (response.ok && data.success) {
       console.log("[LoginUI] Google login successful");
       if (window.opener) {
-        window.opener.location.href = "/chat?justRegistered=1";
+        const redirectPath = route.query.redirect || "/chat";
+        window.opener.location.href = redirectPath;
         window.close();
       } else {
-        router.push({ path: "/chat", query: { justRegistered: "1" } });
+        const redirectPath = route.query.redirect || "/chat";
+        router.push(redirectPath);
       }
     } else {
       console.error("[LoginUI] Google login failed:", data.error);
-      alert(data.error || "Google sign-in failed");
+      alert(data.error || "Google sign-in failed. Please try again.");
     }
   } catch (error) {
     console.error("[LoginUI] Google sign-in error:", {
@@ -190,7 +198,7 @@ async function onGoogleSignIn() {
       message: error.message,
       stack: error.stack,
     });
-    alert("Google sign-in failed");
+    alert(error.message || "Google sign-in failed. Please try again.");
   }
 }
 
@@ -245,8 +253,9 @@ async function onEmailSignUp() {
     console.log("[LoginUI] Response data:", data);
 
     if (response.ok && data.success) {
-      console.log("[LoginUI] Login successful, redirecting to chat");
-      router.push({ path: "/chat", query: { justRegistered: "1" } });
+      console.log("[LoginUI] Login successful, redirecting");
+      const redirectPath = route.query.redirect || "/chat";
+      router.push(redirectPath);
     } else {
       console.error("[LoginUI] Login failed:", data.error);
       alert(data.error || "Registration failed. Please try again.");
@@ -257,7 +266,7 @@ async function onEmailSignUp() {
       message: error.message,
       stack: error.stack,
     });
-    alert(error.message);
+    alert(error.message || "Registration failed. Please try again.");
   }
 }
 </script>
