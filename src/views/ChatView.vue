@@ -120,6 +120,7 @@
         :disabled="isLimitReached"
         rows="1"
         style="resize: none; overflow: hidden"
+        :dir="isRtl ? 'rtl' : 'ltr'"
       ></textarea>
       <button class="send-btn" @click="sendMessage" :disabled="isLimitReached">
         SEND
@@ -1009,7 +1010,6 @@ export default {
 
 /* Add specific RTL padding for Hebrew text */
 .rtl .bot-message {
-  padding: 0.5rem 1rem;
   direction: rtl !important;
   text-align: right !important;
 }

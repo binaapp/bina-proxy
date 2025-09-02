@@ -158,14 +158,15 @@ const buildSystemMessage = () => {
     sections.push(props.coachData.coachPresenceNote);
   }
 
-  // Add coach's role (from coach data)
+    // Add coach's role (from coach data)
   if (instructions.role) {
     sections.push(instructions.role);
   }
 
-  // Add session-specific role/goal (from flow data)
-  if (instructions.sessionRole) {
-    sections.push(`Session Goal: ${instructions.sessionRole}`);
+  // Add session-specific role/goal (prefer top-level, fallback to legacy location)
+  const sessionRole = props.flowData.sessionRole || instructions.sessionRole;
+  if (sessionRole) {
+    sections.push(`Session Goal: ${sessionRole}`);
   }
 
   // Add tone cues if available

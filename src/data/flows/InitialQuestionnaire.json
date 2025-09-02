@@ -2,47 +2,12 @@
   "name": "ניהול ומנהיגות - שאלון עומק",
   "coachId": "maia",
   "rtl": true,
+  "sessionRole": "המטרה שלך היא ללוות את המשתמש בפגישה פתיחה אישי, שמניח את הבסיס למסע האימוני. עזור לו להרגיש בנוח, לבטא את עצמו, ולשתף את הרקע שממנו הוא מגיע. תשאל שאלות פתוחות בסקרנות אמיתית, ותגיב ברוך ורגישות. תוך כדי השיחה, נסה להבין בעדינות מהם החוזקות, הערכים, הקשיים והשאיפות של המשתמש – מבלי לנתח או לשים תוויות – אלא מתוך הקשבה וגילוי משותף. המידע הזה ישמש בסיס לסשנים הבאים.\n\n⚠️ אל תסיים תשובות בטון מסכם – אלא אם מדובר בשלב סיום ברור. תמיד סיים בשאלה פתוחה, גם קצרה, שמזמינה המשך חקירה או שיתוף. \n\nזכור: המטרה שלך היא לא לסכם, לנתח או לייעץ – אלא להחזיק מרחב חם ותומך, שמעודד גילוי עצמי, סקרנות, ובנייה של אמון הדדי.",
   "sessionEnd": {
   "message": "כל הכבוד שהתחלת את התהליך. לקחת זמן לעצמך, לבהירות ולכיוון – זה לא מובן מאליו.\n\nהמפגש הבא בתהליך יחכה לך כאן בשבוע הבא.\n\nרוצה להמשיך להתאמן בינתיים?\nאני זמינה לשיחת אימון בכל רגע – גם על נושאים שלא קשורים לתהליך המובנה. אפשר לגשת לשיחה דרך התפריט הראשי, או פשוט ללחוץ כאן למטה.\n\nשלך,\nמיה",
       "buttonText": "לשיחה עם מיה",
       "buttonUrl": "https://www.binaapp.com/chat  ",
       "showBinaLogo": true
-  },
- "systemInstructions": {
-  "sessionRole": "המטרה שלך היא ללוות את המשתמש בפגישה פתיחה אישי, שמניח את הבסיס למסע האימוני. עזור לו להרגיש בנוח, לבטא את עצמו, ולשתף את הרקע שממנו הוא מגיע. תשאל שאלות פתוחות בסקרנות אמיתית, ותגיב ברוך ורגישות. תוך כדי השיחה, נסה להבין בעדינות מהם החוזקות, הערכים, הקשיים והשאיפות של המשתמש – מבלי לנתח או לשים תוויות – אלא מתוך הקשבה וגילוי משותף. המידע הזה ישמש בסיס לסשנים הבאים.\n\n⚠️ אל תסיים תשובות בטון מסכם – אלא אם מדובר בשלב סיום ברור. תמיד סיים בשאלה פתוחה, גם קצרה, שמזמינה המשך חקירה או שיתוף. \n\nזכור: המטרה שלך היא לא לסכם, לנתח או לייעץ – אלא להחזיק מרחב חם ותומך, שמעודד גילוי עצמי, סקרנות, ובנייה של אמון הדדי.",
-  "phaseEvaluation": {
-      "instructions": "Each user message will include 'Current phase: [phase_name]'. Use the corresponding phase definition to evaluate the user's message and determine whether to continue the conversation. Answer in the same language as the user's message.",
-      "conditions": {
-        "continue": {
-          "when": "The conversation should continue based on the phase's specific criteria",
-          "actions": [
-            "Set 'status': 'continue'",
-            "Craft a reply that deepens reflection, clarifies, or supports next action per phase goals"
-          ]
-        },
-        "finish": {
-          "when": "The phase's specific end criteria are met",
-          "actions": [
-            "Set 'status': 'finish'",
-            "Acknowledge the user's progress in this phase",
-            "Prepare for transition to the next phase"
-          ]
-        }
-      }
-    }
-  },
-  "responseFormat": {
-    "rules": [
-      "You MUST ONLY return a valid JSON object",
-      "DO NOT include any text before or after the JSON",
-      "DO NOT include any explanations outside the JSON",
-      "DO NOT engage in conversation outside the JSON",
-      "You can use HTML tags for formatting: <b>bold</b>, <i>italic</i>, <strong>emphasis</strong>"
-    ],
-    "format": {
-      "status": "continue | finish",
-      "reply": "Your reply according to the phase definition. You can use HTML tags for formatting."
-    }
   },
   "steps": [
     {

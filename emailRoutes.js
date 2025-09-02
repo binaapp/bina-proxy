@@ -169,4 +169,35 @@ router.post('/send-reflection-email', async (req, res) => {
   }
 });
 
+router.post('/send-session-start-email', async (req, res) => {
+  try {
+    const { userName, referralSource, sessionId, deviceInfo, sessionName } = req.body;
+    
+    const emailText = `A new session was started by ${userName}.
+Referral source: ${referralSource || "Unknown"}
+Session ID: ${sessionId}
+User Name: ${deviceInfo?.name || "Not provided"}
+User Nickname: ${deviceInfo?.nickname || "Not provided"}
+User Email: ${deviceInfo?.email || "Not provided"}
+Session Name: ${sessionName || "Not provided"}`;
+
+    const emailHtml = `<p>
+      A new session was started by <b>${userName}</b>.<br>
+      Referral source: <b>${referralSource || "Unknown"}</b><br>
+      Session ID: <b>${sessionId}</b><br>
+      User Name: <b>${deviceInfo?.name || "Not provided"}</b><br>
+      User Nickname: <b>${deviceInfo?.nickname || "Not provided"}</b><br>
+      User Email: <b>${deviceInfo?.email || "Not provided"}</b><br>
+      Session Name: <b>${sessionName || "Not provided"}</b>
+    </p>`;
+
+    await sendEmail('bina@binaapp.com', 'A user started a session', emailText, emailHtml);
+    
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error sending session start email:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 module.exports = router;

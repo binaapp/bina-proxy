@@ -415,21 +415,23 @@ app.post("/api/session", async (req, res) => {
       console.log("Created new session with ID:", resultId, "and sessionName:", sessionName);
 
       // Send email ONLY when a new session is created
-      const userName = deviceInfo && deviceInfo.name ? deviceInfo.name : "Unknown";
       if (shouldSendEmails()) {
         try {
-          await sendEmail(
-            'bina@binaapp.com',
-            'A user started a session',
-            `A new session was started by ${userName}.
-Referral source: ${referralSource || "Unknown"}
-Session ID: ${resultId}`,
-            `<p>
-              A new session was started by <b>${userName}</b>.<br>
-              Referral source: <b>${referralSource || "Unknown"}</b><br>
-              Session ID: <b>${resultId}</b>
-            </p>`
-          );
+          const response = await fetch(`${getApiBase()}/api/email/send-session-start-email`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userName: deviceInfo && deviceInfo.name ? deviceInfo.name : "Unknown",
+              referralSource,
+              sessionId: resultId,
+              deviceInfo,
+              sessionName
+            })
+          });
+          
+          if (!response.ok) {
+            console.error("Failed to send session start email");
+          }
         } catch (emailErr) {
           console.error("Error sending session start email:", emailErr);
         }
@@ -818,6 +820,18 @@ app.get('/api/user-profile/:uid', async (req, res) => {
     // Add nickname and gender fields
     if (userProfile.nickname) parsedProfile.nickname = userProfile.nickname;
     if (userProfile.gender) parsedProfile.gender = userProfile.gender;
+
+    const user_stories = safeJsonParse(userProfile.user_stories);
+    if (user_stories) parsedProfile.user_stories = user_stories;
+
+    const user_language = safeJsonParse(userProfile.user_language);
+    if (user_language) parsedProfile.user_language = user_language;
+
+    const current_mission = safeJsonParse(userProfile.current_mission);
+    if (current_mission) parsedProfile.current_mission = current_mission;
+
+    const learning_history = safeJsonParse(userProfile.learning_history);
+    if (learning_history) parsedProfile.learning_history = learning_history;
 
     console.log("[GET /api/user-profile/:uid] Returning user profile for UID:", uid);
     console.log("[GET /api/user-profile/:uid] Profile data:", parsedProfile);

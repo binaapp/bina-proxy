@@ -5,6 +5,7 @@ import geniusZoneFlow from "@/data/flows/GeniousZone.json";
 import qCoachMaiaFlow from "@/data/flows/QCoachMaia.json";
 import maiaProgram from "@/data/flows/Maia Flow/MaiaProgram.json";
 import { loadCoachData, mergeFlowWithCoach } from "@/utils/coachLoader";
+import FLOW_DEFAULTS from "@/data/flows/defaults/flowDefaults.json";
 
 // We can add more flows here if needed in the future
 // import generalFlow from '@/data/flows/General.json'
@@ -81,13 +82,29 @@ export async function loadFlowBySessionName(sessionName) {
   const pascalName = toPascalCase(sessionName);
   try {
     const module = await import(`@/data/flows/${pascalName}.json`);
-    const flowData = module.default;
+    let flowData = module.default;
+
+    // Apply flow defaults (no override if already set)
+    flowData.responseFormat =
+      flowData.responseFormat || FLOW_DEFAULTS.responseFormat;
+    flowData.systemInstructions = flowData.systemInstructions || {};
+    flowData.systemInstructions.phaseEvaluation =
+      flowData.systemInstructions.phaseEvaluation ||
+      FLOW_DEFAULTS.phaseEvaluation;
 
     // If the flow has a coachId, load and merge coach data
     if (flowData.coachId) {
       const coachData = await loadCoachData(flowData.coachId);
-      return mergeFlowWithCoach(flowData, coachData);
+      flowData = mergeFlowWithCoach(flowData, coachData);
     }
+
+    // Final guard after coach merge (keeps existing values if present)
+    flowData.responseFormat =
+      flowData.responseFormat || FLOW_DEFAULTS.responseFormat;
+    flowData.systemInstructions = flowData.systemInstructions || {};
+    flowData.systemInstructions.phaseEvaluation =
+      flowData.systemInstructions.phaseEvaluation ||
+      FLOW_DEFAULTS.phaseEvaluation;
 
     return flowData;
   } catch (e) {
