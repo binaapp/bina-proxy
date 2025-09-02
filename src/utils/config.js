@@ -5,7 +5,7 @@ const FEATURE_FLAGS = {
 
 // Claude AI model configuration (for frontend API calls)
 const CLAUDE_MODELS = {
-  PRIMARY: "claude-3-5-sonnet-20241022",
+  PRIMARY: "claude-sonnet-4-0",
   FALLBACK: "claude-3-opus-20240229",
   TERTIARY: "claude-3-haiku-20240307",
 };
