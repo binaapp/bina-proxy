@@ -212,6 +212,40 @@ onMounted(async () => {
           sessionHistory.value = [];
           currentStepIndex.value = 0;
           isAwaitingAi.value = false;
+
+          // Trigger initial message display for new session
+          const firstStep = props.flowData.steps[0];
+          if (firstStep && firstStep.introText) {
+            const initialMessage = [
+              firstStep.introText.replace(/\\n/g, "\n"),
+              firstStep.question,
+              firstStep.options
+                ?.map(
+                  (opt, i) =>
+                    `<div class="option-indent">${i + 1}. ${opt.replace(
+                      /\n/g,
+                      "<br>"
+                    )}</div>`
+                )
+                .join(""),
+            ]
+              .filter(Boolean)
+              .join("\n\n");
+
+            if (initialMessage.trim()) {
+              // Save to session history
+              sessionHistory.value.push({
+                role: "assistant",
+                content: initialMessage,
+              });
+
+              emit("ai-response", {
+                message: initialMessage,
+                type: "bot",
+                showButton: firstStep.showButton || null,
+              });
+            }
+          }
           return;
         }
 

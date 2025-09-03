@@ -41,10 +41,17 @@ ssh -i "$SSH_KEY" "$SSH_HOST" "\
   git clone --depth 1 --branch '$BRANCH' '$REPO' . \
 "
 
+
+
 echo "✅ Done. New backend release is at: $REMOTE_DIR"
+
+echo "📦 Installing dependencies..."
+ssh -i "$SSH_KEY" "$SSH_HOST" "cd '$REMOTE_DIR' && npm install"
 
 
 # === Part 4: Update symlink for my-app-staging ===
 echo "🔗 Updating symlink /home/bitnami/my-app-staging -> $REMOTE_DIR"
 
 ssh -i "$SSH_KEY" "$SSH_HOST" "ln -sfn $REMOTE_DIR /home/bitnami/my-app-staging"
+ssh -i "$SSH_KEY" "$SSH_HOST" "ln -sfn /home/bitnami/shared/.env.staging \"$REMOTE_DIR/.env\""
+ssh -i "$SSH_KEY" "$SSH_HOST" "pm2 restart my-app-staging"

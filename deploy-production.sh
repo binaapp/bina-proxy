@@ -41,9 +41,16 @@ ssh -i "$SSH_KEY" "$SSH_HOST" "\
   git clone --depth 1 --branch '$BRANCH' '$REPO' . \
 "
 
+echo "📦 Installing dependencies..."
+
+ssh -i "$SSH_KEY" "$SSH_HOST" "cd '$REMOTE_DIR' && npm install"
+
+
 # === Part 3: Update the production symlink ===
 # This will atomically point /home/bitnami/bina-proxy to the new release
 echo "Updating symlink /home/bitnami/bina-proxy -> $REMOTE_DIR"
 ssh -i "$SSH_KEY" "$SSH_HOST" "ln -sfn '$REMOTE_DIR' /home/bitnami/bina-proxy"
+ssh -i "$SSH_KEY" "$SSH_HOST" "ln -sfn /home/bitnami/shared/.env.production '$REMOTE_DIR/.env'"
+
 
 echo "✅ Production deploy complete. Active release: $REMOTE_DIR"
