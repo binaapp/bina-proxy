@@ -54,3 +54,5 @@ ssh -i "$SSH_KEY" "$SSH_HOST" "ln -sfn /home/bitnami/shared/.env.production '$RE
 
 
 echo "✅ Production deploy complete. Active release: $REMOTE_DIR"
+
+ssh -i "$SSH_KEY" "$SSH_HOST" "pm2 restart bina-proxy"

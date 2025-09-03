@@ -417,7 +417,7 @@ app.post("/api/session", async (req, res) => {
       // Send email ONLY when a new session is created
       if (shouldSendEmails()) {
         try {
-          const response = await fetch(`${getApiBase()}/api/email/send-session-start-email`, {
+          const response = await fetch(`http://localhost:${port}/api/email/send-session-start-email`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -855,6 +855,9 @@ app.use((err, req, res, next) => {
 
 const analyzeSessionRoutes = require('./analyzeSessionRoutes');
 app.use('/api', analyzeSessionRoutes);
+
+const emailRoutes = require('./emailRoutes');
+app.use('/api/email', emailRoutes);
 
 const port = process.env.PORT || 3001;
 app.listen(port, "0.0.0.0", () => {
