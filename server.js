@@ -417,6 +417,30 @@ app.post("/api/session", async (req, res) => {
       // Send email ONLY when a new session is created
       if (shouldSendEmails()) {
         try {
+          let userInfo = {
+            name: "Not provided",
+            email: "Not provided",
+            nickname: "Not provided"
+          };
+
+          // Fetch user information if uid is provided
+          if (uid) {
+            try {
+              const [userRows] = await connection.query(
+                'SELECT name, email, nickname FROM users WHERE uid = ?',
+                [uid]
+              );
+              
+              if (userRows.length > 0) {
+                userInfo.name = userRows[0].name || "Not provided";
+                userInfo.email = userRows[0].email || "Not provided";
+                userInfo.nickname = userRows[0].nickname || "Not provided";
+              }
+            } catch (dbError) {
+              console.error('Error fetching user info:', dbError);
+            }
+          }
+
           const response = await fetch(`http://localhost:${port}/api/email/send-session-start-email`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -425,7 +449,8 @@ app.post("/api/session", async (req, res) => {
               referralSource,
               sessionId: resultId,
               deviceInfo,
-              sessionName
+              sessionName,
+              userInfo  // Pass the user info (name, email, nickname)
             })
           });
           
