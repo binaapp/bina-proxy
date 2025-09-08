@@ -103,7 +103,7 @@ function repairJsonString(jsonString) {
 
 router.post('/analyze-session', async (req, res) => {
   try {
-    const { sessionId, uid, transcript, userEmail, userName, coachName } = req.body;
+    const { sessionId, uid, transcript, userEmail, userName, coachName, sessionName, emailInstructions } = req.body;
 
     if (!sessionId || !uid || !Array.isArray(transcript)) {
       return res.status(400).json({ error: 'Missing required fields' });
@@ -115,7 +115,7 @@ router.post('/analyze-session', async (req, res) => {
     const strictPrompt = `
 Based on the full coaching conversation in this session and the existing user profile data below, return a single JSON object with:
 
-1. "session_overview": A 2–4 sentence summary of the session’s main themes, mood, and key moments.
+1. "session_overview": A 2–4 sentence summary of the session's main themes, mood, and key moments.
 
 2. "user_profile_updates": An object with the COMPLETE, up-to-date values for each of the following fields:
 strengths, weaknesses, paradigms, user_values, goals, intuition, tools_used, User_Style, user_history, user_stories, user_language, current_mission, learning_history, notes, coaching_goal. 
@@ -137,7 +137,23 @@ Return as array.
 {
 The coach's name for this session is: ${coachName || 'מיה'}. Please sign the email with this name.
   "subject_line": "Your email subject line here",
-"body": "Write a short, warm email to the user, as if from their personal coach. This is not a summary — it’s a personal message that helps the user feel seen, valued, and inspired.\n\nTo do this well, you must:\n\n1. Use the **current session transcript** to reflect the main theme and mood.\n2. Include any assignment or task, written clearly and simply.\n3. Look beyond the current session: **use all available information about the user**, including their profile, stories, strengths, values, challenges, and language. This is essential.\n\nUse the user's name if it was shared. Be grounded, professional, and emotionally intelligent. Avoid exaggerated praise or clichés — instead, offer one clear, thoughtful reflection that helps the user see something meaningful in themselves or their journey. This could be a new perspective, a deeper insight, or a subtle connection.\n\nIf an assignment was given, include a gentle suggestion to write their answer or reflection in their coaching notebook.\n\nClose with warmth and a reminder that they can return to the chat with Bina anytime at: <b>www.binaapp.com/chat</b> — whether to continue practicing between sessions, or to open a free-flow coaching conversation about anything on their mind (don't forget to add the instructions to what this link is for!).\n\nAt the end of the email, add in the user's language: 'We’d love to hear your feedback on today’s session — please take a moment to fill out our short questionnaire here: <a href=\"https://forms.gle/NVpqMGcwKucKJjCp8\">Click here</a>.'"
+"body": "Write a short, warm email to the user, as if from their personal coach. This is not a summary — it's a personal message that helps the user feel seen, valued, and inspired.
+
+To do this well, you must:
+
+1. Use the **current session transcript** to reflect the main theme and mood.
+2. Include any assignment or task, written clearly and simply.
+3. Look beyond the current session: **use all available information about the user**, including their profile, stories, strengths, values, challenges, and language. This is essential.
+
+Use the user's name if it was shared. Be grounded, professional, and emotionally intelligent. Avoid exaggerated praise or clichés — instead, offer one clear, thoughtful reflection that helps the user see something meaningful in themselves or their journey. This could be a new perspective, a deeper insight, or a subtle connection.
+
+If an assignment was given, include a gentle suggestion to write their answer or reflection in their coaching notebook.
+
+Close with warmth and a reminder that they can return to the chat with Bina anytime at: <b>www.binaapp.com/chat</b> — whether to continue practicing between sessions, or to open a free-flow coaching conversation about anything on their mind (don't forget to add the instructions to what this link is for!).
+
+At the end of the email, add in the user's language: 'We'd love to hear your feedback on today's session — please take a moment to fill out our short questionnaire here: <a href=\"https://forms.gle/NVpqMGcwKucKJjCp8\">Click here</a>.'
+
+${emailInstructions ? `\n\n**SESSION-SPECIFIC INSTRUCTIONS FOR THIS SESSION:**\n${emailInstructions}` : ''}"
 For both fields use the same language (Hebrew/English) as the user used in this session
   }
 
@@ -253,9 +269,19 @@ Output only a single valid JSON object in this format:
     // === ADD THIS LOG TOO ===
     console.log("=== EXTRACTED JSON DEBUG ===");
     console.log("Extracted JSON:", JSON.stringify(summaryJson, null, 2));
+    console.log("summary_email_text exists:", !!summaryJson.summary_email_text);
+    console.log("summary_email_text value:", summaryJson.summary_email_text);
     console.log("=== END EXTRACTED JSON DEBUG ===");
 
     const { user_profile_updates, session_overview, summary_email_text } = summaryJson;
+    
+    // Add debugging for the destructured variables
+    console.log("Destructured variables:", {
+      user_profile_updates: !!user_profile_updates,
+      session_overview: !!session_overview,
+      summary_email_text: !!summary_email_text
+    });
+    
     if (!user_profile_updates || !session_overview || !summary_email_text) {
       console.error("Claude response missing required fields:", summaryJson);
       return res.status(500).json({ error: "Claude response missing required fields" });
@@ -317,9 +343,7 @@ User Information:
 - Nickname: ${user_profile_updates?.nickname || 'Not provided'}
 - Email: ${userEmail || 'Not provided'}
 - UID: ${uid}
-
-User Profile Updates:
-${JSON.stringify(user_profile_updates, null, 2)}
+- Session Name: ${sessionName || 'Not provided'}
 
 Full Session Transcript:
 ${JSON.stringify(transcript, null, 2)}

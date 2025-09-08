@@ -798,6 +798,9 @@ async function analyzeSessionAfterCompletion() {
       userEmail: currentUser.email,
       userName: currentUser.displayName || userName.value || "",
       coachName: props.flowData?.coachName || "מאיה",
+      sessionName: props.flowData?.name || "Unknown Session",
+      emailInstructions:
+        props.flowData?.emailInstructions?.sessionSpecific || "",
     };
 
     console.log(

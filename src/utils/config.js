@@ -1,6 +1,6 @@
 // Frontend feature flags
 const FEATURE_FLAGS = {
-  ENABLE_SESSION_END_LOGIC: true, // Set to false to disable
+  ENABLE_SESSION_END_LOGIC: false, // Set to false to disable
 };
 
 // Claude AI model configuration (for frontend API calls)

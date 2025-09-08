@@ -64,7 +64,7 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 app.options("*", cors(corsOptions));
-app.use(express.json());
+app.use(express.json({ limit: '50mb' })); // Increase the limit from default 100kb to 50mb
 
 // Logging middleware
 app.use((req, res, next) => {
